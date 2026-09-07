@@ -35,8 +35,11 @@ const ACTIONS = [
 
 export function QuickActionGrid() {
   const router = useRouter()
+  const SWIPE_THRESHOLD = 84
+  const DIRECTION_TOLERANCE = 8
   const touchStartX = React.useRef<number | null>(null)
   const touchStartY = React.useRef<number | null>(null)
+  const gestureDirection = React.useRef<"horizontal" | "vertical" | null>(null)
   const moved = React.useRef(false)
   const [openingHub, setOpeningHub] = React.useState(false)
 
@@ -47,6 +50,7 @@ export function QuickActionGrid() {
     touchStartX.current = touch?.clientX ?? null
     touchStartY.current = touch?.clientY ?? null
     moved.current = false
+    gestureDirection.current = null
     event.stopPropagation()
   }
 
@@ -56,7 +60,13 @@ export function QuickActionGrid() {
     if (!touch) return
     const dx = touch.clientX - touchStartX.current
     const dy = touch.clientY - touchStartY.current
-    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) moved.current = true
+    const absX = Math.abs(dx)
+    const absY = Math.abs(dy)
+
+    if (!gestureDirection.current && Math.max(absX, absY) >= DIRECTION_TOLERANCE) {
+      gestureDirection.current = absX > absY ? "horizontal" : "vertical"
+    }
+    if (Math.max(absX, absY) >= DIRECTION_TOLERANCE) moved.current = true
     event.stopPropagation()
   }
 
@@ -65,13 +75,19 @@ export function QuickActionGrid() {
     const end = event.changedTouches[0]
     const deltaX = (end?.clientX ?? touchStartX.current) - touchStartX.current
     const deltaY = (end?.clientY ?? touchStartY.current ?? 0) - (touchStartY.current ?? 0)
+    const direction = gestureDirection.current
     touchStartX.current = null
     touchStartY.current = null
+    gestureDirection.current = null
     event.stopPropagation()
 
-    // ONLY a predominantly horizontal left swipe opens Utilities Hub.
-    // Right swipes are intentionally ignored. A tap still activates an action.
-    if (deltaX < -70 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+    // Only a deliberate leftward horizontal swipe opens the Utilities Hub.
+    // The threshold and directional lock keep taps, diagonal movement, and scrolling local.
+    if (
+      direction === "horizontal" &&
+      deltaX <= -SWIPE_THRESHOLD &&
+      Math.abs(deltaX) > Math.abs(deltaY)
+    ) {
       moved.current = true
       setOpeningHub(true)
       window.setTimeout(() => router.push('/utilities-hub'), 280)
@@ -80,7 +96,7 @@ export function QuickActionGrid() {
 
   return (
     <div
-      className={"mb-6 relative overflow-hidden select-none touch-pan-x transition-transform duration-300 ease-out " + (openingHub ? "-translate-x-6 opacity-95" : "")}
+      className={"mb-6 relative overflow-hidden select-none touch-pan-y transition-transform duration-300 ease-out " + (openingHub ? "-translate-x-6 opacity-95" : "")}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
