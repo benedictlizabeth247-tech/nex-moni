@@ -19,7 +19,16 @@ type TradingMode = "spot" | "futures"
 type Side = "buy" | "sell"
 type MonitorTab = "positions" | "orders" | "history"
 
-const money = (n:number,currency="USD") => new Intl.NumberFormat("en-US",{style:"currency",currency,maximumFractionDigits:2}).format(n)
+const money = (n: number, currency = "USD") => {
+  const normalizedCurrency = currency.toUpperCase() === "USDT" ? "USD" : currency.toUpperCase()
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: normalizedCurrency,
+    maximumFractionDigits: 2,
+  }).format(Number.isFinite(n) ? n : 0)
+
+  return currency.toUpperCase() === "USDT" ? formatted.replace("$", "USDT ") : formatted
+}
 
 export function TradingTerminal({ mode }: { mode: TradingMode }) {
   const router = useRouter()
