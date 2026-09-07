@@ -174,10 +174,12 @@ export async function markOpenPositions(symbol: string, marketPrice: number) {
 }
 
 export async function closeInternalPosition(positionId: string, markPrice: number) {
+  if (!positionId) throw new Error('A position is required to close a trade.')
+  if (!Number.isFinite(markPrice) || markPrice <= 0) throw new Error('A valid current market price is required.')
   const { data, error } = await supabase.rpc('trading_close_position', {
     p_position_id: positionId,
     p_mark_price: markPrice,
   })
   if (error) throw new Error(error.message)
-  return data
+  return data as { status: 'closed'; position_id: string; realized_pnl: number; mark_price: number; reference: string }
 }
