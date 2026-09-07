@@ -15,6 +15,7 @@ import { NexTipsBanner } from '@/components/dashboard/NexTipsBanner';
 import MarketsFeed from '@/components/MarketsFeed';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { getWallet } from '@/services/walletService';
+import { getTradingAccountSummary } from '@/services/internalTradingService';
 import { getProfile } from '@/services/profileService';
 import type { Profile } from '@/types/database';
 import type { Wallet as DbWallet } from '@/types/database';
@@ -38,6 +39,7 @@ function HomeContent() {
   const router = useRouter();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [equity, setEquity] = useState<number | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [greeting, setGreeting] = useState('Good evening');
   const [homePage, setHomePage] = useState<0 | 1>(0);
@@ -45,11 +47,12 @@ function HomeContent() {
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([getWallet(), getProfile()])
-      .then(([w, p]) => {
+    Promise.all([getWallet(), getProfile(), getTradingAccountSummary()])
+      .then(([w, p, summary]) => {
         if (mounted) {
           setWallet(toCommandCenterWallet(w));
           setProfile(p);
+          setEquity(Number(summary?.equity ?? 0));
         }
       })
       .finally(() => {
@@ -117,7 +120,7 @@ function HomeContent() {
         <div className="overflow-hidden">
           <div className="flex w-[200%] transition-transform duration-300 ease-out" style={{ transform: `translateX(-${homePage * 50}%)` }}>
             <section className="w-1/2 shrink-0 pr-2">
-              <CommandCenter wallet={wallet} loading={walletLoading} />
+              <CommandCenter wallet={wallet} equity={equity} loading={walletLoading} />
               <QuickActionGrid />
               <ProductDiscovery />
               <NexTipsBanner />

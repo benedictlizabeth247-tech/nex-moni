@@ -9,14 +9,15 @@ import { Wallet } from '@/types'
 
 interface CommandCenterProps {
   wallet: Wallet | null;
+  equity?: number | null;
   loading: boolean;
 }
 
-export function CommandCenter({ wallet, loading }: CommandCenterProps) {
+export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
   const router = useRouter()
   const [showBalance, setShowBalance] = useState(true)
 
-  const displayBalance = wallet?.available || 0
+  const displayBalance = equity ?? wallet?.available ?? 0
   const usdtBalance = displayBalance
 
   return (

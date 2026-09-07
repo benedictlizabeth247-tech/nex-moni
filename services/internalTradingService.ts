@@ -49,6 +49,25 @@ export interface TradingPosition {
   closed_at?: string | null
 }
 
+export interface TradingAccountSummary {
+  user_id: string
+  settled_balance: number
+  equity: number
+  used_margin: number
+  available_margin: number
+  unrealized_pnl: number
+  spot_balance: number
+  futures_balance: number
+  funding_balance: number
+  updated_at: string
+}
+
+export async function getTradingAccountSummary() {
+  const { data, error } = await supabase.rpc('trading_account_summary')
+  if (error) throw new Error(error.message)
+  return data as TradingAccountSummary
+}
+
 export async function getTradingAccount() {
   const { data, error } = await supabase.rpc('trading_get_account')
   if (error) throw new Error(error.message)
