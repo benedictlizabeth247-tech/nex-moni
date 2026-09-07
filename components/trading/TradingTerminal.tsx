@@ -20,14 +20,16 @@ type Side = "buy" | "sell"
 type MonitorTab = "positions" | "orders" | "history"
 
 const money = (n: number, currency = "USD") => {
-  const normalizedCurrency = currency.toUpperCase() === "USDT" ? "USD" : currency.toUpperCase()
+  const asset = String(currency || "USD").trim().toUpperCase()
+  const isUsdt = asset === "USDT"
+  const isoCurrency = ["USD", "EUR", "GBP", "NGN"].includes(asset) ? asset : "USD"
   const formatted = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: normalizedCurrency,
+    currency: isoCurrency,
     maximumFractionDigits: 2,
   }).format(Number.isFinite(n) ? n : 0)
 
-  return currency.toUpperCase() === "USDT" ? formatted.replace("$", "USDT ") : formatted
+  return isUsdt ? formatted.replace(/^\$/, "USDT ") : formatted
 }
 
 export function TradingTerminal({ mode }: { mode: TradingMode }) {
