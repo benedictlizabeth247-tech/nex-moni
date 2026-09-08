@@ -418,7 +418,7 @@ export function useCandles(id: string | null, timeframe: Timeframe) {
     const load = async (showSpinner: boolean) => {
       if (showSpinner) setIsLoading(true)
       try {
-        const data = await json<{ series: CandleSeries | null }>(
+        const data = await json<{ series: CandleSeries | null; error?: string }>(
           `/api/market/candles?id=${encodeURIComponent(id)}&timeframe=${timeframe}`,
           controller.signal,
         )
@@ -426,8 +426,12 @@ export function useCandles(id: string | null, timeframe: Timeframe) {
         if (data.series?.candles?.length) {
           setSeries(data.series)
           setError(null)
+        } else if (data.error === 'unsupported_instrument') {
+          setError('This instrument is not supported.')
+        } else if (data.error === 'no_historical_data') {
+          setError('No historical candles are available for this instrument.')
         } else {
-          setError('Chart data unavailable')
+          setError('Historical market data is temporarily unavailable.')
         }
       } catch (err) {
         // Keep the previous series so the chart never blanks on a refresh error.

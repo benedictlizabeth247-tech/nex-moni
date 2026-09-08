@@ -62,6 +62,7 @@ import type {
   SearchResult,
   Timeframe,
   TradeFeed,
+  Candle,
 } from './types'
 
 const TTL = {
@@ -507,6 +508,22 @@ export async function getHeadlines(id: string) {
   return cached(`news:${id}`, TTL.headlines, () => yahoo.getHeadlines(query))
 }
 
+function normalizeCandles(candles: Candle[]): Candle[] {
+  const valid = candles.filter((candle) =>
+    Number.isFinite(candle.time) &&
+    Number.isFinite(candle.open) &&
+    Number.isFinite(candle.high) &&
+    Number.isFinite(candle.low) &&
+    Number.isFinite(candle.close) &&
+    Number.isFinite(candle.volume) &&
+    candle.high >= Math.max(candle.open, candle.close) &&
+    candle.low <= Math.min(candle.open, candle.close),
+  )
+  const unique = new Map<number, Candle>()
+  for (const candle of valid) unique.set(candle.time, candle)
+  return Array.from(unique.values()).sort((a, b) => a.time - b.time)
+}
+
 export async function getCandles(id: string, timeframe: Timeframe): Promise<CandleSeries | null> {
   const ref = parseAssetId(id)
   if (!ref) return null
@@ -514,7 +531,7 @@ export async function getCandles(id: string, timeframe: Timeframe): Promise<Cand
   return cached(`candles:${id}:${timeframe}`, TTL.candles, async () => {
     if (ref.type === 'crypto') {
       try {
-        const candles = await bybit.getKline(ref.symbol, timeframe)
+        const candles = normalizeCandles(await bybit.getKline(ref.symbol, timeframe))
         if (candles.length) return { id, timeframe, provider: 'bybit' as const, candles }
       } catch (err) {
         reportFallback('bybit kline unavailable, trying OKX', err)
@@ -523,56 +540,56 @@ export async function getCandles(id: string, timeframe: Timeframe): Promise<Cand
       // CoinGecko's free tier has no sub-daily candles, so without this the
       // 1m..4H chart ranges render empty wherever Bybit is blocked.
       try {
-        const candles = await okx.getKline(ref.symbol, timeframe)
+        const candles = normalizeCandles(await okx.getKline(ref.symbol, timeframe))
         if (candles.length) return { id, timeframe, provider: 'okx' as const, candles }
       } catch (err) {
         reportFallback('okx kline unavailable, falling back to CoinGecko', err)
       }
-      const candles = await coingecko.getCandles(ref.symbol, timeframe).catch(() => [])
+      const candles = normalizeCandles(await coingecko.getCandles(ref.symbol, timeframe).catch(() => []))
       return { id, timeframe, provider: 'coingecko' as const, candles }
     }
 
-    const fromYahoo = await yahoo.getCandles(ref.type, ref.symbol, timeframe).catch(() => [])
+    const fromYahoo = normalizeCandles(await yahoo.getCandles(ref.type, ref.symbol, timeframe).catch(() => []))
     if (fromYahoo.length) return { id, timeframe, provider: 'yahoo' as const, candles: fromYahoo }
 
     if (finnhub.supports(ref.type)) {
-      const candles = await finnhub.getCandles(ref.type, ref.symbol, timeframe).catch(() => [])
+      const candles = normalizeCandles(await finnhub.getCandles(ref.type, ref.symbol, timeframe).catch(() => []))
       if (candles.length) return { id, timeframe, provider: 'finnhub' as const, candles }
     }
     if (twelvedata.supports(ref.type)) {
-      const candles = await twelvedata.getCandles(ref.type, ref.symbol, timeframe).catch(() => [])
+      const candles = normalizeCandles(await twelvedata.getCandles(ref.type, ref.symbol, timeframe).catch(() => []))
       if (candles.length) return { id, timeframe, provider: 'twelvedata' as const, candles }
     }
     if (polygon.supports(ref.type)) {
-      const candles = await polygon.getCandles(ref.type, ref.symbol, timeframe).catch(() => [])
+      const candles = normalizeCandles(await polygon.getCandles(ref.type, ref.symbol, timeframe).catch(() => []))
       if (candles.length) return { id, timeframe, provider: 'polygon' as const, candles }
     }
     // Keyless forex history. This must be part of the candle chain, not only
     // the quote chain, otherwise a Yahoo outage leaves FX charts empty even
     // though a real public historical source is available.
     if (exchangerate.supports(ref.type)) {
-      const candles = await exchangerate.getCandles(ref.type, ref.symbol, timeframe).catch((err: unknown) => {
+      const candles = normalizeCandles(await exchangerate.getCandles(ref.type, ref.symbol, timeframe).catch((err: unknown) => {
         reportFallback(`exchangerate candles unavailable for ${id}`, err)
         return []
-      })
+      }))
       if (candles.length) return { id, timeframe, provider: 'exchangerate' as const, candles }
     }
     // Keyless last resort so charts still render without any API key.
     if (nasdaq.supports(ref.type)) {
-      const candles = await nasdaq
+      const candles = normalizeCandles(await nasdaq
         .getCandles(ref.type, ref.symbol, timeframe)
         .catch((err: unknown) => {
           reportFallback(`nasdaq candles unavailable for ${id}`, err)
           return []
-        })
+        }))
       if (candles.length) return { id, timeframe, provider: 'nasdaq' as const, candles }
     }
     // Index history of last resort, charted from the fund that tracks the index.
     if (cnbc.supports(ref.type)) {
-      const candles = await cnbc.getCandles(ref.type, ref.symbol, timeframe).catch((err: unknown) => {
+      const candles = normalizeCandles(await cnbc.getCandles(ref.type, ref.symbol, timeframe).catch((err: unknown) => {
         reportFallback(`cnbc index candles unavailable for ${id}`, err)
         return []
-      })
+      }))
       if (candles.length) return { id, timeframe, provider: 'cnbc' as const, candles }
     }
     return { id, timeframe, provider: 'yahoo' as const, candles: [] }

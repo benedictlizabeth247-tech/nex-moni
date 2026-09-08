@@ -26,14 +26,17 @@ export async function GET(request: Request) {
   try {
     const series = await getCandles(normalizedId, timeframe)
     if (!series) {
-      return NextResponse.json({ error: 'unknown_asset', series: null }, { status: 404 })
+      return NextResponse.json({ error: 'unsupported_instrument', series: null }, { status: 404 })
+    }
+    if (!series.candles.length) {
+      return NextResponse.json({ error: 'no_historical_data', series }, { status: 200, headers: { 'cache-control': 'no-store' } })
     }
     return NextResponse.json({ series }, { headers: { 'cache-control': 'no-store' } })
   } catch (error) {
-    logger.error('GET /api/market/candles failed', { reason: (error as Error).message })
+    logger.error('GET /api/market/candles failed', { reason: (error as Error).message, id: normalizedId, timeframe })
     return NextResponse.json(
-      { series: { id: normalizedId, timeframe, provider: 'unavailable', candles: [] }, degraded: true },
-      { status: 200, headers: { 'cache-control': 'no-store' } },
+      { error: 'provider_temporarily_unavailable', series: null },
+      { status: 503, headers: { 'cache-control': 'no-store', 'retry-after': '30' } },
     )
   }
 }

@@ -33,7 +33,17 @@ export async function POST(request: NextRequest) {
   })
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: error.code ?? 'SIGNUP_FAILED' }, { status: 400 })
+    const code = error.code ?? 'SIGNUP_FAILED'
+    const status = error.status ?? 400
+    const message =
+      code === 'user_already_exists' || code === 'email_exists'
+        ? 'Email already registered.'
+        : code === 'weak_password'
+          ? 'Password does not meet the requirements.'
+          : status === 429 || code === 'over_email_send_rate_limit'
+            ? 'Too many signup attempts. Please try again later.'
+            : 'Unable to create your account. Please try again.'
+    return NextResponse.json({ error: message, code }, { status: status >= 400 && status < 500 ? status : 400 })
   }
 
   return NextResponse.json({ userId: data.user.id, verified: true })

@@ -187,7 +187,7 @@ export default function AssetDetailScreen() {
             ) : (
               <div className="h-56 flex items-center justify-center">
                 <p className="text-[13px] text-gray-500">
-                  {chartError ?? 'Chart data unavailable'}
+                  {chartError ?? 'Loading historical market data...'}
                 </p>
               </div>
             )}
