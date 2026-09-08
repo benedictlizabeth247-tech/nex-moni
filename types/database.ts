@@ -35,7 +35,7 @@ export type P2PAdStatus = 'active' | 'paused' | 'closed'
 export interface Profile {
   id: string
   nex_user_id: string
-  display_name: string | null
+  full_name: string | null
   email: string | null
   phone_number: string | null
   photo_url: string | null

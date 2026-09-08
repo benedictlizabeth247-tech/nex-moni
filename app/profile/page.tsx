@@ -95,7 +95,7 @@ export default function ProfileScreen() {
         </div>
         {showSearch && <div className="mt-3 flex items-center gap-2 rounded-xl border border-[#D6E1DE] bg-white px-3 h-11"><Search size={15} className="text-[#708A85]"/><input autoFocus placeholder="Search assets, settings or activity" className="w-full bg-transparent text-[11px] outline-none"/><button onClick={()=>setShowSearch(false)}><X size={15}/></button></div>}
         <div className="mt-4 flex items-end justify-between">
-          <div><p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#708A85]">Profile & Assets</p><h1 className="mt-1 text-[22px] font-black">{profile?.display_name || 'Profile'}</h1></div>
+          <div><p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#708A85]">Profile & Assets</p><h1 className="mt-1 text-[22px] font-black">{profile?.full_name || 'Profile'}</h1></div>
           <Badge className="bg-[#E8F7F0] text-[#087F5B] border-none text-[9px] font-black">{profile?.is_verified ? 'Verified' : 'Verification pending'}</Badge>
         </div>
       </header>
@@ -106,7 +106,7 @@ export default function ProfileScreen() {
             <div className="h-12 w-12 rounded-2xl bg-[#E8F7F0] flex items-center justify-center text-[#087F5B] overflow-hidden">
               {profile?.photo_url ? <img src={profile.photo_url} alt="Profile" className="h-full w-full object-cover"/> : <User size={22}/>} 
             </div>
-            <div className="min-w-0 flex-1"><p className="text-[15px] font-black truncate">{profile?.display_name || 'nexMonie Member'}</p><p className="text-[10px] text-[#708A85] truncate">{profile?.email || user?.email || 'Member account'}</p></div>
+            <div className="min-w-0 flex-1"><p className="text-[15px] font-black truncate">{profile?.full_name || 'nexMonie Member'}</p><p className="text-[10px] text-[#708A85] truncate">{profile?.email || user?.email || 'Member account'}</p></div>
             <button onClick={()=>document.getElementById('profile-preferences')?.scrollIntoView({behavior:'smooth'})} className="h-9 w-9 rounded-xl bg-[#F5F8F7] flex items-center justify-center"><Settings size={16}/></button>
           </div>
           <div className="mt-4 rounded-2xl bg-[#183A36] p-4 text-white">

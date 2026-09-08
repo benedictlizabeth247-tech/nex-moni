@@ -52,7 +52,7 @@ export const getWalletIdentity = async (userId?: string): Promise<WalletIdentity
   return {
     walletNumber: wallet?.id || '---',
     nexId: profile.nex_user_id,
-    accountName: profile.display_name || 'Nex Member',
+    accountName: profile.full_name || 'Nex Member',
     status: STATUS_MAP[wallet?.status ?? 'active'] ?? 'Active',
     verificationStatus: profile.is_verified ? 'Tier 3' : 'Tier 1',
     memberSince: profile.created_at

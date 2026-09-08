@@ -12,19 +12,17 @@ export async function GET(request: Request) {
   const safe = query.replace(/[%_]/g, '\\$&')
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, nex_user_id, display_name, email, photo_url')
-    .or(`nex_user_id.eq.${safe},display_name.ilike.%${safe}%,email.ilike.%${safe}%`)
-    .neq('id', auth.user.id)
-    .eq('status', 'active')
+    .select('id, full_name, email')
+    .or(`full_name.ilike.%${safe}%,email.ilike.%${safe}%`)
     .limit(10)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json((data ?? []).map(profile => ({
     id: profile.id,
-    displayName: profile.display_name,
-    username: profile.display_name || profile.email?.split('@')[0] || 'nex user',
-    nexUserId: profile.nex_user_id,
-    photoURL: profile.photo_url || '',
+    displayName: profile.full_name,
+    username: profile.full_name || 'nex user',
+    nexUserId: null,
+    photoURL: '',
   })))
 }

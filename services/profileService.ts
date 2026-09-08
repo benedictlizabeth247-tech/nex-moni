@@ -40,7 +40,7 @@ export const getProfile = async (): Promise<Profile | null> => {
 };
 
 export const updateProfile = async (
-  updates: Partial<Pick<Profile, 'display_name' | 'phone_number' | 'photo_url' | 'preferred_language' | 'onboarding_completed'>>,
+  updates: Partial<Pick<Profile, 'full_name' | 'phone_number' | 'photo_url' | 'preferred_language' | 'onboarding_completed'>>,
 ): Promise<Profile> => {
   const supabase = createClient();
   const { data: authData } = await supabase.auth.getUser();

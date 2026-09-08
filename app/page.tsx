@@ -41,7 +41,6 @@ function HomeContent() {
   const [walletLoading, setWalletLoading] = useState(true);
   const [equity, setEquity] = useState<number | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [greeting, setGreeting] = useState('Good evening');
   const [homePage, setHomePage] = useState<0 | 1>(0);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -63,19 +62,9 @@ function HomeContent() {
     };
   }, []);
 
-  useEffect(() => {
-    const updateGreeting = () => {
-      const hour = Number(new Intl.DateTimeFormat('en-NG', { hour: 'numeric', hour12: false, timeZone: 'Africa/Lagos' }).format(new Date()));
-      if (hour >= 5 && hour < 12) setGreeting('Good morning');
-      else if (hour >= 12 && hour < 17) setGreeting('Good afternoon');
-      else setGreeting('Good evening');
-    };
-    updateGreeting();
-    const id = window.setInterval(updateGreeting, 60_000);
-    return () => window.clearInterval(id);
-  }, []);
+  const surname = profile?.full_name?.trim().split(/\s+/).at(-1) ?? '';
+  const profileLoading = walletLoading && !profile;
 
-  const username = profile?.display_name?.trim() || profile?.email?.split('@')[0] || 'there';
 
   const handleTouchStart = (event: TouchEvent) => {
     touchStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
@@ -98,11 +87,13 @@ function HomeContent() {
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-[11px] font-black tracking-[-0.02em] text-foreground">nexMonie</span>
-            <span className="mt-1 text-[15px] font-semibold text-muted-foreground">{greeting}, <span className="font-black text-foreground">{username}</span></span>
+            <span className="mt-1 text-[15px] font-semibold text-muted-foreground">
+              {profileLoading ? 'Loading profile…' : surname || 'Profile name unavailable'}
+            </span>
           </div>
         <div className="flex items-center gap-2">
         <button onClick={() => router.push('/profile')} className="relative h-9 w-9 overflow-hidden rounded-full border border-[#E1D5D1] bg-[#F8F2F0]" aria-label="Open profile">
-          {profile?.photo_url ? <Image src={profile.photo_url} alt="" fill className="object-cover" unoptimized /> : <span className="flex h-full w-full items-center justify-center text-[10px] font-black text-[#7A5E58]">{username.slice(0,1).toUpperCase()}</span>}
+          {profile?.photo_url ? <Image src={profile.photo_url} alt="" fill className="object-cover" unoptimized /> : <span className="flex h-full w-full items-center justify-center text-[10px] font-black text-[#7A5E58]">{surname.slice(0, 1).toUpperCase()}</span>}
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#FFFDFB] bg-[#3B82F6]" aria-hidden="true" />
         </button>
         <Link

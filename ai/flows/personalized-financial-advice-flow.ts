@@ -33,10 +33,11 @@ export async function getPersonalizedFinancialAdvice(
 ): Promise<PersonalizedFinancialAdviceOutput> {
   const parsed = PersonalizedFinancialAdviceInputSchema.parse(input)
 
-  const { object } = await generateObject({
-    model: "openai/gpt-5.4-mini",
-    schema: PersonalizedFinancialAdviceOutputSchema,
-    prompt: `You are the NexTips Advisor, an AI-powered financial expert for Nex Monie users. Your goal is to analyze the user's financial situation and provide personalized, actionable financial tips and strategies.
+  try {
+    const { object } = await generateObject({
+      model: "openai/gpt-5.4-mini",
+      schema: PersonalizedFinancialAdviceOutputSchema,
+      prompt: `You are the NexTips Advisor, an AI-powered financial expert for Nex Monie users. Your goal is to analyze the user's financial situation and provide personalized, actionable financial tips and strategies.
 Focus on suggestions for automated daily savings, consistent wealth growth, and improving overall financial health.
 
 Use the following information to generate your advice:
@@ -46,7 +47,17 @@ Financial Goals: ${parsed.financialGoals}
 Spending Patterns: ${parsed.spendingPatterns}
 
 Based on this information, please provide a summary of your advice and an array of specific, personalized tips. Ensure the tips are practical and directly address the user's spending patterns and goals.`,
-  })
+    })
 
-  return object
+    return object
+  } catch {
+    return {
+      summary: "Your account is ready for steady progress. Start with a small, repeatable savings habit and review your spending regularly.",
+      tips: [
+        "Set an automatic daily or weekly savings amount you can maintain comfortably.",
+        "Review recent spending and prioritize essentials before discretionary purchases.",
+        "Keep an emergency buffer before increasing higher-risk investments.",
+      ],
+    }
+  }
 }
