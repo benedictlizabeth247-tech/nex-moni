@@ -28,7 +28,7 @@ const ACTIONS = [
 
 export function QuickActionGrid() {
   const router = useRouter()
-  const SWIPE_THRESHOLD = 84
+  const SWIPE_THRESHOLD = 70
   const DIRECTION_TOLERANCE = 8
   const touchStartX = React.useRef<number | null>(null)
   const touchStartY = React.useRef<number | null>(null)
@@ -78,7 +78,7 @@ export function QuickActionGrid() {
     // The threshold and directional lock keep taps, diagonal movement, and scrolling local.
     if (
       direction === "horizontal" &&
-      deltaX <= -SWIPE_THRESHOLD &&
+      deltaX < -70 &&
       Math.abs(deltaX) > Math.abs(deltaY)
     ) {
       moved.current = true
