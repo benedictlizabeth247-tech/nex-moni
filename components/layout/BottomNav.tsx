@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { Home, Compass, Plus, Wallet, User } from 'lucide-react'
+import { Home, Compass, Wallet, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -41,20 +41,6 @@ export function BottomNav() {
       <div className="w-full flex items-center justify-between relative px-1 sm:px-2">
         <NavItem id="home" path="/" icon={<Home />} label="Home" />
         <NavItem id="discovery" path="/earn" icon={<Compass />} label="Discovery" />
-        
-        <div className="flex-1 flex justify-center items-center pointer-events-none">
-          <div className="relative w-11 h-11 sm:w-[52px] sm:h-[52px] pointer-events-auto -mt-6 sm:-mt-8">
-            <button 
-              onClick={() => router.push('/actions-hub')}
-              className={cn(
-                "w-full h-full rounded-full flex items-center justify-center shadow-lg transition-all active:scale-95 group",
-                "bg-accent text-white shadow-accent/30 hover:shadow-accent/50 hover:-translate-y-0.5"
-              )}
-            >
-              <Plus className="w-6 h-6 sm:w-7 sm:h-7 transition-transform group-hover:rotate-90 duration-300" />
-            </button>
-          </div>
-        </div>
         
         <NavItem id="finances" path="/finances" icon={<Wallet />} label="Finance" />
         <NavItem id="profile" path="/profile" icon={<User />} label="Profile" />

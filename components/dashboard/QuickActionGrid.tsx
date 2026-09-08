@@ -4,13 +4,9 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   ArrowDownCircle,
-  Smartphone,
   Banknote,
-  ScanLine,
-  TrendingUp, 
-  Repeat, 
-  Wifi, 
-  FileText, 
+  TrendingUp,
+  Repeat,
   Grid2x2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -25,10 +21,7 @@ const ACTIONS = [
   { id: 'receive', icon: <ArrowDownCircle size={21} />, label: "Receive", iconColor: "text-[#D86F68]", path: "/wallet-details" },
   { id: 'futures', icon: <TrendingUp size={20} />, label: "Futures", iconColor: "text-accent", path: "/futures" },
   { id: 'spot', icon: <Repeat size={20} />, label: "Spot Trading", iconColor: "text-accent", path: "/spot" },
-  { id: 'data', icon: <Wifi size={22} />, label: "Buy Data", iconColor: "text-[#D86F68]", path: "/buy-data" },
-  { id: 'airtime', icon: <Smartphone size={21} />, label: "Airtime", iconColor: "text-[#D86F68]", path: "/buy-airtime" },
-  { id: 'scan', icon: <ScanLine size={21} />, label: "Scan & Pay", iconColor: "text-[#D86F68]", path: "/scan-pay" },
-  { id: 'bills', icon: <FileText size={22} />, label: "Bills", iconColor: "text-[#D86F68]", path: "/pay-bills" },
+  { id: 'scan', icon: <Grid2x2 size={21} />, label: "Scan & Pay", iconColor: "text-[#D86F68]", path: "/scan-pay" },
   { id: 'withdraw', icon: <ArrowDownCircle size={21} />, label: "Withdraw", iconColor: "text-[#D86F68]", path: "/withdraw" },
   { id: 'more', icon: <Grid2x2 size={22} />, label: "More", iconColor: "text-[#D86F68]", path: "/actions-hub" },
 ]
@@ -106,7 +99,7 @@ export function QuickActionGrid() {
         <span className="text-[9px] font-bold text-muted-foreground">Swipe ← for services</span>
       </div>
 
-      <div className="flex gap-2 sm:gap-2.5 overflow-x-auto overscroll-x-contain touch-pan-x pb-1 scrollbar-none snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+      <div className="grid grid-cols-3 gap-2 sm:gap-2.5 pb-1">
         {ACTIONS.map((action) => (
           <button
             key={action.id}

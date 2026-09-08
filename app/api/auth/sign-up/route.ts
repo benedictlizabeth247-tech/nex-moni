@@ -5,7 +5,8 @@ import { z } from 'zod'
 const schema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(6),
-  fullName: z.string().trim().min(1).max(120),
+  firstName: z.string().trim().min(1).max(80),
+  surname: z.string().trim().min(1).max(80),
 })
 
 export async function POST(request: NextRequest) {
@@ -24,7 +25,11 @@ export async function POST(request: NextRequest) {
     email: parsed.data.email.toLowerCase(),
     password: parsed.data.password,
     email_confirm: true,
-    user_metadata: { full_name: parsed.data.fullName },
+    user_metadata: {
+      first_name: parsed.data.firstName,
+      surname: parsed.data.surname,
+      full_name: `${parsed.data.firstName} ${parsed.data.surname}`,
+    },
   })
 
   if (error) {

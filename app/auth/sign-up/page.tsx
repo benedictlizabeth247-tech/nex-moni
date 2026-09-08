@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NexLogo } from '@/components/ui/NexLogo'
-import { Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -35,9 +35,11 @@ function signUpErrorMessage(error: unknown): string {
 }
 
 export default function Page() {
-  const [fullName, setFullName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [surname, setSurname] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [repeatPassword, setRepeatPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -59,7 +61,7 @@ export default function Page() {
       const response = await fetch('/api/auth/sign-up', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, fullName }),
+        body: JSON.stringify({ email, password, firstName, surname }),
       })
       const result = await response.json().catch(() => null)
       if (!response.ok) throw Object.assign(new Error(result?.error ?? 'Unable to complete sign-up.'), { code: result?.code })
@@ -86,19 +88,12 @@ export default function Page() {
 
         <form onSubmit={handleSignUp} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="fullName" className="text-xs font-bold uppercase tracking-wide text-gray-500">
-              Full name
-            </Label>
-            <Input
-              id="fullName"
-              type="text"
-              placeholder="Jane Doe"
-              required
-              autoComplete="name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="h-12 rounded-2xl border-border bg-white"
-            />
+            <Label htmlFor="firstName" className="text-xs font-bold uppercase tracking-wide text-gray-500">First name</Label>
+            <Input id="firstName" type="text" placeholder="Jane" required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-2xl border-border bg-white" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="surname" className="text-xs font-bold uppercase tracking-wide text-gray-500">Surname</Label>
+            <Input id="surname" type="text" placeholder="Doe" required autoComplete="family-name" value={surname} onChange={(e) => setSurname(e.target.value)} className="h-12 rounded-2xl border-border bg-white" />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wide text-gray-500">
@@ -119,15 +114,12 @@ export default function Page() {
             <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-gray-500">
               Password
             </Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 rounded-2xl border-border bg-white"
-            />
+            <div className="relative">
+              <Input id="password" type={showPassword ? 'text' : 'password'} required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl border-border bg-white pr-12" />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-3 flex items-center text-muted-foreground" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="repeat-password" className="text-xs font-bold uppercase tracking-wide text-gray-500">
