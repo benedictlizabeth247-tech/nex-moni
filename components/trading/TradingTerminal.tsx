@@ -101,7 +101,7 @@ export function TradingTerminal({ mode }: { mode: TradingMode }) {
     }
     setBusy(true)
     try {
-      const result=await closeInternalPosition(p.id,currentPrice)
+      const result=await closeInternalPosition(p.id,p.symbol)
       setNotice(`Position ${marketLabel(p.symbol)} closed. Realized P&L: ${money(Number(result.realized_pnl),wallet?.currency||"USD")}.`)
       await refresh()
     } catch (error:any) {
