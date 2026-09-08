@@ -135,7 +135,7 @@ function HomeContent() {
                   </div>
                   <button onClick={() => setHomePage(0)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E5D9D6] bg-[#F8F2F0]" aria-label="Back to home"><ChevronRight className="rotate-180" size={18}/></button>
                 </div>
-                <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="mt-5 grid grid-cols-3 gap-2.5">
                   {[
                     ['Transfer', '/send-money', '↗'],
                     ['Deposit', '/fund-account', '↓'],
@@ -147,7 +147,7 @@ function HomeContent() {
                     ['Profile', '/profile', '◎'],
                     ['More', '/actions-hub', '⋯'],
                   ].map(([label, path, icon]) => (
-                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[88px] min-w-0 flex-col items-center justify-center gap-2 rounded-[18px] border border-[#E8DEDA] bg-[#F8F2F0] px-2 py-3 text-center transition-transform active:scale-[.98]">
+                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-muted/60 px-1.5 py-3 text-center transition-colors hover:bg-secondary active:scale-[.98]">
                       <span aria-hidden="true" className="text-[21px] font-black leading-none text-[#005F56]">{icon}</span>
                       <span className="truncate text-[11px] font-black text-[#4A3936]">{label}</span>
                     </button>

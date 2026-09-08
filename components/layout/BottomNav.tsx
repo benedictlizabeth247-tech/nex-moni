@@ -15,9 +15,10 @@ export function BottomNav() {
     return (
       <button 
         onClick={() => router.push(path)}
+        aria-current={isActive ? 'page' : undefined}
         className={cn(
-          "flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-all duration-300 flex-1 group min-w-0 py-1",
-          isActive ? "text-primary" : "text-gray-400 hover:text-primary/70"
+          "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl py-1 transition-colors duration-200 group",
+          isActive ? "bg-secondary text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
         )}
       >
         <div className="w-[22px] h-[22px] sm:w-[24px] sm:h-[24px] flex items-center justify-center transition-transform group-active:scale-90">

@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'nexMonie | Your financial command center',
+  description: 'A secure, clear and connected financial platform for your money, markets and everyday transfers.',
+  generator: 'nexMonie',
   icons: {
     icon: [
       {
