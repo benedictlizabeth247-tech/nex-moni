@@ -62,9 +62,24 @@ export interface TradingAccountSummary {
   updated_at: string
 }
 
-export async function getTradingAccountSummary() {
-  const { data, error } = await supabase.rpc('trading_account_summary')
-  if (error) throw new Error(error.message)
+export async function getTradingAccountSummary(): Promise<TradingAccountSummary | null> {
+  const requestSummary = () => supabase.rpc('trading_account_summary')
+  let { data, error } = await requestSummary()
+
+  if (error?.message.toLowerCase().includes('jwt issued at future')) {
+    // A preview can briefly retain a token minted ahead of the database clock.
+    // Refresh the cookie-backed session once, then retry the RPC with the new token.
+    await supabase.auth.refreshSession()
+    ;({ data, error } = await requestSummary())
+  }
+
+  if (error) {
+    if (error.message.toLowerCase().includes('jwt issued at future')) {
+      return null
+    }
+    throw new Error(error.message)
+  }
+
   return data as TradingAccountSummary
 }
 
