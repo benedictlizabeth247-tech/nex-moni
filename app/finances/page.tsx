@@ -84,11 +84,13 @@ export default function FinancesScreen() {
       const portfolios = await fetch(`/api/finances/portfolios`, { cache: "no-store" }).then(r => r.json())
       const portfolio = (portfolios?.data ?? []).find((item: any) => String(item.name || "").toLowerCase().includes(String(selected.firm || selected.name).toLowerCase()) || String(item.description || "").toLowerCase().includes(String(selected.name).toLowerCase()))
       if (!portfolio?.id) throw new Error("This pilot is not connected to a live nexMonie portfolio yet.")
-      const response = await fetch("/api/finances/copy-trade", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ portfolioId: portfolio.id, amount: entered }) })
+      const idempotencyKey = `copy-${portfolio.id}-${entered.toFixed(2)}-${selected.firm}-${selected.name}`.slice(0, 128)
+      const response = await fetch("/api/finances/copy-trade", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ portfolioId: portfolio.id, amount: entered, idempotencyKey }) })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(payload?.error || "Could not start copy trading.")
+      const { data: refreshedWallet } = await supabase.from("wallets").select("available").eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? "").eq("currency", "USD").maybeSingle()
       setCopyNotice(`Allocation started: $${entered.toFixed(2)} reserved from your USD wallet.`)
-      setBalance((value) => Math.max(0, value - entered))
+      setBalance(Number(refreshedWallet?.available ?? Math.max(0, balance - entered)))
     } catch (error) { setCopyNotice(error instanceof Error ? error.message : "Could not start copy trading.") }
     finally { setCopyBusy(false) }
   }
