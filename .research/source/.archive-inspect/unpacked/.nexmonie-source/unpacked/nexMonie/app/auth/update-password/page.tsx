@@ -1,0 +1,17 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { Loader2, ShieldCheck } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { NexLogo } from "@/components/ui/NexLogo"
+
+export default function UpdateAdminPassword(){
+  const router=useRouter(); const [password,setPassword]=useState(""); const [confirm,setConfirm]=useState(""); const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [ready,setReady]=useState(false)
+  useEffect(()=>{(async()=>{try{const supabase=createClient();const {data}=await supabase.auth.getUser();if(!data.user)throw new Error("Recovery session is missing or expired.");const response=await fetch('/api/admin/session',{cache:'no-store'});if(!response.ok)throw new Error("This recovery session is not authorized for an active NexMonie administrator.");setReady(true)}catch(cause){setError(cause instanceof Error?cause.message:"Unable to verify the recovery session.")}})()},[])
+  const submit=async(e:React.FormEvent)=>{e.preventDefault();setError("");if(password.length<8){setError("Use a password with at least 8 characters.");return}if(password!==confirm){setError("Passwords do not match.");return}setBusy(true);try{const authorization=await fetch('/api/admin/session',{cache:'no-store'});if(!authorization.ok)throw new Error("Admin recovery session is not authorized.");const supabase=createClient();const {error}=await supabase.auth.updateUser({password});if(error)throw error;router.replace("/admin-login")}catch(cause){setError(cause instanceof Error?cause.message:"Unable to update password.")}finally{setBusy(false)}}
+  return <main className="flex min-h-screen items-center justify-center bg-[#0D0F11] px-5 py-8 text-white"><div className="w-full max-w-sm"><div className="mb-8 flex flex-col items-center gap-4"><NexLogo className="[&_*]:!text-white"/><div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#183A36] text-[#55D6A7]"><ShieldCheck size={25}/></div><h1 className="text-xl font-black">Set new admin password</h1></div>{ready?<form onSubmit={submit} className="space-y-4 rounded-3xl border border-[#30343A] bg-[#171A1E] p-5"><div className="space-y-2"><Label htmlFor="password" className="text-xs text-[#8D959D]">New password</Label><Input id="password" type="password" required autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} className="h-12 rounded-2xl border-[#30343A] bg-[#0D0F11] text-white"/></div><div className="space-y-2"><Label htmlFor="confirm" className="text-xs text-[#8D959D]">Confirm password</Label><Input id="confirm" type="password" required autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)} className="h-12 rounded-2xl border-[#30343A] bg-[#0D0F11] text-white"/></div>{error&&<p className="rounded-xl bg-[#321E20] px-3 py-2.5 text-xs font-semibold text-[#FFB4B4]">{error}</p>}<Button disabled={busy} className="h-12 w-full rounded-2xl bg-[#55D6A7] font-black text-[#102019]">{busy?<><Loader2 size={16} className="mr-2 animate-spin"/>Updating…</>:"Update password"}</Button></form>:<div className="rounded-3xl border border-[#713B3B] bg-[#321E20] p-5 text-center"><p className="text-xs text-[#FFB4B4]">{error||"Checking recovery session…"}</p></div>}</div></main>
+}

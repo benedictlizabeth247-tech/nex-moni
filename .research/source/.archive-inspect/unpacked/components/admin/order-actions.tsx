@@ -1,0 +1,7 @@
+"use client"
+import { useState } from "react"
+export function OrderActions({ id }: { id: string }) {
+ const [note,setNote]=useState(""); const [status,setStatus]=useState("open"); const [message,setMessage]=useState(""); const [saving,setSaving]=useState(false)
+ async function submit(e:React.FormEvent){e.preventDefault();setSaving(true);setMessage("");const r=await fetch("/api/admin/orders",{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({id,status,admin_note:note})});const j=await r.json();setMessage(r.ok?"Order updated":"Update failed");setSaving(false);if(!r.ok) console.error(j)}
+ return <form onSubmit={submit} className="flex flex-wrap items-center gap-2"><select value={status} onChange={e=>setStatus(e.target.value)} className="rounded-lg border border-[#29413A] bg-[#101A18] px-2 py-2 text-[10px]"><option value="open">Open</option><option value="partially_filled">Partial</option><option value="filled">Filled</option><option value="rejected">Rejected</option><option value="cancelled">Cancelled</option></select><input value={note} onChange={e=>setNote(e.target.value)} placeholder="Admin note" className="min-w-0 flex-1 rounded-lg border border-[#29413A] bg-[#101A18] px-2 py-2 text-[10px]"/><button disabled={saving} className="rounded-lg bg-[#55D6A7] px-3 py-2 text-[10px] font-black text-[#101A18]">{saving?"Saving…":"Apply"}</button>{message&&<span className="text-[10px] text-[#8DE0BD]">{message}</span>}</form>
+}

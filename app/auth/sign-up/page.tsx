@@ -1,0 +1,170 @@
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { NexLogo } from '@/components/ui/NexLogo'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+
+// Supabase does not reveal whether an email is already registered, so the
+// fallback stays generic. Validation failures describe the user's own input and
+// are not an enumeration oracle, so surface them.
+function signUpErrorMessage(error: unknown): string {
+  const { code, status } = (error ?? {}) as { code?: string; status?: number }
+
+  if (code === 'weak_password') {
+    return 'Please choose a stronger password (at least 6 characters).'
+  }
+  if (code === 'email_address_invalid') {
+    return 'Please use a real email address — example and test domains are not supported.'
+  }
+  if (code === 'email_address_not_authorized') {
+    return 'We cannot send confirmation email to that address. Please use a different one.'
+  }
+  if (code === 'validation_failed') {
+    return 'Please check the details you entered.'
+  }
+  if (code === 'over_email_send_rate_limit' || status === 429) {
+    return 'Too many attempts. Please wait a moment and try again.'
+  }
+  return 'Unable to complete sign-up. Please try again.'
+}
+
+export default function Page() {
+  const [firstName, setFirstName] = useState('')
+  const [surname, setSurname] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [repeatPassword, setRepeatPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const supabase = createClient()
+    setIsLoading(true)
+    setError(null)
+
+    if (password !== repeatPassword) {
+      setError('Passwords do not match.')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/auth/sign-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, firstName, surname }),
+      })
+      const result = await response.json().catch(() => null)
+      if (!response.ok) throw Object.assign(new Error(result?.error ?? 'Unable to complete sign-up.'), { code: result?.code })
+
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+      if (error) throw error
+      router.push('/')
+    } catch (error: unknown) {
+      setError(signUpErrorMessage(error))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#F8FAF9] px-6 py-10">
+      <div className="w-full max-w-sm">
+        <div className="mb-10 flex flex-col items-center gap-4">
+          <NexLogo />
+          <p className="text-center text-[13px] font-medium text-gray-400">
+            Create your account to get started.
+          </p>
+        </div>
+
+        <form onSubmit={handleSignUp} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="firstName" className="text-xs font-bold uppercase tracking-wide text-gray-500">First name</Label>
+            <Input id="firstName" type="text" placeholder="Jane" required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-2xl border-border bg-white" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="surname" className="text-xs font-bold uppercase tracking-wide text-gray-500">Surname</Label>
+            <Input id="surname" type="text" placeholder="Doe" required autoComplete="family-name" value={surname} onChange={(e) => setSurname(e.target.value)} className="h-12 rounded-2xl border-border bg-white" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wide text-gray-500">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-12 rounded-2xl border-border bg-white"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-gray-500">
+              Password
+            </Label>
+            <div className="relative">
+              <Input id="password" type={showPassword ? 'text' : 'password'} required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl border-border bg-white pr-12" />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-3 flex items-center text-muted-foreground" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="repeat-password" className="text-xs font-bold uppercase tracking-wide text-gray-500">
+              Repeat password
+            </Label>
+            <Input
+              id="repeat-password"
+              type="password"
+              required
+              autoComplete="new-password"
+              value={repeatPassword}
+              onChange={(e) => setRepeatPassword(e.target.value)}
+              className="h-12 rounded-2xl border-border bg-white"
+            />
+          </div>
+
+          {error && (
+            <p className="rounded-xl bg-destructive/10 px-4 py-2.5 text-sm font-medium text-destructive">
+              {error}
+            </p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="h-12 w-full rounded-2xl bg-primary text-[15px] font-bold text-primary-foreground hover:bg-primary/90"
+          >
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 size={16} className="animate-spin" />
+                Creating account...
+              </span>
+            ) : (
+              'Create account'
+            )}
+          </Button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Already have an account?{' '}
+          <Link href="/auth/login" className="font-bold text-primary underline-offset-4 hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  )
+}
