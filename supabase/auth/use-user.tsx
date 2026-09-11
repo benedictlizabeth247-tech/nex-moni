@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
@@ -12,27 +12,36 @@ import type { User } from '@supabase/supabase-js';
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    // Check active sessions and set the user with error handling
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
-      })
-      .catch((err) => {
-        // Silent catch for network errors during initial load
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-
-    // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    let cancelled = false;
+    const finishInitialization = (nextUser: User | null) => {
+      if (cancelled || initialized.current) return;
+      initialized.current = true;
+      setUser(nextUser);
       setLoading(false);
+    };
+
+    const timeout = window.setTimeout(() => finishInitialization(null), 4000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => finishInitialization(session?.user ?? null))
+      .catch(() => finishInitialization(null));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (initialized.current) {
+        setUser(session?.user ?? null);
+        return;
+      }
+      finishInitialization(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { user, loading };
