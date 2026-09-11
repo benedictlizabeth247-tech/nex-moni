@@ -16,7 +16,7 @@ export default function WithdrawPage(){
  const [wallet,setWallet]=useState<WalletType|null>(null); const [amount,setAmount]=useState("")
  const [destinationType,setDestinationType]=useState<WithdrawalDestination>("bank")
  const [autopilot,setAutopilot]=useState(false)
- const rails=[{id:'bank' as const,label:'Bank account',hint:'Configured payout destination',icon:Building2},{id:'nex' as const,label:'nexMonie account',hint:'Internal transfer',icon:ArrowUpFromLine},{id:'card_refund' as const,label:'Card refund',hint:'Return to eligible card',icon:CreditCard},{id:'mobile_money' as const,label:'Mobile money',hint:'Supported regional rail',icon:Smartphone},{id:'crypto' as const,label:'Crypto wallet',hint:'Network-specific payout',icon:Coins}]
+ const rails=[{id:'bank' as const,label:'Bank account',hint:'Configured payout destination',icon:Building2},{id:'nex' as const,label:'Apedat account',hint:'Internal transfer',icon:ArrowUpFromLine},{id:'card_refund' as const,label:'Card refund',hint:'Return to eligible card',icon:CreditCard},{id:'mobile_money' as const,label:'Mobile money',hint:'Supported regional rail',icon:Smartphone},{id:'crypto' as const,label:'Crypto wallet',hint:'Network-specific payout',icon:Coins}]
  const [destination,setDestination]=useState(""); const [busy,setBusy]=useState(false)
  const [submitted,setSubmitted]=useState(false); const [error,setError]=useState("")
  useEffect(()=>{void getWallet().then(setWallet)},[])
@@ -24,7 +24,7 @@ export default function WithdrawPage(){
   setError(""); const n=Number(amount); const available=Number(wallet?.available||0)
   if(!n||n<=0){setError("Enter a valid amount.");return}
   if(n>available){setError("Insufficient available balance.");return}
-  if(!destination.trim()){setError(destinationType==='bank'?"Enter the bank account destination.":"Enter the nexMonie recipient.");return}
+  if(!destination.trim()){setError(destinationType==='bank'?"Enter the bank account destination.":"Enter the Apedat recipient.");return}
   setBusy(true)
   try{
    const result=await createWithdrawalRequest({amount:n,destinationType,destination,currency:"USDT", autopilot})
@@ -34,7 +34,7 @@ export default function WithdrawPage(){
   finally{setBusy(false)}
  }
  return <main className="min-h-screen bg-[#EEF2F1] pb-32 text-[#183A36]">
-  <header className="sticky top-0 z-30 border-b border-[#D6E1DE] bg-[#EEF2F1]/95 p-4 backdrop-blur"><button onClick={()=>router.back()} className="h-10 w-10 rounded-xl bg-white border border-[#D6E1DE] flex items-center justify-center"><ArrowLeft size={18}/></button><h1 className="mt-4 text-[22px] font-black">Withdraw</h1><p className="text-[10px] text-[#708A85]">Create a withdrawal request from your nexMonie balance.</p></header>
+  <header className="sticky top-0 z-30 border-b border-[#D6E1DE] bg-[#EEF2F1]/95 p-4 backdrop-blur"><button onClick={()=>router.back()} className="h-10 w-10 rounded-xl bg-white border border-[#D6E1DE] flex items-center justify-center"><ArrowLeft size={18}/></button><h1 className="mt-4 text-[22px] font-black">Withdraw</h1><p className="text-[10px] text-[#708A85]">Create a withdrawal request from your Apedat balance.</p></header>
   <div className="space-y-4 p-4">
    <Card className="rounded-[26px] border-none bg-[#183A36] p-5 text-white"><p className="text-[9px] uppercase tracking-widest text-white/60">Available Funding Balance</p><p className="mt-2 text-[28px] font-black">{money(Number(wallet?.available||0))}</p></Card>
    {!submitted?<>

@@ -1,14 +1,16 @@
 import 'server-only'
 
-export type DiscoveryCategory = 'Job' | 'Bounty' | 'Hackathon' | 'Grant' | 'Quest' | 'Project' | 'Task'
+export type DiscoveryCategory = 'Job' | 'Bounty' | 'Hackathon' | 'Grant' | 'Quest' | 'Project' | 'Task' | 'Open Source'
 
 export interface DiscoveryOpportunity {
   id: string
   title: string
   organizationName: string
-  source: 'Superteam Earn' | 'Gibwork' | 'Galxe' | 'Dework'
+  source: string
   sourceUrl: string
+  applicationUrl?: string
   category: DiscoveryCategory
+  isVerified?: boolean
   shortDescription: string
   description: string
   imageUrl?: string
