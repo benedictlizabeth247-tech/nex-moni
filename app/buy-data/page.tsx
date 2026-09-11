@@ -227,7 +227,7 @@ export default function BuyDataWorkflow() {
             <CheckCircle2 size={56} />
           </div>
           <h1 className="text-[28px] font-bold text-[#1A1A1A] mb-2">Request Received</h1>
-          <p className="text-[15px] text-gray-500 mb-12">Your request is with APEDAT operations. You will receive an update when the service is fulfilled.</p>
+          <p className="text-[15px] text-gray-500 mb-12">Your request is with nexMonie operations. You will receive an update when the service is fulfilled.</p>
           <button onClick={() => router.push('/')} className="w-full py-5 bg-[#1A1A1A] text-white font-bold rounded-[22px]">Return to Dashboard</button>
         </div>
       </main>

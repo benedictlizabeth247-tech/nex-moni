@@ -16,7 +16,7 @@ export default function MarketsOverviewPage() {
       <header className="sticky top-0 z-30 border-b border-[#E1D5D1] bg-[#FFFDFB]/95 px-5 pb-4 pt-6 backdrop-blur">
         <div className="flex items-center justify-between">
           <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#E6DCD8] bg-[#F8F2F0]" aria-label="Go back"><ChevronLeft size={20} /></button>
-          <div className="text-center"><p className="text-[8px] font-black uppercase tracking-[.18em] text-[#9A7772]">APEDAT</p><h1 className="mt-1 text-[18px] font-black text-[#342A28]">Markets</h1></div>
+          <div className="text-center"><p className="text-[8px] font-black uppercase tracking-[.18em] text-[#9A7772]">nexMonie</p><h1 className="mt-1 text-[18px] font-black text-[#342A28]">Markets</h1></div>
           <div className="w-10" />
         </div>
       </header>
