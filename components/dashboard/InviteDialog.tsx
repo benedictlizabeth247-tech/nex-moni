@@ -33,7 +33,7 @@ export function InviteDialog({ trigger }: InviteDialogProps) {
   const referralCode = "NEX-" + Math.random().toString(36).substring(2, 8).toUpperCase()
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`Join me on nex Monie! Use my code ${referralCode} to get a starter bonus. https://nexmonie.com/join`)
+    navigator.clipboard.writeText(`Join me on Apedat! Use my code ${referralCode} to get a starter bonus. https://apedat.app/join`)
     setCopied(true)
     toast({
       title: "Link Copied!",
@@ -69,7 +69,7 @@ export function InviteDialog({ trigger }: InviteDialogProps) {
         <div className="p-8 text-center bg-white">
           <DialogHeader className="mb-8">
             <DialogTitle className="text-[26px] font-light text-[#1A1A1A] leading-tight text-center">
-              Grow the <span className="font-light">nex</span><span className="font-bold">Monie</span> Circle
+              Grow the <span className="font-bold">Apedat</span> Circle
             </DialogTitle>
             <p className="text-[14px] text-gray-500 font-medium px-4 mt-2 leading-relaxed">
               Invite your trusted network and receive a USD reward for every successful activation.
@@ -98,7 +98,7 @@ export function InviteDialog({ trigger }: InviteDialogProps) {
         </div>
         
         <div className="p-5 bg-gray-50/50 border-t border-gray-50 flex items-center justify-center">
-          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em]">nex Monie Global Rewards Program</span>
+          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em]">Apedat Global Rewards Program</span>
         </div>
       </DialogContent>
     </Dialog>

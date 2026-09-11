@@ -46,5 +46,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message, code }, { status: status >= 400 && status < 500 ? status : 400 })
   }
 
+  const { error: profileError } = await admin.from('profiles').upsert(
+    {
+      id: data.user.id,
+      full_name: `${parsed.data.firstName} ${parsed.data.surname}`.trim(),
+      status: 'active',
+      is_verified: true,
+      trading_access: true,
+    },
+    { onConflict: 'id' },
+  )
+
+  if (profileError) {
+    await admin.auth.admin.deleteUser(data.user.id)
+    return NextResponse.json({ error: 'Unable to create your profile.', code: 'PROFILE_CREATE_FAILED' }, { status: 500 })
+  }
+
   return NextResponse.json({ userId: data.user.id, verified: true })
 }

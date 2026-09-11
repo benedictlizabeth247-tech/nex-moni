@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useUser } from "@/supabase"
 import type { DiscoveryOpportunity } from "@/services/discovery"
 
-const categories = ["All", "Bounty", "Project", "Job", "Grant", "Development", "Design", "Content", "Community", "Growth", "Other"]
+const categories = ["All", "Jobs", "Bounties", "Grants", "Projects", "Quests", "Open Source"]
 
 export default function EarnScreen() {
   const { user } = useUser()
@@ -24,6 +24,16 @@ export default function EarnScreen() {
   const [error, setError] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+
+  async function trackApplication(item: DiscoveryOpportunity) {
+    try {
+      await fetch('/api/discovery/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunityId: item.id, status: 'REDIRECTED', applicationUrl: item.applicationUrl || item.sourceUrl }),
+      })
+    } catch { /* the official source remains available even if tracking is temporarily unavailable */ }
+  }
 
   async function load(nextPage = 1) {
     nextPage === 1 ? setLoading(true) : setLoadingMore(true)
@@ -54,9 +64,9 @@ export default function EarnScreen() {
     <main className="min-h-screen bg-background pb-28">
       <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 px-6 pb-5 pt-6 backdrop-blur">
         <div className="mb-6 flex items-center justify-between"><NexLogo /><div className="flex items-center gap-4"><Bell size={21} className="text-foreground" /><div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-50"><User size={18} className="text-gray-300" /></div></div></div>
-        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Opportunity marketplace</p>
+        <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary">Apedat marketplace</p>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Discovery</h1>
-        <p className="mt-2 max-w-sm text-sm leading-6 text-gray-500">Find real projects, bounties and ways to contribute across the open internet.</p>
+        <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Live jobs, bounties, grants and open-source work from verified sources.</p>
       </header>
 
       <section className="px-6 pt-5">
@@ -65,7 +75,7 @@ export default function EarnScreen() {
       </section>
 
       <section className="px-6 pt-7">
-        <div className="mb-4 flex items-end justify-between"><div><h2 className="text-lg font-bold text-foreground">Open opportunities</h2><p className="mt-1 text-xs text-gray-400">Live listings from verified sources</p></div><SlidersHorizontal size={18} className="text-gray-400" /></div>
+        <div className="mb-4 flex items-end justify-between"><div><h2 className="text-lg font-bold text-foreground">Live opportunities</h2><p className="mt-1 text-xs text-muted-foreground">Synchronized from trusted sources</p></div><div className="flex items-center gap-2 text-xs font-semibold text-primary"><span className="size-2 rounded-full bg-primary" /> {filtered.length} available</div></div>
         {loading ? <div className="space-y-3">{[1,2,3,4].map((item) => <Skeleton key={item} className="h-32 w-full rounded-2xl" />)}</div> : error ? <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center"><p className="text-sm font-semibold text-foreground">Discovery is temporarily unavailable.</p><p className="mt-1 text-xs text-gray-500">Try again to refresh the live sources.</p><Button onClick={() => load()} variant="outline" className="mt-4 rounded-xl">Try again</Button></div> : filtered.length === 0 ? <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center"><Globe2 className="mx-auto text-gray-300" size={28} /><p className="mt-3 text-sm font-semibold text-foreground">No opportunities found</p><p className="mt-1 text-xs text-gray-500">Try another search or category.</p></div> : <div className="space-y-3">{filtered.map((item) => <OpportunityCard key={item.id} item={item} onClick={() => setSelected(item)} />)}</div>}
         {!loading && !error && hasMore && filtered.length > 0 && <Button onClick={() => load(page + 1)} disabled={loadingMore} variant="outline" className="mt-5 w-full rounded-xl">{loadingMore ? "Loading more..." : "Load more opportunities"}</Button>}
       </section>
@@ -83,6 +93,12 @@ function OpportunityCard({ item, onClick }: { item: DiscoveryOpportunity; onClic
   </button>
 }
 
+async function trackApplication(item: DiscoveryOpportunity) {
+  try {
+    await fetch('/api/discovery/applications', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opportunityId: item.id, status: 'REDIRECTED', applicationUrl: item.applicationUrl || item.sourceUrl }) })
+  } catch { /* preserve external application access if tracking is temporarily unavailable */ }
+}
+
 function OpportunityDetail({ item, onClose }: { item: DiscoveryOpportunity; onClose: () => void }) {
-  return <div className="fixed inset-0 z-[60] overflow-y-auto bg-background"><div className="mx-auto min-h-screen max-w-screen-md bg-background"><header className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5"><button onClick={onClose} aria-label="Close"><ArrowLeft size={20} /></button><span className="text-xs font-bold uppercase tracking-widest text-gray-400">Opportunity</span><button onClick={onClose} aria-label="Close"><X size={20} className="text-gray-400" /></button></header><div className="px-6 pb-12 pt-6"><div className="mb-6 flex h-40 items-center justify-center overflow-hidden rounded-2xl bg-gray-50">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <Globe2 size={38} className="text-gray-300" />}</div><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">{item.source}</span><h1 className="mt-2 text-2xl font-bold leading-tight text-foreground">{item.title}</h1><p className="mt-2 text-sm text-gray-500">{item.organizationName}</p><div className="mt-5 flex flex-wrap gap-2">{[item.category, ...item.tags.slice(0, 3)].map((tag) => <Badge key={tag} variant="outline" className="rounded-full text-[10px]">{tag}</Badge>)}</div><div className="mt-8 space-y-6"><div><h2 className="text-sm font-bold text-foreground">About</h2><p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{item.description || item.shortDescription}</p></div>{item.rewardLabel && <div><h2 className="text-sm font-bold text-foreground">Compensation</h2><p className="mt-2 text-sm text-gray-600">{item.rewardLabel}</p></div>}{item.deadline && <div><h2 className="text-sm font-bold text-foreground">Deadline</h2><p className="mt-2 text-sm text-gray-600">{item.deadline}</p></div>}</div><a className="mt-9 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href={item.sourceUrl} target="_blank" rel="noreferrer">View on {item.source}<ExternalLink size={16} /></a></div></div></div>
+  return <div className="fixed inset-0 z-[60] overflow-y-auto bg-background"><div className="mx-auto min-h-screen max-w-screen-md bg-background"><header className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5"><button onClick={onClose} aria-label="Close"><ArrowLeft size={20} /></button><span className="text-xs font-bold uppercase tracking-widest text-gray-400">Opportunity</span><button onClick={onClose} aria-label="Close"><X size={20} className="text-gray-400" /></button></header><div className="px-6 pb-12 pt-6"><div className="mb-6 flex h-40 items-center justify-center overflow-hidden rounded-2xl bg-gray-50">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <Globe2 size={38} className="text-gray-300" />}</div><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">{item.source}</span><h1 className="mt-2 text-2xl font-bold leading-tight text-foreground">{item.title}</h1><p className="mt-2 text-sm text-gray-500">{item.organizationName}</p><div className="mt-5 flex flex-wrap gap-2">{[item.category, ...item.tags.slice(0, 3)].map((tag) => <Badge key={tag} variant="outline" className="rounded-full text-[10px]">{tag}</Badge>)}</div><div className="mt-8 space-y-6"><div><h2 className="text-sm font-bold text-foreground">About</h2><p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{item.description || item.shortDescription}</p></div>{item.rewardLabel && <div><h2 className="text-sm font-bold text-foreground">Compensation</h2><p className="mt-2 text-sm text-gray-600">{item.rewardLabel}</p></div>}{item.deadline && <div><h2 className="text-sm font-bold text-foreground">Deadline</h2><p className="mt-2 text-sm text-gray-600">{item.deadline}</p></div>}</div><a onClick={() => { void trackApplication(item) }} className="mt-9 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href={item.applicationUrl || item.sourceUrl} target="_blank" rel="noreferrer">{item.applicationUrl ? 'Apply on source' : `View on ${item.source}`}<ExternalLink size={16} /></a></div></div></div>
 }
