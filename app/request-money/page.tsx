@@ -37,7 +37,7 @@ export default function RequestMoneyPage() {
           <h2 className="text-xl font-bold text-foreground">Who are you requesting from?</h2>
           <p className="mt-1 text-sm text-gray-500">Add a recipient, amount, and optional note.</p>
         </div>
-        <label className="block text-sm font-bold text-foreground">Recipient<input value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="Name, nexMonie ID, or phone number" className="mt-2 w-full rounded-2xl border border-gray-100 bg-white p-4 text-sm outline-none" /></label>
+        <label className="block text-sm font-bold text-foreground">Recipient<input value={recipient} onChange={e => setRecipient(e.target.value)} placeholder="Name, APEDAT ID, or phone number" className="mt-2 w-full rounded-2xl border border-gray-100 bg-white p-4 text-sm outline-none" /></label>
         <label className="block text-sm font-bold text-foreground">Amount (USDT)<input inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.00 USDT" className="mt-2 w-full rounded-2xl border border-gray-100 bg-white p-4 text-sm outline-none" /></label>
         <label className="block text-sm font-bold text-foreground">Note <span className="font-normal text-gray-400">(optional)</span><textarea value={note} onChange={e => setNote(e.target.value)} placeholder="What is this request for?" className="mt-2 min-h-24 w-full rounded-2xl border border-gray-100 bg-white p-4 text-sm outline-none" /></label>
         {error && <p className="rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-600">{error}</p>}

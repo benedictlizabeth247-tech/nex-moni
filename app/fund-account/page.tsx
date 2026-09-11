@@ -88,7 +88,7 @@ export default function FundAccountPage() {
         <div className="mt-4">
           <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#8E7772]">Funding Account</p>
           <h1 className="mt-1 text-[24px] font-black tracking-[-.025em]">Fund your account</h1>
-          <p className="mt-1 max-w-[390px] text-[10px] leading-5 text-[#8E7772]">Choose how you want money or crypto to arrive in your nexMonie Funding balance.</p>
+          <p className="mt-1 max-w-[390px] text-[10px] leading-5 text-[#8E7772]">Choose how you want money or crypto to arrive in your APEDAT Funding balance.</p>
         </div>
       </div>
     </header>

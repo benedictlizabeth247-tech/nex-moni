@@ -237,7 +237,10 @@ export async function getQuotes(ids: string[]): Promise<MarketListResult> {
   )
 
   const byId = new Map<string, Quote>()
-  for (const quote of results.flat()) byId.set(quote.id, { ...quote, iconUrl: quote.iconUrl ?? assetIconUrl(quote.type, quote.symbol) })
+  for (const quote of results.flat()) {
+    if (!isUsableQuote(quote) || !Number.isFinite(quote.changePercent)) continue
+    byId.set(quote.id, { ...quote, iconUrl: quote.iconUrl ?? assetIconUrl(quote.type, quote.symbol) })
+  }
 
   // Preserve request order; keep last-known-good values so the UI never blanks.
   const quotes: Quote[] = []
@@ -249,8 +252,7 @@ export async function getQuotes(ids: string[]): Promise<MarketListResult> {
       continue
     }
     const stale = peekCache<Quote>(quoteKey(id))
-    if (stale) quotes.push({ ...stale, stale: true })
-    else quotes.push(placeholderQuote(ref.type, ref.symbol))
+    if (stale && isUsableQuote(stale)) quotes.push({ ...stale, stale: true })
   }
 
   const providers = Array.from(new Set(quotes.map((q) => q.provider)))
@@ -259,23 +261,13 @@ export async function getQuotes(ids: string[]): Promise<MarketListResult> {
 
 const quoteKey = (id: string) => `quote:${id}`
 
+function isUsableQuote(quote: Quote): boolean {
+  return Number.isFinite(quote.price) && quote.price > 0 && Number.isFinite(quote.timestamp)
+}
+
 function cacheQuote(quote: Quote) {
   // Last-known-good snapshot so a provider outage never blanks the UI.
   putCache(quoteKey(quote.id), quote, 60 * 60 * 1000)
-}
-
-function placeholderQuote(type: AssetType, symbol: string): Quote {
-  const ref = toAssetRef(type, symbol)
-  return {
-    ...ref,
-    price: 0,
-    change: 0,
-    changePercent: 0,
-    currency: 'USD',
-    provider: type === 'crypto' ? 'bybit' : 'yahoo',
-    timestamp: Date.now(),
-    stale: true,
-  }
 }
 
 export type BoardTab = 'favorites' | 'hot' | 'gainers' | 'losers'

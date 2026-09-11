@@ -51,7 +51,7 @@ export default function ProfileScreen() {
   useEffect(() => { void load() }, [user])
 
   useEffect(() => {
-    const saved = window.localStorage.getItem('nexMonie-theme') as 'light'|'dark'|null
+    const saved = window.localStorage.getItem('APEDAT-theme') as 'light'|'dark'|null
     const next = saved === 'dark' ? 'dark' : 'light'
     setTheme(next)
     document.documentElement.classList.toggle('dark', next === 'dark')
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
 
   const changeTheme = (next: 'light'|'dark') => {
     setTheme(next)
-    window.localStorage.setItem('nexMonie-theme', next)
+    window.localStorage.setItem('APEDAT-theme', next)
     document.documentElement.classList.toggle('dark', next === 'dark')
     document.documentElement.classList.toggle('light', next === 'light')
   }
@@ -106,7 +106,7 @@ export default function ProfileScreen() {
             <div className="h-12 w-12 rounded-2xl bg-[#E8F7F0] flex items-center justify-center text-[#087F5B] overflow-hidden">
               {profile?.photo_url ? <img src={profile.photo_url} alt="Profile" className="h-full w-full object-cover"/> : <User size={22}/>} 
             </div>
-            <div className="min-w-0 flex-1"><p className="text-[15px] font-black truncate">{profile?.full_name || 'nexMonie Member'}</p><p className="text-[10px] text-[#708A85] truncate">{profile?.email || user?.email || 'Member account'}</p></div>
+            <div className="min-w-0 flex-1"><p className="text-[15px] font-black truncate">{profile?.full_name || 'APEDAT Member'}</p><p className="text-[10px] text-[#708A85] truncate">{profile?.email || user?.email || 'Member account'}</p></div>
             <button onClick={()=>document.getElementById('profile-preferences')?.scrollIntoView({behavior:'smooth'})} className="h-9 w-9 rounded-xl bg-[#F5F8F7] flex items-center justify-center"><Settings size={16}/></button>
           </div>
           <div className="mt-4 rounded-2xl bg-[#183A36] p-4 text-white">
@@ -152,9 +152,9 @@ export default function ProfileScreen() {
           <Card className="overflow-hidden rounded-[26px] border-[#D6E1DE] bg-white shadow-none divide-y divide-[#EEF2F1]">
             <ProfileOption icon={<WalletCards/>} title="Assets & transfers" subtitle="Funding, Spot, Futures and internal transfers" onClick={()=>router.push('/assets')} />
             <ProfileOption icon={<ArrowDownToLine/>} title="Deposit / Fund" subtitle="Bank and crypto funding" onClick={()=>router.push('/fund-account')} />
-            <ProfileOption icon={<ArrowUpFromLine/>} title="Withdraw" subtitle="Move available funds out of nexMonie" onClick={()=>router.push('/withdraw')} />
+            <ProfileOption icon={<ArrowUpFromLine/>} title="Withdraw" subtitle="Move available funds out of APEDAT" onClick={()=>router.push('/withdraw')} />
             <ProfileOption icon={<ShieldCheck/>} title="KYC & verification" subtitle={profile?.is_verified?'Verified account':'Complete verification'} />
-            <ProfileOption icon={<Copy/>} title="Wallet details" subtitle="nexMonie ID and wallet identity" onClick={()=>router.push('/wallet-details')} />
+            <ProfileOption icon={<Copy/>} title="Wallet details" subtitle="APEDAT ID and wallet identity" onClick={()=>router.push('/wallet-details')} />
           </Card>
         </section>
 

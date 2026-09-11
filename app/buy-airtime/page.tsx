@@ -87,7 +87,7 @@ export default function BuyAirtimeWorkflow() {
       if (result.success) setStage('success')
       else toast({ variant: "destructive", title: "Request Failed", description: result.error || "Could not create airtime request." })
     } catch {
-      toast({ variant: "destructive", title: "Request Failed", description: "Could not reach nexMonie operations." })
+      toast({ variant: "destructive", title: "Request Failed", description: "Could not reach APEDAT operations." })
     } finally { setLoading(false) }
   }
 

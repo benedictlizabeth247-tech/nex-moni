@@ -8,6 +8,13 @@
 
 export type AssetType = 'crypto' | 'stock' | 'etf' | 'forex' | 'commodity' | 'index'
 
+export interface InstrumentCapabilities {
+  marketDataEnabled: boolean
+  tradingEnabled: boolean
+  spotEnabled: boolean
+  futuresEnabled: boolean
+}
+
 export type ProviderId =
   | 'bybit'
   /** Keyless crypto fallback — spot tickers, klines, order book and trades. */
@@ -41,6 +48,12 @@ export interface AssetRef {
   exchange?: string
   /** Canonical visual identity for the instrument where a stable public logo exists. */
   iconUrl?: string
+  market?: string
+  quoteCurrency?: string
+  baseCurrency?: string
+  providerSymbol?: string
+  provider?: ProviderId
+  capabilities?: InstrumentCapabilities
 }
 
 export interface Quote extends AssetRef {

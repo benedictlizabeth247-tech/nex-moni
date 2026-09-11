@@ -40,7 +40,7 @@ export default function ScanPayWorkflow() {
   const wallet = wallets?.[0]
 
   const handleDecode = async () => {
-    if (!qrInput.trim()) { toast({ variant: 'destructive', title: 'QR data required', description: 'Scan a merchant QR or paste its nexMonie payload.' }); return }
+    if (!qrInput.trim()) { toast({ variant: 'destructive', title: 'QR data required', description: 'Scan a merchant QR or paste its APEDAT payload.' }); return }
     setDecoding(true)
     try {
       const res = await fetch('/api/scan/decode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ qrData: qrInput }) })
@@ -82,7 +82,7 @@ export default function ScanPayWorkflow() {
            <div className="space-y-3">
               <Input value={qrInput} onChange={(e) => setQrInput(e.target.value)} placeholder="Merchant QR payload" className="h-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 rounded-2xl" />
               <button onClick={handleDecode} disabled={decoding} className="w-full py-4 bg-accent text-[#16231F] rounded-[22px] font-black text-[14px]">{decoding ? 'Reading QR…' : 'Read Merchant QR'}</button>
-              <p className="text-center text-[10px] text-white/50">Use the device QR scanner to supply a nexMonie-compatible merchant payload.</p>
+              <p className="text-center text-[10px] text-white/50">Use the device QR scanner to supply a APEDAT-compatible merchant payload.</p>
            </div>
         </div>
       </main>

@@ -83,7 +83,7 @@ export default function FinancesScreen() {
     try {
       const portfolios = await fetch(`/api/finances/portfolios`, { cache: "no-store" }).then(r => r.json())
       const portfolio = (portfolios?.data ?? []).find((item: any) => String(item.name || "").toLowerCase().includes(String(selected.firm || selected.name).toLowerCase()) || String(item.description || "").toLowerCase().includes(String(selected.name).toLowerCase()))
-      if (!portfolio?.id) throw new Error("This pilot is not connected to a live nexMonie portfolio yet.")
+      if (!portfolio?.id) throw new Error("This pilot is not connected to a live APEDAT portfolio yet.")
       const idempotencyKey = `copy-${portfolio.id}-${entered.toFixed(2)}-${selected.firm}-${selected.name}`.slice(0, 128)
       const response = await fetch("/api/finances/copy-trade", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ portfolioId: portfolio.id, amount: entered, idempotencyKey }) })
       const payload = await response.json().catch(() => ({}))
