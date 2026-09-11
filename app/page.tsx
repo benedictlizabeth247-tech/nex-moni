@@ -64,6 +64,7 @@ function HomeContent() {
 
   const surname = profile?.full_name?.trim().split(/\s+/).at(-1) ?? '';
   const profileLoading = walletLoading && !profile;
+  const identityLabel = profileLoading ? 'Loading profile…' : surname;
 
 
   const handleTouchStart = (event: TouchEvent) => {
@@ -88,7 +89,7 @@ function HomeContent() {
           <div className="flex flex-col">
             <span className="text-[11px] font-black tracking-[-0.02em] text-foreground">nexMonie</span>
             <span className="mt-1 text-[15px] font-semibold text-muted-foreground">
-              {profileLoading ? 'Loading profile…' : surname || 'Profile name unavailable'}
+              {identityLabel || (profileLoading ? 'Loading profile…' : '')}
             </span>
           </div>
         <div className="flex items-center gap-2">
