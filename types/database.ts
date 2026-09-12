@@ -36,6 +36,7 @@ export interface Profile {
   id: string
   nex_user_id: string
   full_name: string | null
+  surname: string | null
   email: string | null
   phone_number: string | null
   photo_url: string | null

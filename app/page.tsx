@@ -62,9 +62,11 @@ function HomeContent() {
     };
   }, []);
 
-  const surname = profile?.full_name?.trim().split(/\s+/).at(-1) ?? '';
+  const surname = profile?.surname?.trim() ?? '';
+  const hour = new Date().getHours();
+  const greeting = hour >= 5 && hour < 12 ? 'Good morning' : hour >= 12 && hour < 17 ? 'Good afternoon' : hour >= 17 && hour < 21 ? 'Good evening' : 'Good night';
   const profileLoading = walletLoading && !profile;
-  const identityLabel = profileLoading ? 'Loading profile…' : surname;
+  const identityLabel = profileLoading ? 'Loading profile…' : surname || 'Profile unavailable';
 
 
   const handleTouchStart = (event: TouchEvent) => {
@@ -86,11 +88,13 @@ function HomeContent() {
     <div className="min-h-screen overflow-x-hidden bg-[#F3EEEC] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <header className="sticky top-0 z-30 border-b border-border bg-white/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-[11px] font-black tracking-[0.12em] text-foreground">APEDAT</span>
-            <span className="mt-1 text-[15px] font-semibold text-muted-foreground">
-              {identityLabel || (profileLoading ? 'Loading profile…' : '')}
-            </span>
+          <div className="flex flex-col items-center gap-1">
+            <Image src="/ape-nft-logo.png" alt="APEDAT ape logo" width={52} height={52} className="h-13 w-13 object-contain" priority />
+            <div className="flex flex-col">
+              <span className="text-[15px] font-semibold text-muted-foreground">
+                {profileLoading ? 'Loading profile…' : `${greeting}, ${identityLabel}`}
+              </span>
+            </div>
           </div>
         <div className="flex items-center gap-2">
         <button onClick={() => router.push('/profile')} className="relative h-9 w-9 overflow-hidden rounded-full border border-[#E1D5D1] bg-[#F8F2F0]" aria-label="Open profile">

@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
     {
       id: data.user.id,
       full_name: `${parsed.data.firstName} ${parsed.data.surname}`.trim(),
+      surname: parsed.data.surname.trim(),
       status: 'active',
       is_verified: true,
       trading_access: true,
