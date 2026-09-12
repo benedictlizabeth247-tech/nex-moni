@@ -20,6 +20,7 @@ export async function GET(request: Request) {
         hasMore: result.hasMore,
         available: anyProviderUp,
         generatedAt: new Date().toISOString(),
+        total: result.total,
       },
       { headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=600' } },
     )

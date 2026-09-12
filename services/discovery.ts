@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
+import { syncOpportunitySources } from './opportunityIngestion'
 
 export type DiscoveryCategory = 'Job' | 'Bounty' | 'Hackathon' | 'Grant' | 'Quest' | 'Project' | 'Task' | 'Open Source'
 
@@ -73,6 +74,11 @@ export async function getDiscoveryOpportunities(options: { page?: number; limit?
   const from = (page - 1) * limit
   const to = from + limit - 1
   const supabase = await createClient()
+
+  const { count: liveCount } = await supabase.from('opportunities').select('id', { count: 'exact', head: true }).eq('status', 'LIVE').eq('is_verified', true).or(`deadline.is.null,deadline.gt.${new Date().toISOString()}`)
+  if ((liveCount || 0) === 0) {
+    try { await syncOpportunitySources() } catch { /* feed remains available with its current persisted snapshot */ }
+  }
 
   let query = supabase
     .from('opportunities')

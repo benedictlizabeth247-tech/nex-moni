@@ -17,13 +17,20 @@ type NormalizedOpportunity = {
 }
 
 async function json(url: string) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json', 'User-Agent': 'APEDAT-opportunity-sync/1.0' }, cache: 'no-store' })
-    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
-    return await response.json()
-  } finally { clearTimeout(timer) }
+  let lastError: unknown
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json', 'User-Agent': 'APEDAT-opportunity-sync/1.0' }, cache: 'no-store' })
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
+      return await response.json()
+    } catch (error) {
+      lastError = error
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt))
+    } finally { clearTimeout(timer) }
+  }
+  throw lastError instanceof Error ? lastError : new Error('Source request failed')
 }
 
 function text(value: unknown) { return typeof value === 'string' && value.trim() ? value.trim() : null }
@@ -51,6 +58,8 @@ async function discoverSuperteam(): Promise<NormalizedOpportunity[]> {
 
 export async function syncOpportunitySources() {
   const startedAt = new Date().toISOString()
+  const run = await sources.from('opportunity_sync_runs').insert({ source: 'superteam_earn', status: 'RUNNING', started_at: startedAt }).select('id').maybeSingle()
+  const runId = run.data?.id ?? null
   const results: Record<string, { ok: boolean; count: number; error?: string }> = {}
   try {
     const rows = await discoverSuperteam()
@@ -58,10 +67,12 @@ export async function syncOpportunitySources() {
     if (error) throw error
     await sources.from('opportunity_sources').upsert({ source: 'superteam_earn', name: 'Superteam Earn', enabled: true, api_status: 'healthy', last_success_at: startedAt, last_sync_at: startedAt, records_seen: rows.length, records_updated: rows.length, error_message: null }, { onConflict: 'source' })
     results.superteam_earn = { ok: true, count: rows.length }
+    if (runId) await sources.from('opportunity_sync_runs').update({ status: 'SUCCEEDED', finished_at: new Date().toISOString(), records_seen: rows.length, records_updated: rows.length }).eq('id', runId)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown source error'
     await sources.from('opportunity_sources').upsert({ source: 'superteam_earn', name: 'Superteam Earn', enabled: true, api_status: 'error', last_failure_at: startedAt, last_sync_at: startedAt, error_message: message }, { onConflict: 'source' })
     results.superteam_earn = { ok: false, count: 0, error: message }
+    if (runId) await sources.from('opportunity_sync_runs').update({ status: 'FAILED', finished_at: new Date().toISOString(), error_message: message }).eq('id', runId)
   }
   return { startedAt, results }
 }

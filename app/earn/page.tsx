@@ -24,6 +24,7 @@ export default function EarnScreen() {
   const [error, setError] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [feedState, setFeedState] = useState<'loading' | 'live' | 'empty' | 'unavailable'>('loading')
 
   async function load(nextPage = 1) {
     nextPage === 1 ? setLoading(true) : setLoadingMore(true)
@@ -36,9 +37,10 @@ export default function EarnScreen() {
       // Only treat as an error when every provider is down and we have nothing to show.
       if (nextPage === 1 && incoming.length === 0 && data.available === false) throw new Error()
       setItems((current) => nextPage === 1 ? incoming : [...current, ...incoming.filter((item: DiscoveryOpportunity) => !current.some((old) => old.id === item.id))])
+      setFeedState(incoming.length > 0 || nextPage > 1 ? 'live' : 'empty')
       setPage(nextPage)
       setHasMore(Boolean(data.hasMore))
-    } catch { if (nextPage === 1) setError(true) } finally { setLoading(false); setLoadingMore(false) }
+    } catch { if (nextPage === 1) { setError(true); setFeedState('unavailable') } } finally { setLoading(false); setLoadingMore(false) }
   }
 
   useEffect(() => { load() }, [])
@@ -65,7 +67,7 @@ export default function EarnScreen() {
       </section>
 
       <section className="px-6 pt-7">
-        <div className="mb-4 flex items-end justify-between"><div><h2 className="text-lg font-bold text-foreground">Open opportunities</h2><p className="mt-1 text-xs text-gray-400">Live listings from verified sources</p></div><SlidersHorizontal size={18} className="text-gray-400" /></div>
+        <div className="mb-4 flex items-end justify-between"><div><h2 className="text-lg font-bold text-foreground">Open opportunities</h2><p className="mt-1 text-xs text-gray-400">{feedState === 'live' ? 'Live listings from verified sources' : feedState === 'unavailable' ? 'Sources are temporarily unavailable' : 'Synchronizing verified sources'}</p></div><SlidersHorizontal size={18} className="text-gray-400" /></div>
         {loading ? <div className="space-y-3">{[1,2,3,4].map((item) => <Skeleton key={item} className="h-32 w-full rounded-2xl" />)}</div> : error ? <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center"><p className="text-sm font-semibold text-foreground">Discovery is temporarily unavailable.</p><p className="mt-1 text-xs text-gray-500">Try again to refresh the live sources.</p><Button onClick={() => load()} variant="outline" className="mt-4 rounded-xl">Try again</Button></div> : filtered.length === 0 ? <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center"><Globe2 className="mx-auto text-gray-300" size={28} /><p className="mt-3 text-sm font-semibold text-foreground">No opportunities found</p><p className="mt-1 text-xs text-gray-500">Try another search or category.</p></div> : <div className="space-y-3">{filtered.map((item) => <OpportunityCard key={item.id} item={item} onClick={() => setSelected(item)} />)}</div>}
         {!loading && !error && hasMore && filtered.length > 0 && <Button onClick={() => load(page + 1)} disabled={loadingMore} variant="outline" className="mt-5 w-full rounded-xl">{loadingMore ? "Loading more..." : "Load more opportunities"}</Button>}
       </section>
