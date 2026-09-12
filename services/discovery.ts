@@ -1,5 +1,8 @@
 import 'server-only'
 
+import { createClient } from '@/lib/supabase/server'
+import { syncOpportunitySources } from './opportunityIngestion'
+
 export type DiscoveryCategory = 'Job' | 'Bounty' | 'Hackathon' | 'Grant' | 'Quest' | 'Project' | 'Task' | 'Open Source'
 
 export interface DiscoveryOpportunity {
@@ -8,9 +11,7 @@ export interface DiscoveryOpportunity {
   organizationName: string
   source: string
   sourceUrl: string
-  applicationUrl?: string
   category: DiscoveryCategory
-  isVerified?: boolean
   shortDescription: string
   description: string
   imageUrl?: string
@@ -19,182 +20,82 @@ export interface DiscoveryOpportunity {
   deadline?: string
   tags: string[]
   isFeatured: boolean
+  ecosystem?: string
+  chain?: string
+  location?: string
+  remote?: boolean
+  applicationUrl?: string
+  lastSyncedAt?: string
 }
 
-type ProviderResult = { opportunities: DiscoveryOpportunity[]; available: boolean; hasMore: boolean }
-
-const BROWSER_HEADERS = {
-  Accept: 'application/json',
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+function label(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
-function text(value: unknown) {
-  return typeof value === 'string' ? value.trim() : ''
-}
-function first(...values: unknown[]) {
-  return values.map(text).find(Boolean)
-}
-function stripHtml(value: unknown, max = 220) {
-  const clean = text(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-  return clean.length > max ? `${clean.slice(0, max).trim()}…` : clean
-}
-function category(value: unknown): DiscoveryCategory {
-  const normalized = text(value).toLowerCase()
-  if (normalized.includes('job')) return 'Job'
-  if (normalized.includes('grant')) return 'Grant'
-  if (normalized.includes('quest')) return 'Quest'
-  if (normalized.includes('project')) return 'Project'
-  if (normalized.includes('hack')) return 'Hackathon'
-  if (normalized.includes('task') || normalized.includes('service')) return 'Task'
-  return 'Bounty'
-}
-function formatDeadline(value: unknown) {
-  const raw = text(value)
-  if (!raw) return undefined
-  const date = new Date(raw)
-  if (Number.isNaN(date.getTime())) return undefined
-  const now = Date.now()
-  const days = Math.round((date.getTime() - now) / 86_400_000)
-  if (days < 0) return 'Closed'
-  if (days === 0) return 'Closes today'
-  if (days === 1) return '1 day left'
-  if (days <= 60) return `${days} days left`
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+function rewardText(row: Record<string, unknown>) {
+  const explicit = label(row.reward_text)
+  if (explicit) return explicit
+  const amount = row.reward_amount
+  const currency = label(row.reward_currency)
+  if (amount !== null && amount !== undefined) return `${Number(amount).toLocaleString()}${currency ? ` ${currency}` : ''}`
+  return undefined
 }
 
-async function fetchJson(url: string, init?: RequestInit) {
-  const response = await fetch(url, {
-    ...init,
-    headers: { ...BROWSER_HEADERS, ...(init?.headers || {}) },
-    next: { revalidate: 300 },
-  })
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
-  return response.json()
-}
-
-// --- Superteam Earn -------------------------------------------------------
-// Public listings endpoint used by the official earn.superteam.fun frontend.
-async function superteam(page: number, limit: number): Promise<ProviderResult> {
-  const base = process.env.SUPERTEAM_EARN_LISTINGS_URL || 'https://earn.superteam.fun/api/listings/'
-  const url = `${base}${base.includes('?') ? '&' : '?'}take=${limit}&skip=${(page - 1) * limit}`
-  try {
-    const payload = await fetchJson(
-      url,
-      process.env.SUPERTEAM_API_KEY ? { headers: { Authorization: `Bearer ${process.env.SUPERTEAM_API_KEY}` } } : undefined,
-    )
-    const rows: any[] = Array.isArray(payload) ? payload : Array.isArray(payload?.listings) ? payload.listings : Array.isArray(payload?.data) ? payload.data : []
-    const opportunities = rows
-      .filter((row) => (row.status ? String(row.status).toUpperCase() === 'OPEN' : true))
-      .map((row): DiscoveryOpportunity => {
-        const token = text(row.token)
-        const min = row.minRewardAsk
-        const max = row.maxRewardAsk
-        let rewardLabel: string | undefined
-        if (typeof row.rewardAmount === 'number' && row.rewardAmount > 0) rewardLabel = `${row.rewardAmount.toLocaleString()} ${token}`.trim()
-        else if (min && max) rewardLabel = `${Number(min).toLocaleString()}–${Number(max).toLocaleString()} ${token}`.trim()
-        else if (String(row.compensationType).toLowerCase() === 'variable') rewardLabel = 'Variable reward'
-        return {
-          id: `superteam-${row.id || row.slug || row.title}`,
-          title: first(row.title) || 'Untitled opportunity',
-          organizationName: first(row.sponsor?.name) || 'Superteam ecosystem',
-          source: 'Superteam Earn',
-          sourceUrl: row.slug ? `https://earn.superteam.fun/listing/${row.slug}/` : 'https://earn.superteam.fun/',
-          category: category(row.type),
-          shortDescription: `${category(row.type)} · ${first(row.sponsor?.name) || 'Superteam'}`,
-          description: '',
-          imageUrl: first(row.sponsor?.logo),
-          creatorAvatarUrl: first(row.sponsor?.logo),
-          rewardLabel,
-          deadline: formatDeadline(row.deadline),
-          tags: [text(row.type)].filter(Boolean),
-          isFeatured: Boolean(row.isFeatured),
-        }
-      })
-    return { available: true, opportunities, hasMore: rows.length >= limit }
-  } catch {
-    return { available: false, opportunities: [], hasMore: false }
-  }
-}
-
-// --- Gibwork --------------------------------------------------------------
-// Official public explore endpoint (api.gib.work) with page/limit pagination.
-async function gibwork(page: number, limit: number): Promise<ProviderResult> {
-  const base = process.env.GIBWORK_EXPLORE_URL || 'https://api.gib.work/explore'
-  try {
-    const payload = await fetchJson(`${base}?page=${page}&limit=${limit}`)
-    const rows: any[] = Array.isArray(payload) ? payload : Array.isArray(payload?.results) ? payload.results : []
-    const lastPage = Number(payload?.lastPage) || page
-    const opportunities = rows
-      .filter((row) => row.isOpen !== false && row.isHidden !== true)
-      .map((row): DiscoveryOpportunity => {
-        const symbol = first(row.asset?.symbol)
-        const amount = row.remainingAmount ?? row.asset?.price
-        return {
-          id: `gibwork-${row.id}`,
-          title: first(row.title) || 'Untitled task',
-          organizationName: first(row.user?.username) || 'Gibwork creator',
-          source: 'Gibwork',
-          sourceUrl: `https://gib.work/tasks/${row.id}`,
-          category: category(row.type),
-          shortDescription: stripHtml(row.content, 120) || 'Open task on Gibwork.',
-          description: stripHtml(row.content, 1200),
-          imageUrl: first(row.user?.profilePicture),
-          creatorAvatarUrl: first(row.user?.profilePicture),
-          rewardLabel: amount != null ? `${Number(amount).toLocaleString()} ${symbol || ''}`.trim() : undefined,
-          deadline: formatDeadline(row.deadline),
-          tags: Array.isArray(row.tags) ? row.tags.map(text).filter(Boolean) : [],
-          isFeatured: Boolean(row.isFeatured),
-        }
-      })
-    return { available: true, opportunities, hasMore: page < lastPage }
-  } catch {
-    return { available: false, opportunities: [], hasMore: false }
-  }
-}
-
-async function optionalProvider(_source: 'Galxe' | 'Dework'): Promise<ProviderResult> {
-  // Adapter placeholder — reports pending instead of fabricating data.
-  return { available: false, opportunities: [], hasMore: false }
-}
-
-// Interleave provider results so the feed feels aggregated rather than grouped.
-function interleave(groups: DiscoveryOpportunity[][]) {
-  const merged: DiscoveryOpportunity[] = []
-  const max = Math.max(0, ...groups.map((group) => group.length))
-  for (let index = 0; index < max; index += 1) {
-    for (const group of groups) if (group[index]) merged.push(group[index])
-  }
-  return merged
-}
-
-export async function getDiscoveryOpportunities(
-  page = 1,
-  limit = 24,
-): Promise<{ opportunities: DiscoveryOpportunity[]; providers: Record<string, boolean>; hasMore: boolean }> {
-  const half = Math.max(6, Math.ceil(limit / 2))
-  const [superteamResult, gibworkResult, galxeResult, deworkResult] = await Promise.all([
-    superteam(page, half),
-    gibwork(page, half),
-    optionalProvider('Galxe'),
-    optionalProvider('Dework'),
-  ])
-
-  const seen = new Set<string>()
-  const opportunities = interleave([superteamResult.opportunities, gibworkResult.opportunities]).filter((item) => {
-    if (seen.has(item.id)) return false
-    seen.add(item.id)
-    return true
-  })
-
+function mapOpportunity(row: Record<string, unknown>): DiscoveryOpportunity {
+  const description = label(row.description) || ''
+  const category = (label(row.category) || label(row.type) || 'Project') as DiscoveryCategory
   return {
-    opportunities,
-    providers: {
-      superteam: superteamResult.available,
-      gibwork: gibworkResult.available,
-      galxe: galxeResult.available,
-      dework: deworkResult.available,
-    },
-    hasMore: superteamResult.hasMore || gibworkResult.hasMore,
+    id: String(row.id),
+    title: String(row.title),
+    organizationName: label(row.organization_name) || 'Verified Web3 organization',
+    source: String(row.source),
+    sourceUrl: String(row.source_url),
+    category,
+    shortDescription: description.slice(0, 180),
+    description,
+    imageUrl: label(row.organization_logo),
+    creatorAvatarUrl: label(row.organization_logo),
+    rewardLabel: rewardText(row),
+    deadline: label(row.deadline),
+    tags: Array.isArray(row.skills) ? row.skills.filter((tag): tag is string => typeof tag === 'string') : [],
+    isFeatured: row.is_featured === true,
+    ecosystem: label(row.ecosystem),
+    chain: label(row.chain),
+    location: label(row.location),
+    remote: row.remote === true,
+    applicationUrl: label(row.application_url),
+    lastSyncedAt: label(row.last_synced_at),
   }
+}
+
+export async function getDiscoveryOpportunities(options: { page?: number; limit?: number; search?: string; category?: string; ecosystem?: string } = {}) {
+  const page = Math.max(1, options.page || 1)
+  const limit = Math.min(50, Math.max(1, options.limit || 24))
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+  const supabase = await createClient()
+
+  const { count: liveCount } = await supabase.from('opportunities').select('id', { count: 'exact', head: true }).eq('status', 'LIVE').eq('is_verified', true).or(`deadline.is.null,deadline.gt.${new Date().toISOString()}`)
+  if ((liveCount || 0) === 0) {
+    try { await syncOpportunitySources() } catch { /* feed remains available with its current persisted snapshot */ }
+  }
+
+  let query = supabase
+    .from('opportunities')
+    .select('id,title,organization_name,source,source_url,type,description,organization_logo,reward_amount,reward_currency,reward_text,category,skills,ecosystem,chain,location,remote,deadline,application_url,is_featured,last_synced_at', { count: 'exact' })
+    .eq('status', 'LIVE')
+    .eq('is_verified', true)
+    .or(`deadline.is.null,deadline.gt.${new Date().toISOString()}`)
+    .order('is_featured', { ascending: false })
+    .order('deadline', { ascending: true, nullsFirst: false })
+    .range(from, to)
+
+  if (options.search?.trim()) query = query.ilike('title', `%${options.search.trim()}%`)
+  if (options.category && options.category !== 'All') query = query.ilike('category', options.category)
+  if (options.ecosystem && options.ecosystem !== 'All') query = query.ilike('ecosystem', options.ecosystem)
+
+  const { data, error, count } = await query
+  if (error) throw error
+  const opportunities = (data || []).map((row) => mapOpportunity(row as Record<string, unknown>))
+  return { opportunities, providers: { catalog: true }, hasMore: from + opportunities.length < (count || 0), total: count || 0 }
 }

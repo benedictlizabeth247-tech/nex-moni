@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Apedat | Financial opportunity, connected',
-  description: 'Apedat is a calm, secure financial and Web3 opportunity platform for money, markets and meaningful work.',
-  generator: 'Apedat',
+  title: 'APEDAT | Your financial command center',
+  description: 'A secure, clear and connected financial platform for your money, markets and everyday transfers.',
+  generator: 'APEDAT',
   icons: {
     icon: [
       {

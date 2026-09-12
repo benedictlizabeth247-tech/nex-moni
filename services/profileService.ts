@@ -34,7 +34,7 @@ export const getProfile = async (): Promise<Profile | null> => {
   const uid = authData.user?.id;
   if (!uid) return null;
 
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).single();
+  const { data, error } = await supabase.from('profiles').select('id, full_name, surname, email, phone_number, photo_url, tier, is_verified, status, preferred_language, kyc_level, role, onboarding_completed, created_at, updated_at').eq('id', uid).single();
   if (error) return null;
   return data as Profile;
 };
