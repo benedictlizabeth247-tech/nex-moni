@@ -245,11 +245,11 @@ export async function getQuotes(ids: string[]): Promise<MarketListResult> {
     const fresh = byId.get(id)
     if (fresh) {
       cacheQuote(fresh)
-      quotes.push(fresh)
+      quotes.push({ ...fresh, capabilities: { marketData: true, trading: false, spot: false, futures: false } })
       continue
     }
     const stale = peekCache<Quote>(quoteKey(id))
-    if (stale) quotes.push({ ...stale, stale: true })
+    if (stale) quotes.push({ ...stale, stale: true, capabilities: { marketData: true, trading: false, spot: false, futures: false } })
     // Do not manufacture a zero quote; callers can render an explicit unavailable state.
   }
 

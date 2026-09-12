@@ -41,6 +41,13 @@ export interface AssetRef {
   exchange?: string
   /** Canonical visual identity for the instrument where a stable public logo exists. */
   iconUrl?: string
+  /** Market-data and execution are intentionally separate capabilities. */
+  capabilities?: {
+    marketData: boolean
+    trading: boolean
+    spot: boolean
+    futures: boolean
+  }
 }
 
 export interface Quote extends AssetRef {
