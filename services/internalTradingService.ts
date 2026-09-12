@@ -92,10 +92,23 @@ export async function getTradingAccount() {
 export type TradingAccountBucket = 'funding' | 'spot' | 'futures'
 
 export async function transferBetweenAccounts(from: TradingAccountBucket, to: TradingAccountBucket, amount: number) {
-  if (!amount || amount <= 0) throw new Error('Enter a valid transfer amount.')
-  if (from === to) throw new Error('Choose different accounts.')
-  const { data, error } = await supabase.rpc('trading_transfer_between_accounts', { p_from: from, p_to: to, p_amount: amount })
-  if (error) throw new Error(error.message)
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('Enter an amount greater than 0.')
+  if (from === to) throw new Error('Choose two different accounts.')
+
+  const { data, error } = await supabase.rpc('trading_transfer_between_accounts', {
+    p_from: from,
+    p_to: to,
+    p_amount: amount,
+  })
+
+  if (error) {
+    const message = error.message.toLowerCase()
+    if (message.includes('insufficient')) throw new Error('There is not enough available balance in the source account.')
+    if (message.includes('not authenticated') || message.includes('jwt')) throw new Error('Your session expired. Sign in again and retry.')
+    if (message.includes('row-level security') || message.includes('permission denied')) throw new Error('Transfers are temporarily unavailable. Please try again.')
+    throw new Error('We could not complete the transfer. Please try again.')
+  }
+
   return data as TradingAccount
 }
 

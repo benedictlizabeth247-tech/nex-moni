@@ -1,11 +1,68 @@
 "use client"
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowDownUp, ArrowLeft, ChevronDown, LineChart, Wallet } from 'lucide-react'
-import { Card } from '@/components/ui/card'
-import { BottomNav } from '@/components/layout/BottomNav'
-import { getTradingAccount, transferBetweenAccounts, type TradingAccount, type TradingAccountBucket } from '@/services/internalTradingService'
-import { getWallet } from '@/services/walletService'
-import type { Wallet as WalletType } from '@/types/database'
-const formatUsdt=(n:number)=>`${n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:8})} USDT`
-export default function AssetsPage(){const router=useRouter();const [a,setA]=useState<TradingAccount|null>(null);const [w,setW]=useState<WalletType|null>(null);const [amount,setAmount]=useState('');const [from,setFrom]=useState<TradingAccountBucket>('funding');const [to,setTo]=useState<TradingAccountBucket>('spot');const [msg,setMsg]=useState('');const load=async()=>{try{const [account,wallet]=await Promise.all([getTradingAccount(),getWallet()]);setA(account);setW(wallet)}catch(e:any){setMsg(e.message)}};useEffect(()=>{void load()},[]);const transfer=async()=>{try{await transferBetweenAccounts(from,to,Number(amount));setAmount('');setMsg('Transfer completed');await load()}catch(e:any){setMsg(e.message)}};const value=(k:TradingAccountBucket)=>k==='funding'?Number(a?.funding_balance||0):k==='spot'?Number(a?.spot_balance||0):Number(a?.futures_balance||0);return <main className="min-h-screen bg-[#EEF2F1] pb-32 text-[#183A36]"><header className="sticky top-0 z-30 border-b border-[#D6E1DE] bg-[#EEF2F1]/95 p-4 backdrop-blur"><button onClick={()=>router.back()} className="h-9 w-9 rounded-xl bg-white border border-[#D6E1DE] flex items-center justify-center"><ArrowLeft size={18}/></button><h1 className="mt-4 text-[22px] font-black">Assets</h1><p className="text-[10px] text-[#708A85]">Overview, Funding, Spot and Futures</p></header><div className="space-y-3 p-4"><Card className="rounded-[26px] bg-[#183A36] p-5 text-white border-none"><p className="text-[9px] uppercase tracking-widest text-white/60">Total account value</p><p className="mt-2 text-[30px] font-black">{formatUsdt(value('funding')+value('spot')+value('futures'))}</p></Card><div className="grid grid-cols-3 gap-2">{(['funding','spot','futures'] as TradingAccountBucket[]).map(k=><Card key={k} className="rounded-2xl border-[#D6E1DE] p-3"><p className="text-[9px] capitalize text-[#708A85]">{k}</p><p className="mt-1 text-[14px] font-black">{formatUsdt(value(k))}</p></Card>)}</div><Card className="rounded-[24px] border-[#D6E1DE] p-4"><div className="flex items-center gap-2"><ArrowDownUp size={16} className="text-[#0E8D7A]"/><b className="text-[12px]">Transfer between accounts</b></div><div className="mt-3 grid grid-cols-2 gap-2"><select value={from} onChange={e=>setFrom(e.target.value as TradingAccountBucket)} className="h-11 rounded-xl border border-[#D6E1DE] bg-[#F7F9F8] px-2 text-[10px] font-bold">{(['funding','spot','futures'] as TradingAccountBucket[]).map(k=><option key={k} value={k}>{k}</option>)}</select><select value={to} onChange={e=>setTo(e.target.value as TradingAccountBucket)} className="h-11 rounded-xl border border-[#D6E1DE] bg-[#F7F9F8] px-2 text-[10px] font-bold">{(['funding','spot','futures'] as TradingAccountBucket[]).map(k=><option key={k} value={k}>{k}</option>)}</select></div><div className="mt-2 flex justify-center"><ChevronDown size={14} className="rotate-90 text-[#708A85]"/></div><input value={amount} onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,''))} placeholder="Amount" className="h-11 w-full rounded-xl border border-[#D6E1DE] bg-[#F7F9F8] px-3 text-[12px] outline-none"/><button onClick={transfer} className="mt-3 w-full rounded-xl bg-[#0E8D7A] py-3 text-[10px] font-black text-white">Transfer now</button>{msg&&<p className="mt-2 text-[9px] text-[#708A85]">{msg}</p>}</Card><div className="grid grid-cols-2 gap-2"><button onClick={()=>router.push('/spot')} className="rounded-2xl bg-white border border-[#D6E1DE] p-4 text-left"><LineChart className="text-[#0E8D7A]" size={18}/><b className="mt-3 block text-[11px]">Spot trading</b></button><button onClick={()=>router.push('/futures')} className="rounded-2xl bg-white border border-[#D6E1DE] p-4 text-left"><Wallet className="text-[#0E8D7A]" size={18}/><b className="mt-3 block text-[11px]">Futures trading</b></button></div></div><BottomNav/></main>}
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowDownUp, ArrowLeft, CheckCircle2, ChevronDown, LineChart, LoaderCircle, Wallet } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import { BottomNav } from "@/components/layout/BottomNav"
+import { getTradingAccount, transferBetweenAccounts, type TradingAccount, type TradingAccountBucket } from "@/services/internalTradingService"
+import { getWallet } from "@/services/walletService"
+import type { Wallet as WalletType } from "@/types/database"
+
+const buckets: TradingAccountBucket[] = ["funding", "spot", "futures"]
+const formatUsdt = (n: number) => `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} USDT`
+
+export default function AssetsPage() {
+  const router = useRouter()
+  const [account, setAccount] = useState<TradingAccount | null>(null)
+  const [, setWallet] = useState<WalletType | null>(null)
+  const [amount, setAmount] = useState("")
+  const [from, setFrom] = useState<TradingAccountBucket>("funding")
+  const [to, setTo] = useState<TradingAccountBucket>("spot")
+  const [message, setMessage] = useState("")
+  const [busy, setBusy] = useState(false)
+
+  const load = async () => {
+    try {
+      const [nextAccount, nextWallet] = await Promise.all([getTradingAccount(), getWallet()])
+      setAccount(nextAccount)
+      setWallet(nextWallet)
+    } catch {
+      setMessage("Unable to load balances. Please refresh and try again.")
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  const balance = (bucket: TradingAccountBucket) => bucket === "funding" ? Number(account?.funding_balance || 0) : bucket === "spot" ? Number(account?.spot_balance || 0) : Number(account?.futures_balance || 0)
+  const transfer = async () => {
+    const numericAmount = Number(amount)
+    setMessage("")
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) return setMessage("Enter an amount greater than 0.")
+    if (from === to) return setMessage("Choose two different accounts.")
+    if (numericAmount > balance(from)) return setMessage(`Available in ${from}: ${formatUsdt(balance(from))}.`)
+    setBusy(true)
+    try { await transferBetweenAccounts(from, to, numericAmount); setAmount(""); setMessage("Transfer completed successfully."); await load() } catch (error) { setMessage(error instanceof Error ? error.message : "We could not complete the transfer.") } finally { setBusy(false) }
+  }
+
+  return <main className="min-h-screen overflow-x-hidden bg-background pb-32 text-foreground">
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/95 p-4 backdrop-blur">
+      <button aria-label="Go back" onClick={() => router.back()} className="grid size-10 place-items-center rounded-xl border border-border bg-card shadow-sm"><ArrowLeft size={18} /></button>
+      <h1 className="mt-4 text-2xl font-black tracking-tight">Assets</h1>
+      <p className="text-xs text-muted-foreground">Overview, funding, spot and futures accounts</p>
+    </header>
+    <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <Card className="rounded-3xl border-0 bg-primary p-5 text-primary-foreground shadow-sm"><p className="text-[10px] font-bold uppercase tracking-[0.18em] opacity-70">Total account value</p><p className="mt-2 text-3xl font-black">{formatUsdt(buckets.reduce((sum, bucket) => sum + balance(bucket), 0))}</p><p className="mt-1 text-xs opacity-70">Live USDT account balances</p></Card>
+      <div className="grid grid-cols-3 gap-2">{buckets.map(bucket => <Card key={bucket} className="rounded-2xl border-border/70 bg-card p-3"><p className="text-[10px] capitalize text-muted-foreground">{bucket}</p><p className="mt-1 break-words text-sm font-black">{formatUsdt(balance(bucket))}</p></Card>)}</div>
+      <Card className="rounded-3xl border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="flex items-center gap-3"><div className="grid size-10 place-items-center rounded-2xl bg-primary/10 text-primary"><ArrowDownUp size={20} /></div><div><h2 className="font-black">Transfer between accounts</h2><p className="text-xs text-muted-foreground">Move USDT instantly between your trading wallets.</p></div></div>
+        <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-end gap-2"><label className="min-w-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">From<select value={from} onChange={e => setFrom(e.target.value as TradingAccountBucket)} className="mt-1 h-12 w-full rounded-2xl border border-border bg-background px-3 text-sm font-bold text-foreground outline-none">{buckets.map(bucket => <option key={bucket}>{bucket}</option>)}</select></label><button aria-label="Swap accounts" onClick={() => { setFrom(to); setTo(from) }} className="mb-2 grid size-9 place-items-center rounded-full border border-border bg-background text-muted-foreground"><ArrowDownUp size={15} /></button><label className="min-w-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">To<select value={to} onChange={e => setTo(e.target.value as TradingAccountBucket)} className="mt-1 h-12 w-full rounded-2xl border border-border bg-background px-3 text-sm font-bold text-foreground outline-none">{buckets.map(bucket => <option key={bucket}>{bucket}</option>)}</select></label></div>
+        <div className="mt-4 flex items-center justify-between text-xs"><span className="text-muted-foreground">Available from {from}</span><button onClick={() => setAmount(String(balance(from)))} className="font-bold text-primary">Use max</button></div>
+        <input inputMode="decimal" aria-label="Transfer amount" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00 USDT" className="mt-2 h-14 w-full rounded-2xl border border-border bg-background px-4 text-lg font-bold text-foreground outline-none ring-primary/20 placeholder:text-muted-foreground/60 focus:ring-4" />
+        <button disabled={busy} onClick={() => void transfer()} className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary font-black text-primary-foreground shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60">{busy && <LoaderCircle className="animate-spin" size={18} />}{busy ? "Transferring…" : "Transfer now"}</button>
+        {message && <p className={`mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${message.includes("successfully") ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-destructive/10 text-destructive"}`}>{message.includes("successfully") && <CheckCircle2 size={15} />}{message}</p>}
+      </Card>
+      <div className="grid grid-cols-2 gap-3"><button onClick={() => router.push("/trading?mode=spot")} className="rounded-3xl border border-border bg-card p-5 text-left shadow-sm"><LineChart className="text-primary" /><strong className="mt-6 block">Spot trading</strong><span className="mt-1 block text-xs text-muted-foreground">Trade supported assets</span></button><button onClick={() => router.push("/trading?mode=futures")} className="rounded-3xl border border-border bg-card p-5 text-left shadow-sm"><Wallet className="text-primary" /><strong className="mt-6 block">Futures trading</strong><span className="mt-1 block text-xs text-muted-foreground">Manage positions</span></button></div>
+    </div><BottomNav />
+  </main>
+}
