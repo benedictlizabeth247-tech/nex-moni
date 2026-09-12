@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const limit = Math.min(50, Math.max(1, Number(searchParams.get('limit') || '24')))
 
   try {
-    const result = await getDiscoveryOpportunities(page, limit)
+    const result = await getDiscoveryOpportunities({ page, limit, search: searchParams.get('search') || undefined, category: searchParams.get('category') || undefined, ecosystem: searchParams.get('ecosystem') || undefined })
     const anyProviderUp = Object.values(result.providers).some(Boolean)
     return NextResponse.json(
       {

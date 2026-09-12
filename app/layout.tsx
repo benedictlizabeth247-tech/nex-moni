@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'nexMonie | Your financial command center',
+  title: 'APEDAT | Your financial command center',
   description: 'A secure, clear and connected financial platform for your money, markets and everyday transfers.',
-  generator: 'nexMonie',
+  generator: 'APEDAT',
   icons: {
     icon: [
       {

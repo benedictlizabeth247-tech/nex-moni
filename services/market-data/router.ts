@@ -250,7 +250,7 @@ export async function getQuotes(ids: string[]): Promise<MarketListResult> {
     }
     const stale = peekCache<Quote>(quoteKey(id))
     if (stale) quotes.push({ ...stale, stale: true })
-    else quotes.push(placeholderQuote(ref.type, ref.symbol))
+    // Do not manufacture a zero quote; callers can render an explicit unavailable state.
   }
 
   const providers = Array.from(new Set(quotes.map((q) => q.provider)))
@@ -262,20 +262,6 @@ const quoteKey = (id: string) => `quote:${id}`
 function cacheQuote(quote: Quote) {
   // Last-known-good snapshot so a provider outage never blanks the UI.
   putCache(quoteKey(quote.id), quote, 60 * 60 * 1000)
-}
-
-function placeholderQuote(type: AssetType, symbol: string): Quote {
-  const ref = toAssetRef(type, symbol)
-  return {
-    ...ref,
-    price: 0,
-    change: 0,
-    changePercent: 0,
-    currency: 'USD',
-    provider: type === 'crypto' ? 'bybit' : 'yahoo',
-    timestamp: Date.now(),
-    stale: true,
-  }
 }
 
 export type BoardTab = 'favorites' | 'hot' | 'gainers' | 'losers'

@@ -17,8 +17,7 @@ export function NexLogo({ className, iconOnly = false }: NexLogoProps) {
       
       {!iconOnly && (
         <div className="flex items-center text-[18px] tracking-tight text-[#1A1A1A]">
-          <span className="font-light lowercase opacity-70">nex</span>
-          <span className="font-bold ml-1">Monie</span>
+          <span className="font-black tracking-[0.12em]">APEDAT</span>
         </div>
       )}
     </div>
