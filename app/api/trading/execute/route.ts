@@ -36,6 +36,10 @@ export async function POST(request: Request) {
     if (!quote) {
       return NextResponse.json({ error: 'No market quote is currently available.' }, { status: 503 })
     }
+    const { data: instrument } = await client.from('instruments').select('trading_enabled,spot_enabled,futures_enabled').eq('symbol', quote.symbol).maybeSingle()
+    if (instrument && (!instrument.trading_enabled || (mode === 'spot' && !instrument.spot_enabled) || (mode === 'futures' && !instrument.futures_enabled))) {
+      return NextResponse.json({ error: 'This instrument has market data but execution is not enabled by the configured provider.' }, { status: 403 })
+    }
     const executionPrice = Number(quote.price ?? 0)
     if (!executionPrice || !Number.isFinite(executionPrice)) {
       return NextResponse.json({ error: 'No live execution price is currently available.' }, { status: 503 })
