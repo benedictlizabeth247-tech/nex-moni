@@ -5,16 +5,18 @@ security definer
 set search_path = ''
 as $$
 begin
-  insert into public.profiles (id, full_name, status, is_verified, trading_access)
+  insert into public.profiles (id, full_name, surname, status, is_verified, trading_access)
   values (
     new.id,
     nullif(trim(coalesce(new.raw_user_meta_data ->> 'full_name', concat_ws(' ', new.raw_user_meta_data ->> 'first_name', new.raw_user_meta_data ->> 'surname'))), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'surname'), ''),
     'active',
     true,
     true
   )
   on conflict (id) do update set
     full_name = coalesce(excluded.full_name, public.profiles.full_name),
+    surname = coalesce(excluded.surname, public.profiles.surname),
     updated_at = now();
 
   insert into public.wallets (user_id, currency)

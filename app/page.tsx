@@ -41,32 +41,34 @@ function HomeContent() {
   const [walletLoading, setWalletLoading] = useState(true);
   const [equity, setEquity] = useState<number | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [homePage, setHomePage] = useState<0 | 1>(0);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([getWallet(), getProfile(), getTradingAccountSummary()])
-      .then(([w, p, summary]) => {
-        if (mounted) {
-          setWallet(toCommandCenterWallet(w));
-          setProfile(p);
-          setEquity(Number(summary?.equity ?? 0));
-        }
+    Promise.allSettled([getWallet(), getProfile(), getTradingAccountSummary()])
+      .then(([walletResult, profileResult, equityResult]) => {
+        if (!mounted) return;
+        if (walletResult.status === 'fulfilled') setWallet(toCommandCenterWallet(walletResult.value));
+        if (profileResult.status === 'fulfilled') setProfile(profileResult.value);
+        if (equityResult.status === 'fulfilled') setEquity(Number(equityResult.value?.equity ?? 0));
       })
       .finally(() => {
-        if (mounted) setWalletLoading(false);
+        if (mounted) {
+          setWalletLoading(false);
+          setProfileLoading(false);
+        }
       });
     return () => {
       mounted = false;
     };
   }, []);
 
-  const surname = profile?.surname?.trim() ?? '';
+  const registeredName = profile?.full_name?.trim() || [profile?.surname?.trim()].filter(Boolean).join(' ');
   const hour = new Date().getHours();
   const greeting = hour >= 5 && hour < 12 ? 'Good morning' : hour >= 12 && hour < 17 ? 'Good afternoon' : hour >= 17 && hour < 21 ? 'Good evening' : 'Good night';
-  const profileLoading = walletLoading && !profile;
-  const identityLabel = profileLoading ? 'Loading profile…' : surname || 'Profile unavailable';
+  const identityLabel = profileLoading ? 'Loading profile…' : registeredName || 'Member';
 
 
   const handleTouchStart = (event: TouchEvent) => {
@@ -85,11 +87,11 @@ function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#F3EEEC] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="min-h-screen overflow-x-hidden bg-[#F2F1EF] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <header className="sticky top-0 z-30 border-b border-border bg-white/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-center gap-1">
-            <Image src="/ape-nft-logo.png" alt="APEDAT ape logo" width={52} height={52} className="h-13 w-13 object-contain" priority />
+            <NexLogo />
             <div className="flex flex-col">
               <span className="text-[15px] font-semibold text-muted-foreground">
                 {profileLoading ? 'Loading profile…' : `${greeting}, ${identityLabel}`}
@@ -98,7 +100,7 @@ function HomeContent() {
           </div>
         <div className="flex items-center gap-2">
         <button onClick={() => router.push('/profile')} className="relative h-9 w-9 overflow-hidden rounded-full border border-[#E1D5D1] bg-[#F8F2F0]" aria-label="Open profile">
-          {profile?.photo_url ? <Image src={profile.photo_url} alt="" fill className="object-cover" unoptimized /> : <span className="flex h-full w-full items-center justify-center text-[10px] font-black text-[#7A5E58]">{surname.slice(0, 1).toUpperCase()}</span>}
+          {profile?.photo_url ? <Image src={profile.photo_url} alt="" fill className="object-cover" unoptimized /> : <span className="flex h-full w-full items-center justify-center text-[10px] font-black text-[#7A5E58]">{(registeredName || 'M').slice(0, 1).toUpperCase()}</span>}
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#FFFDFB] bg-[#3B82F6]" aria-hidden="true" />
         </button>
         <Link
@@ -143,8 +145,8 @@ function HomeContent() {
                     ['Profile', '/profile', '◎'],
                     ['More', '/actions-hub', '⋯'],
                   ].map(([label, path, icon]) => (
-                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-muted/60 px-1.5 py-3 text-center transition-colors hover:bg-secondary active:scale-[.98]">
-                      <span aria-hidden="true" className="text-[21px] font-black leading-none text-[#005F56]">{icon}</span>
+                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[76px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-muted/60 px-1.5 py-2.5 text-center transition-colors hover:bg-secondary active:scale-[.98]">
+                      <span aria-hidden="true" className="text-[18px] font-semibold leading-none text-[#8D554D]">{icon}</span>
                       <span className="truncate text-[11px] font-black text-[#4A3936]">{label}</span>
                     </button>
                   ))}

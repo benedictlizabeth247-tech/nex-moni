@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 const PRODUCTS = [
   {
-    title: "APEDAT Wallet",
+    title: "nexMonie Wallet",
     desc: "Elite digital wallet for seamless payments",
     icon: <Wallet size={26} />,
     color: "bg-[#E8F5F3]",

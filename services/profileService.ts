@@ -30,13 +30,17 @@ const TIER_LIMITS: Record<string, { daily: number; monthly: number }> = {
 
 export const getProfile = async (): Promise<Profile | null> => {
   const supabase = createClient();
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
   const uid = authData.user?.id;
-  if (!uid) return null;
+  if (authError || !uid) return null;
 
-  const { data, error } = await supabase.from('profiles').select('id, full_name, surname, email, phone_number, photo_url, tier, is_verified, status, preferred_language, kyc_level, role, onboarding_completed, created_at, updated_at').eq('id', uid).single();
-  if (error) return null;
-  return data as Profile;
+  const columns = 'id, nex_user_id, full_name, surname, email, phone_number, photo_url, tier, is_verified, status, preferred_language, kyc_level, role, onboarding_completed, created_at, updated_at';
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await supabase.from('profiles').select(columns).eq('id', uid).maybeSingle();
+    if (!error && data) return data as Profile;
+    if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+  }
+  return null;
 };
 
 export const updateProfile = async (

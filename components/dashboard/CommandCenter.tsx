@@ -22,14 +22,14 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
 
   return (
     <div className="mb-5 w-full">
-      <Card className="relative w-full overflow-hidden rounded-3xl border border-primary/20 bg-primary pt-5 text-primary-foreground shadow-[0_12px_32px_rgba(14,141,122,.16)] sm:pt-6">
+      <Card className="relative w-full overflow-hidden rounded-3xl border border-primary/20 bg-[#5C5552] pt-5 text-white shadow-[0_12px_32px_rgba(78,66,62,.14)] sm:pt-6">
         <div className="absolute inset-x-0 top-0 h-1 bg-primary-foreground/35" aria-hidden="true" />
         <div className="relative z-10 px-4 sm:px-6">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#B7BEC5]">Available Portfolio</span>
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-white/65">Available Portfolio</span>
             <button 
               onClick={() => setShowBalance(!showBalance)} 
-              className="rounded-lg p-2 text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground active:scale-95"
+              className="rounded-lg p-2 text-primary-foreground/80 transition-colors hover:bg-white/10 hover:text-primary-foreground active:scale-95"
             >
               {showBalance ? <Eye size={14} className="sm:w-4 sm:h-4" /> : <EyeOff size={14} className="sm:w-4 sm:h-4" />}
             </button>
@@ -47,7 +47,7 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
 
           <button 
             onClick={() => router.push('/finances')} 
-            className="mb-4 inline-flex min-h-9 items-center gap-1 rounded-lg border border-primary-foreground/25 bg-primary-foreground/10 px-3 py-1.5 text-[10px] font-bold text-primary-foreground transition-colors hover:bg-primary-foreground/15 active:scale-95 sm:mb-6"
+            className="mb-4 inline-flex min-h-9 items-center gap-1 rounded-lg border border-primary-foreground/25 bg-white/10 px-3 py-1.5 text-[10px] font-bold text-primary-foreground transition-colors hover:bg-primary-foreground/15 active:scale-95 sm:mb-6"
           >
             Portfolio Breakdown <ChevronRight size={10} className="sm:w-3 sm:h-3" />
           </button>
@@ -69,7 +69,7 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
 function ActionItem({ id, icon, label, onClick }: { id: string, icon: React.ReactNode, label: string, onClick?: () => void }) {
   return (
     <button key={id} onClick={onClick} className="flex flex-col items-center gap-1 sm:gap-2 transition-all active:scale-90 flex-1 group">
-      <div className="flex size-10 items-center justify-center rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground transition-colors group-hover:bg-primary-foreground/15">
+      <div className="flex size-10 items-center justify-center rounded-xl border border-primary-foreground/20 bg-white/10 text-primary-foreground transition-colors group-hover:bg-primary-foreground/15">
         {React.cloneElement(icon as React.ReactElement<Record<string, unknown>>, { 
           className: "h-4 w-4 sm:h-[18px] sm:w-[18px]" 
         })}

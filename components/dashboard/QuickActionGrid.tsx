@@ -104,7 +104,7 @@ export function QuickActionGrid() {
           <button
             key={action.id}
             onClick={() => { if (!moved.current && !openingHub) router.push(action.path) }}
-            className="flex w-[82px] min-w-[82px] snap-start flex-col items-center gap-2 rounded-[16px] border border-[#E5D8D5] bg-[#FFFDFB] px-1.5 py-3 shadow-[0_6px_20px_rgba(25,55,45,.045)] transition-all hover:border-[#BFD8D0] active:scale-[.985] group relative"
+            className="flex w-[82px] min-w-[82px] snap-start flex-col items-center gap-2 rounded-[16px] border border-[#E5D8D5] bg-[#FFFDFB] px-1.5 py-3 shadow-[0_6px_20px_rgba(25,55,45,.045)] transition-all hover:border-[#D8B7B0] active:scale-[.985] group relative"
           >
             <div className={cn("transition-transform group-hover:scale-110", action.iconColor)}>
               {React.cloneElement(action.icon as React.ReactElement<Record<string, unknown>>, {
@@ -121,7 +121,7 @@ export function QuickActionGrid() {
       <button
         type="button"
         onClick={() => router.push('/utilities-hub')}
-        className="mt-2 flex w-full items-center justify-center rounded-xl border border-dashed border-[#C9D8D2] bg-white/70 py-2 text-[10px] font-bold text-[#087F5B]"
+        className="mt-2 flex w-full items-center justify-center rounded-xl border border-dashed border-[#D8D0CC] bg-white/70 py-2 text-[10px] font-bold text-[#8D554D]"
       >
         Swipe left to open the Utilities Hub ←
       </button>
