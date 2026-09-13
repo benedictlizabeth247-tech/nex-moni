@@ -41,21 +41,24 @@ function HomeContent() {
   const [walletLoading, setWalletLoading] = useState(true);
   const [equity, setEquity] = useState<number | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [homePage, setHomePage] = useState<0 | 1>(0);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([getWallet(), getProfile(), getTradingAccountSummary()])
-      .then(([w, p, summary]) => {
-        if (mounted) {
-          setWallet(toCommandCenterWallet(w));
-          setProfile(p);
-          setEquity(Number(summary?.equity ?? 0));
-        }
+    Promise.allSettled([getWallet(), getProfile(), getTradingAccountSummary()])
+      .then(([walletResult, profileResult, equityResult]) => {
+        if (!mounted) return;
+        if (walletResult.status === 'fulfilled') setWallet(toCommandCenterWallet(walletResult.value));
+        if (profileResult.status === 'fulfilled') setProfile(profileResult.value);
+        if (equityResult.status === 'fulfilled') setEquity(Number(equityResult.value?.equity ?? 0));
       })
       .finally(() => {
-        if (mounted) setWalletLoading(false);
+        if (mounted) {
+          setWalletLoading(false);
+          setProfileLoading(false);
+        }
       });
     return () => {
       mounted = false;
@@ -65,7 +68,6 @@ function HomeContent() {
   const surname = profile?.surname?.trim() ?? '';
   const hour = new Date().getHours();
   const greeting = hour >= 5 && hour < 12 ? 'Good morning' : hour >= 12 && hour < 17 ? 'Good afternoon' : hour >= 17 && hour < 21 ? 'Good evening' : 'Good night';
-  const profileLoading = walletLoading && !profile;
   const identityLabel = profileLoading ? 'Loading profile…' : surname || 'Profile unavailable';
 
 
