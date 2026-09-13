@@ -65,10 +65,10 @@ function HomeContent() {
     };
   }, []);
 
-  const surname = profile?.surname?.trim() ?? '';
+  const registeredName = profile?.full_name?.trim() || [profile?.surname?.trim()].filter(Boolean).join(' ');
   const hour = new Date().getHours();
   const greeting = hour >= 5 && hour < 12 ? 'Good morning' : hour >= 12 && hour < 17 ? 'Good afternoon' : hour >= 17 && hour < 21 ? 'Good evening' : 'Good night';
-  const identityLabel = profileLoading ? 'Loading profile…' : surname || 'Profile unavailable';
+  const identityLabel = profileLoading ? 'Loading profile…' : registeredName || 'Member';
 
 
   const handleTouchStart = (event: TouchEvent) => {
@@ -100,7 +100,7 @@ function HomeContent() {
           </div>
         <div className="flex items-center gap-2">
         <button onClick={() => router.push('/profile')} className="relative h-9 w-9 overflow-hidden rounded-full border border-[#E1D5D1] bg-[#F8F2F0]" aria-label="Open profile">
-          {profile?.photo_url ? <Image src={profile.photo_url} alt="" fill className="object-cover" unoptimized /> : <span className="flex h-full w-full items-center justify-center text-[10px] font-black text-[#7A5E58]">{surname.slice(0, 1).toUpperCase()}</span>}
+          {profile?.photo_url ? <Image src={profile.photo_url} alt="" fill className="object-cover" unoptimized /> : <span className="flex h-full w-full items-center justify-center text-[10px] font-black text-[#7A5E58]">{(registeredName || 'M').slice(0, 1).toUpperCase()}</span>}
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#FFFDFB] bg-[#3B82F6]" aria-hidden="true" />
         </button>
         <Link

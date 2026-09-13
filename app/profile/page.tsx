@@ -96,7 +96,6 @@ export default function ProfileScreen() {
         {showSearch && <div className="mt-3 flex items-center gap-2 rounded-xl border border-[#D9D6D2] bg-white px-3 h-11"><Search size={15} className="text-[#737A7D]"/><input autoFocus placeholder="Search assets, settings or activity" className="w-full bg-transparent text-[11px] outline-none"/><button onClick={()=>setShowSearch(false)}><X size={15}/></button></div>}
         <div className="mt-4 flex items-end justify-between">
           <div><p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#737A7D]">Profile & Assets</p><h1 className="mt-1 text-[22px] font-black">{profile?.full_name || 'Profile'}</h1></div>
-          <Badge className="bg-[#F1E4E0] text-[#8D554D] border-none text-[9px] font-black">{profile?.is_verified ? 'Verified' : 'Verification pending'}</Badge>
         </div>
       </header>
 
@@ -109,12 +108,12 @@ export default function ProfileScreen() {
             <div className="min-w-0 flex-1"><p className="text-[15px] font-black truncate">{profile?.full_name || 'nexMonie Member'}</p><p className="text-[10px] text-[#737A7D] truncate">{profile?.email || user?.email || 'Member account'}</p></div>
             <button onClick={()=>document.getElementById('profile-preferences')?.scrollIntoView({behavior:'smooth'})} className="h-9 w-9 rounded-xl bg-[#F5F8F7] flex items-center justify-center"><Settings size={16}/></button>
           </div>
-          <div className="mt-4 rounded-2xl bg-[#183A36] p-4 text-white">
+          <div className="mt-4 rounded-2xl bg-[#5C5552] p-4 text-white">
             <div className="flex items-center justify-between"><p className="text-[9px] uppercase tracking-[.18em] text-white/60">Total estimated balance</p><button onClick={()=>setShowBalance(v=>!v)}>{showBalance?<Eye size={16}/>:<EyeOff size={16}/>}</button></div>
             <p className="mt-2 text-[29px] font-black tracking-tight">{loading ? '••••••' : showBalance ? money(total) : '••••••••'}</p>
             <p className="mt-1 text-[9px] text-white/55">Funding + Spot + Futures account balances</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={()=>router.push('/fund-account')} className="flex items-center justify-center gap-1.5 rounded-xl bg-[#16A36A] py-2.5 text-[10px] font-black"><ArrowDownToLine size={14}/> Deposit / Fund</button>
+              <button onClick={()=>router.push('/fund-account')} className="flex items-center justify-center gap-1.5 rounded-xl bg-[#9B5B52] py-2.5 text-[10px] font-black"><ArrowDownToLine size={14}/> Deposit / Fund</button>
               <button onClick={()=>router.push('/withdraw')} className="flex items-center justify-center gap-1.5 rounded-xl bg-white/10 py-2.5 text-[10px] font-black border border-white/15"><ArrowUpFromLine size={14}/> Withdraw</button>
             </div>
             <div className="mt-2 grid grid-cols-2 gap-2">
@@ -153,7 +152,6 @@ export default function ProfileScreen() {
             <ProfileOption icon={<WalletCards/>} title="Assets & transfers" subtitle="Funding, Spot, Futures and internal transfers" onClick={()=>router.push('/assets')} />
             <ProfileOption icon={<ArrowDownToLine/>} title="Deposit / Fund" subtitle="Bank and crypto funding" onClick={()=>router.push('/fund-account')} />
             <ProfileOption icon={<ArrowUpFromLine/>} title="Withdraw" subtitle="Move available funds out of nexMonie" onClick={()=>router.push('/withdraw')} />
-            <ProfileOption icon={<ShieldCheck/>} title="KYC & verification" subtitle={profile?.is_verified?'Verified account':'Complete verification'} />
             <ProfileOption icon={<Copy/>} title="Wallet details" subtitle="nexMonie ID and wallet identity" onClick={()=>router.push('/wallet-details')} />
           </Card>
         </section>
@@ -179,7 +177,7 @@ export default function ProfileScreen() {
 
         <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
           <DialogTrigger asChild><button className="w-full rounded-2xl border border-[#D9D6D2] bg-white py-4 text-[10px] font-black text-[#B94A48] flex items-center justify-center gap-2"><LogOut size={16}/> Sign out securely</button></DialogTrigger>
-          <DialogContent className="max-w-[92vw] rounded-[28px] p-7"><DialogHeader><DialogTitle>Exit secure session?</DialogTitle><DialogDescription>You'll need to authenticate again to access your account.</DialogDescription></DialogHeader><div className="space-y-2"><button onClick={()=>void signOut()} className="w-full rounded-xl bg-[#183A36] py-3 text-[10px] font-black text-white">Yes, sign out</button><button onClick={()=>setLogoutOpen(false)} className="w-full rounded-xl bg-[#F2F1EF] py-3 text-[10px] font-black">Cancel</button></div></DialogContent>
+          <DialogContent className="max-w-[92vw] rounded-[28px] p-7"><DialogHeader><DialogTitle>Exit secure session?</DialogTitle><DialogDescription>You'll need to authenticate again to access your account.</DialogDescription></DialogHeader><div className="space-y-2"><button onClick={()=>void signOut()} className="w-full rounded-xl bg-[#5C5552] py-3 text-[10px] font-black text-white">Yes, sign out</button><button onClick={()=>setLogoutOpen(false)} className="w-full rounded-xl bg-[#F2F1EF] py-3 text-[10px] font-black">Cancel</button></div></DialogContent>
         </Dialog>
       </div>
       <BottomNav />

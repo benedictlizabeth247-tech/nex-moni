@@ -76,13 +76,6 @@ export default function WalletDetailsPage() {
 
       <div className="px-6 py-8">
         <Card className="bg-white p-8 border-none shadow-nex-soft rounded-[40px] flex flex-col items-center text-center mb-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4">
-             <div className="flex items-center gap-1 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                <BadgeCheck size={12} className="text-emerald-500" />
-                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{identity?.verificationStatus}</span>
-             </div>
-          </div>
-
           <div className="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center mb-6 border border-gray-100 shadow-inner">
              <QrCode size={48} className="text-gray-300" />
           </div>
