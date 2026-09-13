@@ -47,24 +47,24 @@
 
 :root {
   color-scheme: light;
-  --background: #F4F7F6;
-  --foreground: #183A36;
+  --background: #F2F1EF;
+  --foreground: #2E3437;
   --card: #FFFFFF;
-  --card-foreground: #183A36;
+  --card-foreground: #2E3437;
   --popover: #FFFFFF;
-  --popover-foreground: #183A36;
-  --primary: #0E8D7A;
+  --popover-foreground: #2E3437;
+  --primary: #9B5B52;
   --primary-foreground: #FFFFFF;
-  --secondary: #E8F0EE;
-  --secondary-foreground: #183A36;
-  --muted: #EEF3F1;
-  --muted-foreground: #61736F;
-  --accent: #F4E9E6;
-  --accent-foreground: #7A3F3A;
+  --secondary: #E7E5E2;
+  --secondary-foreground: #2E3437;
+  --muted: #ECEAE7;
+  --muted-foreground: #737A7D;
+  --accent: #F1E4E0;
+  --accent-foreground: #82483F;
   --destructive: #B94A48;
-  --border: #D8E4E0;
-  --input: #D8E4E0;
-  --ring: #0E8D7A;
+  --border: #D9D6D2;
+  --input: #D9D6D2;
+  --ring: #9B5B52;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

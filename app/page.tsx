@@ -87,11 +87,11 @@ function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#F3EEEC] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="min-h-screen overflow-x-hidden bg-[#F2F1EF] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <header className="sticky top-0 z-30 border-b border-border bg-white/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-center gap-1">
-            <Image src="/ape-nft-logo.png" alt="APEDAT ape logo" width={52} height={52} className="h-13 w-13 object-contain" priority />
+            <NexLogo />
             <div className="flex flex-col">
               <span className="text-[15px] font-semibold text-muted-foreground">
                 {profileLoading ? 'Loading profile…' : `${greeting}, ${identityLabel}`}
@@ -145,8 +145,8 @@ function HomeContent() {
                     ['Profile', '/profile', '◎'],
                     ['More', '/actions-hub', '⋯'],
                   ].map(([label, path, icon]) => (
-                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[84px] min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-muted/60 px-1.5 py-3 text-center transition-colors hover:bg-secondary active:scale-[.98]">
-                      <span aria-hidden="true" className="text-[21px] font-black leading-none text-[#005F56]">{icon}</span>
+                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[76px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-muted/60 px-1.5 py-2.5 text-center transition-colors hover:bg-secondary active:scale-[.98]">
+                      <span aria-hidden="true" className="text-[18px] font-semibold leading-none text-[#8D554D]">{icon}</span>
                       <span className="truncate text-[11px] font-black text-[#4A3936]">{label}</span>
                     </button>
                   ))}
