@@ -11,6 +11,7 @@ const NEXMONIE_SUPABASE_URL = 'https://eqyoyrswqjqvsozttfxr.supabase.co'
 export async function createClient() {
   const cookieStore = await cookies()
   const publishableKey =
+    process.env.JWT_3 ??
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 

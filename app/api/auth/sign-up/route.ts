@@ -17,7 +17,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please check the details entered.' }, { status: 400 })
   }
 
-  const secretKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+  const secretKey =
+    process.env.JWT_2_2 ??
+    process.env.SUPABASE_SECRET_KEY ??
+    process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!secretKey) {
     return NextResponse.json({ error: 'Account service is not configured.' }, { status: 503 })
   }

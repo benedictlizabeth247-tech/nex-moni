@@ -8,6 +8,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabaseUrl = 'https://eqyoyrswqjqvsozttfxr.supabase.co'
   const supabaseAnonKey =
+    process.env.JWT_3 ??
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!supabaseAnonKey) {
