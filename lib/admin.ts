@@ -34,7 +34,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     const admin = createAdminClient()
     const { data: staff, error } = await admin
       .from('admin_staff')
-      .select('user_id,role,active')
+      .select('user_id,active')
       .eq('user_id', user.id)
       .eq('active', true)
       .maybeSingle()
