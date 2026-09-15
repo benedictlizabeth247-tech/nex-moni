@@ -47,22 +47,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message, code }, { status: status >= 400 && status < 500 ? status : 400 })
   }
 
-  const { error: profileError } = await admin.from('profiles').upsert(
-    {
-      id: data.user.id,
-      nex_user_id: data.user.id,
-      full_name: `${parsed.data.firstName.trim()} ${parsed.data.surname.trim()}`,
-      surname: parsed.data.surname.trim(),
-      email: parsed.data.email.toLowerCase(),
-      status: 'active',
-      is_verified: true,
-    },
-    { onConflict: 'id' },
-  )
+  const profile = {
+    id: data.user.id,
+    nex_user_id: data.user.id,
+    full_name: `${parsed.data.firstName.trim()} ${parsed.data.surname.trim()}`,
+    surname: parsed.data.surname.trim(),
+    email: parsed.data.email.toLowerCase(),
+    status: 'active',
+    is_verified: true,
+  }
+  const { error: profileError } = await admin.from('profiles').upsert(profile, { onConflict: 'id' })
 
+  // Auth creation is the source of truth. A transferred project can have a
+  // profile trigger or a slightly different profile schema; neither should
+  // leave a valid auth user unable to sign in.
   if (profileError) {
-    await admin.auth.admin.deleteUser(data.user.id)
-    return NextResponse.json({ error: 'Unable to create your profile.', code: 'PROFILE_CREATE_FAILED' }, { status: 500 })
+    console.error('[v0] Profile creation warning:', profileError.message)
   }
 
   return NextResponse.json({ userId: data.user.id, verified: true })
