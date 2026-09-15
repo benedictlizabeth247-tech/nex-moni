@@ -12,15 +12,23 @@ const schema = z.object({
   screenshotUrl: z.string().url().max(2000).nullable().optional(),
 })
 
-const FALLBACK_BANKS = {
-  uba: { bankName: 'UBA Bank', accountNumber: '2295345512', accountName: 'Benjamin Atuchukwu' },
-  access: { bankName: 'Access Bank', accountNumber: '', accountName: 'Benjamin Atuchukwu' },
-} as const
-
 function configuredBanks(value: Record<string, unknown> | null) {
   const configured = value?.accounts
-  if (Array.isArray(configured)) return configured.filter((item): item is Record<string, string> => !!item && typeof item === 'object')
-  return Object.entries(FALLBACK_BANKS).map(([id, bank]) => ({ id, ...bank }))
+  if (Array.isArray(configured)) {
+    return configured
+      .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+      .map((item, index) => ({
+        id: String(item.id || item.bankId || `bank-${index + 1}`),
+        bankName: String(item.bankName || item.bank_name || '').trim(),
+        accountNumber: String(item.accountNumber || item.account_number || '').trim(),
+        accountName: String(item.accountName || item.account_name || '').trim(),
+      }))
+  }
+
+  const bankName = String(value?.bankName || value?.bank_name || '').trim()
+  const accountNumber = String(value?.accountNumber || value?.account_number || '').trim()
+  const accountName = String(value?.accountName || value?.account_name || '').trim()
+  return bankName || accountNumber || accountName ? [{ id: 'configured', bankName, accountNumber, accountName }] : []
 }
 
 async function requireUser() {

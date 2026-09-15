@@ -35,6 +35,7 @@ export default function FundAccountPage() {
   const networkOptions = DEPOSIT_NETWORKS[asset] ?? []
   const selectedNetwork = networkOptions.find((item) => item.id === network) ?? networkOptions[0]
   const selectedBank = session?.banks?.find((bank) => bank.id === selectedBankId) ?? session
+  const hasFiatConfig = Boolean(selectedBank?.bankName && selectedBank?.accountNumber && selectedBank?.accountName)
 
   useEffect(() => {
     if (!session) return
@@ -71,7 +72,7 @@ export default function FundAccountPage() {
   const copy = (v:string) => { navigator.clipboard?.writeText(v); toast({title:'Copied'}) }
   const fiatAmount = useMemo(()=>Number(amount||0),[amount])
   const submitFiat = async () => {
-    if (!user || !session || fiatAmount <= 0 || !senderBank) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter the amount and sending bank.'}); return }
+    if (!user || !session || !hasFiatConfig || fiatAmount <= 0 || !senderBank) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter the amount and sending bank.'}); return }
     setSubmitting(true)
     try {
       if (remainingSeconds <= 0) throw new Error('This deposit session has expired. Refresh the bank details to start a new session.')
@@ -152,6 +153,7 @@ export default function FundAccountPage() {
           <div className="mt-4 grid grid-cols-2 gap-2">
             {(session?.banks ?? []).map((bank: any) => <button key={bank.id} type="button" onClick={() => setSelectedBankId(bank.id)} className={`rounded-xl border p-3 text-left ${selectedBankId === bank.id ? 'border-[#D86F68] bg-[#F9E8E5]' : 'border-[#E1D5D1] bg-white'}`}><b className="block text-[10px]">{bank.bankName}</b><span className="mt-1 block text-[9px] text-[#8E7772]">{bank.accountNumber || 'Account number pending configuration'}</span></button>)}
           </div>
+          {!session && !loading && <div className="mt-3 rounded-[22px] border border-amber-200 bg-amber-50 p-4"><p className="text-[10px] font-black text-amber-800">Fiat deposit is temporarily unavailable</p><p className="mt-1 text-[9px] leading-5 text-amber-700">The existing operational deposit configuration could not be loaded. No bank details are shown until the backend provides them.</p></div>}
           <div className="mt-3 rounded-[22px] bg-[#F8F2F0] p-4">
             <div className="flex items-center justify-between"><p className="text-[9px] font-black uppercase tracking-widest text-[#D86F68]">Transfer window</p><b className="text-[12px]">{Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}</b></div>
             <div className="mt-3 grid grid-cols-1 gap-3">
@@ -167,7 +169,7 @@ export default function FundAccountPage() {
             <input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Transfer reference (optional)" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/>
           </div>
           {remainingSeconds <= 0 && <p className="mt-3 rounded-xl bg-red-50 p-3 text-[10px] font-bold text-red-700">This transfer window expired. Reload the page to receive a new reference window.</p>}
-          <button disabled={submitting || !session || remainingSeconds <= 0} onClick={submitFiat} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#E1D5D1] bg-[#FFFDFB] text-[10px] font-black text-[#342A28] disabled:opacity-50">I already made a bank transfer <ArrowRight size={14}/></button>
+          <button disabled={submitting || !session || !hasFiatConfig || remainingSeconds <= 0} onClick={submitFiat} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#E1D5D1] bg-[#FFFDFB] text-[10px] font-black text-[#342A28] disabled:opacity-50">I already made a bank transfer <ArrowRight size={14}/></button>
         </Card>}
 
         {method === 'p2p' && <Card className="rounded-[28px] border-[#E1D5D1] bg-[#FFFDFB] p-5 shadow-none">

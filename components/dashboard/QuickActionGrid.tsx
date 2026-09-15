@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
  * Architecture: UI consumes from a predefined schema.
  */
 const ACTIONS = [
-  { id: 'deposit', icon: <ArrowDownCircle size={22} />, label: "Fund", iconColor: "text-[#D86F68]", path: "/fund" },
+  { id: 'deposit', icon: <ArrowDownCircle size={22} />, label: "Fund", iconColor: "text-[#D86F68]", path: "/fund-account" },
   { id: 'send', icon: <Banknote size={21} />, label: "Send Money", iconColor: "text-[#D86F68]", path: "/send-money" },
   { id: 'receive', icon: <ArrowDownCircle size={21} />, label: "Receive", iconColor: "text-[#D86F68]", path: "/wallet-details" },
   { id: 'futures', icon: <TrendingUp size={20} />, label: "Futures", iconColor: "text-accent", path: "/futures" },
