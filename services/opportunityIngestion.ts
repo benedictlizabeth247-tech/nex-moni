@@ -3,7 +3,10 @@ import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
 
-const sources = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)!)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+const supabaseSecret = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!supabaseUrl || !supabaseSecret) throw new Error('Supabase server configuration is missing.')
+const sources = createClient(supabaseUrl, supabaseSecret, { auth: { autoRefreshToken: false, persistSession: false } })
 const timeoutMs = 12_000
 
 type NormalizedOpportunity = {

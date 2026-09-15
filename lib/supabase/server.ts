@@ -9,13 +9,21 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const cookieStore = await cookies()
 
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      // Secure cookies in production; not in dev, so localhost still works.
-      cookieOptions: { secure: process.env.NODE_ENV === 'production' },
-      cookies: {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    process.env.SUPABASE_ANON_KEY
+
+  if (!url || !key) throw new Error('Supabase server configuration is missing.')
+
+  return createServerClient(url, key, {
+    cookieOptions: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+    },
+    cookies: {
         getAll() {
           return cookieStore.getAll()
         },
