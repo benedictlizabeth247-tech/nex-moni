@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { z } from 'zod'
 
 const schema = z.object({
@@ -15,11 +15,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please check the details entered.' }, { status: 400 })
   }
 
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
+  let admin: ReturnType<typeof createAdminClient>
+  try {
+    admin = createAdminClient()
+  } catch {
+    return NextResponse.json({ error: 'Account service is not configured.', code: 'AUTH_CONFIG_MISSING' }, { status: 503 })
+  }
 
   const { data, error } = await admin.auth.admin.createUser({
     email: parsed.data.email.toLowerCase(),
@@ -49,11 +50,12 @@ export async function POST(request: NextRequest) {
   const { error: profileError } = await admin.from('profiles').upsert(
     {
       id: data.user.id,
-      full_name: `${parsed.data.firstName} ${parsed.data.surname}`.trim(),
+      nex_user_id: data.user.id,
+      full_name: `${parsed.data.firstName.trim()} ${parsed.data.surname.trim()}`,
       surname: parsed.data.surname.trim(),
+      email: parsed.data.email.toLowerCase(),
       status: 'active',
       is_verified: true,
-      trading_access: true,
     },
     { onConflict: 'id' },
   )
