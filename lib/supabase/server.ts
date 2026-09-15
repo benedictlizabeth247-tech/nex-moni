@@ -6,12 +6,21 @@ import { cookies } from 'next/headers'
  * global variable. Always create a new client within each function when using
  * it.
  */
+const NEXMONIE_SUPABASE_URL = 'https://eqyoyrswqjqvsozttfxr.supabase.co'
+
 export async function createClient() {
   const cookieStore = await cookies()
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!publishableKey) {
+    throw new Error('Supabase publishable key is not configured.')
+  }
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    NEXMONIE_SUPABASE_URL,
+    publishableKey,
     {
       // Secure cookies in production; not in dev, so localhost still works.
       cookieOptions: { secure: process.env.NODE_ENV === 'production' },

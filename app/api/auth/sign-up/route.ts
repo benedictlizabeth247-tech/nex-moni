@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
+const NEXMONIE_SUPABASE_URL = 'https://eqyoyrswqjqvsozttfxr.supabase.co'
+
 const schema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(6),
@@ -15,9 +17,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please check the details entered.' }, { status: 400 })
   }
 
+  const secretKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!secretKey) {
+    return NextResponse.json({ error: 'Account service is not configured.' }, { status: 503 })
+  }
+
   const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    NEXMONIE_SUPABASE_URL,
+    secretKey,
     { auth: { autoRefreshToken: false, persistSession: false } },
   )
 
