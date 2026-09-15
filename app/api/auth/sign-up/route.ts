@@ -42,22 +42,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message, code }, { status: status >= 400 && status < 500 ? status : 400 })
   }
 
-  const { error: profileError } = await admin.from('profiles').upsert(
-    {
-      id: data.user.id,
-      full_name: `${parsed.data.firstName} ${parsed.data.surname}`.trim(),
-      surname: parsed.data.surname.trim(),
-      status: 'active',
-      is_verified: true,
-      trading_access: true,
-    },
-    { onConflict: 'id' },
-  )
+  const profile = {
+    id: data.user.id,
+    full_name: `${parsed.data.firstName} ${parsed.data.surname}`.trim(),
+    surname: parsed.data.surname.trim(),
+  }
+  const { error: profileError } = await admin.from('profiles').upsert(profile, { onConflict: 'id' })
 
+  // Auth is the source of truth. Never delete a valid account because a
+  // transferred project has a different optional profile column or trigger.
   if (profileError) {
-    await admin.auth.admin.deleteUser(data.user.id)
-    return NextResponse.json({ error: 'Unable to create your profile.', code: 'PROFILE_CREATE_FAILED' }, { status: 500 })
+    console.error('[v0] profile bootstrap failed after auth signup', { code: profileError.code })
+    return NextResponse.json({ userId: data.user.id, verified: true, profilePending: true })
   }
 
-  return NextResponse.json({ userId: data.user.id, verified: true })
+  return NextResponse.json({ userId: data.user.id, verified: true, profilePending: false })
 }

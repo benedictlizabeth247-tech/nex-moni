@@ -7,9 +7,21 @@ import { randomUUID } from 'node:crypto'
 const schema = z.object({
   amount: z.number().finite().positive().max(1_000_000_000),
   senderBank: z.string().trim().min(2).max(120),
+  bankId: z.enum(['uba', 'access']).default('uba'),
   reference: z.string().trim().max(120).optional(),
   screenshotUrl: z.string().url().max(2000).nullable().optional(),
 })
+
+const FALLBACK_BANKS = {
+  uba: { bankName: 'UBA Bank', accountNumber: '2295345512', accountName: 'Benjamin Atuchukwu' },
+  access: { bankName: 'Access Bank', accountNumber: '', accountName: 'Benjamin Atuchukwu' },
+} as const
+
+function configuredBanks(value: Record<string, unknown> | null) {
+  const configured = value?.accounts
+  if (Array.isArray(configured)) return configured.filter((item): item is Record<string, string> => !!item && typeof item === 'object')
+  return Object.entries(FALLBACK_BANKS).map(([id, bank]) => ({ id, ...bank }))
+}
 
 async function requireUser() {
   const client = await createClient()
@@ -26,18 +38,14 @@ export async function GET() {
   if (error) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
 
   const value = data?.value as Record<string, unknown> | null
-  const bankName = typeof value?.bankName === 'string' ? value.bankName.trim() : ''
-  const accountNumber = typeof value?.accountNumber === 'string' ? value.accountNumber.trim() : ''
-  const accountName = typeof value?.accountName === 'string' ? value.accountName.trim() : ''
-  if (!bankName || !accountNumber || !accountName) {
-    return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
-  }
+  const banks = configuredBanks(value)
+  const available = banks.filter((bank) => bank.accountNumber && bank.accountName)
+  if (!available.length) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
 
   return NextResponse.json({
     sessionId: randomUUID(),
-    bankName,
-    accountNumber,
-    accountName,
+    banks: available,
+    ...available[0],
     expiryTime: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
   }, { headers: { 'cache-control': 'no-store' } })
 }
@@ -53,10 +61,12 @@ export async function POST(request: Request) {
   const { data: config, error: configError } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
   if (configError) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
   const value = config?.value as Record<string, unknown> | null
-  const bankName = typeof value?.bankName === 'string' ? value.bankName.trim() : ''
-  const accountNumber = typeof value?.accountNumber === 'string' ? value.accountNumber.trim() : ''
-  const accountName = typeof value?.accountName === 'string' ? value.accountName.trim() : ''
-  if (!bankName || !accountNumber || !accountName) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
+  const banks = configuredBanks(value)
+  const selected = banks.find((bank) => bank.id === parsed.data.bankId) ?? banks[0]
+  const bankName = String(selected?.bankName || '').trim()
+  const accountNumber = String(selected?.accountNumber || '').trim()
+  const accountName = String(selected?.accountName || '').trim()
+  if (!bankName || !accountNumber || !accountName) return NextResponse.json({ error: 'Selected fiat funding account is not configured.' }, { status: 503 })
 
   const reference = parsed.data.reference?.trim() || `DEP-${randomUUID().replaceAll('-', '').slice(0, 20).toUpperCase()}`
   const { data, error } = await admin.from('deposits').insert({

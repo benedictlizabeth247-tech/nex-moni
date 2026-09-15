@@ -7,10 +7,12 @@ export interface DepositSession {
   accountName: string
   expiryTime: Date
   status: 'active' | 'expired'
+  banks?: Array<{ id: string; bankName: string; accountNumber: string; accountName: string }>
 }
 
 export interface DepositRequestInput {
   amount: number
+  bankId?: 'uba' | 'access'
   senderBank: string
   reference?: string
   screenshotUrl?: string | null
@@ -25,12 +27,13 @@ export async function getDepositSession(): Promise<DepositSession> {
     bankName: String(payload.bankName),
     accountNumber: String(payload.accountNumber),
     accountName: String(payload.accountName),
+    banks: Array.isArray(payload.banks) ? payload.banks : undefined,
     expiryTime: new Date(String(payload.expiryTime)),
     status: 'active',
   }
 }
 
-export async function submitDepositRequest(input: DepositRequestInput): Promise<{ success: boolean; referenceId: string }> {
+export async function submitDepositRequest(input: DepositRequestInput): Promise<{ success: boolean; referenceId: string; depositId?: string }> {
   const response = await fetch('/api/deposits/bank', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -38,5 +41,5 @@ export async function submitDepositRequest(input: DepositRequestInput): Promise<
   })
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(payload?.error || 'Deposit request could not be recorded.')
-  return { success: true, referenceId: String(payload.referenceId) }
+  return { success: true, referenceId: String(payload.referenceId), depositId: payload.depositId ? String(payload.depositId) : undefined }
 }

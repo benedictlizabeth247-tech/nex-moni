@@ -29,10 +29,19 @@ export default function FundAccountPage() {
   const router = useRouter(); const { user } = useUser(); const { toast } = useToast()
   const [method, setMethod] = useState<Method>('crypto'); const [session, setSession] = useState<DepositSession|null>(null)
   const [banks, setBanks] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false)
+  const [selectedBankId, setSelectedBankId] = useState<'uba'|'access'>('uba'); const [remainingSeconds, setRemainingSeconds] = useState(0); const [submittedRecord, setSubmittedRecord] = useState<{depositId?: string; referenceId?: string} | null>(null)
   const [stage, setStage] = useState<'choose'|'details'|'pending'>('choose')
   const [amount, setAmount] = useState(''); const [senderBank, setSenderBank] = useState(''); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
   const networkOptions = DEPOSIT_NETWORKS[asset] ?? []
   const selectedNetwork = networkOptions.find((item) => item.id === network) ?? networkOptions[0]
+  const selectedBank = session?.banks?.find((bank) => bank.id === selectedBankId) ?? session
+
+  useEffect(() => {
+    if (!session) return
+    const tick = () => setRemainingSeconds(Math.max(0, Math.floor((session.expiryTime.getTime() - Date.now()) / 1000)))
+    tick(); const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [session])
 
   useEffect(() => { Promise.all([
     getDepositSession().then(setSession).catch(()=>setSession(null)),
@@ -65,8 +74,10 @@ export default function FundAccountPage() {
     if (!user || !session || fiatAmount <= 0 || !senderBank) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter the amount and sending bank.'}); return }
     setSubmitting(true)
     try {
-      const result=await submitDepositRequest({amount:fiatAmount,senderBank,reference})
+      if (remainingSeconds <= 0) throw new Error('This deposit session has expired. Refresh the bank details to start a new session.')
+      const result=await submitDepositRequest({amount:fiatAmount,bankId:selectedBankId,senderBank,reference})
       if(!result.success) throw new Error('Deposit request could not be recorded')
+      setSubmittedRecord({ depositId: result.depositId, referenceId: result.referenceId })
       setStage('pending')
     } catch(e:any){toast({variant:'destructive',title:'Deposit failed',description:e?.message||'Please try again.'})} finally{setSubmitting(false)}
   }
@@ -138,19 +149,25 @@ export default function FundAccountPage() {
         {method === 'fiat' && <Card className="rounded-[28px] border-[#E1D5D1] bg-[#FFFDFB] p-5 shadow-none">
           <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#8E7772]">Fiat deposit</p>
           <h2 className="mt-1 text-[19px] font-black">Deposit NGN by bank transfer</h2>
-          <div className="mt-4 rounded-[22px] bg-[#F8F2F0] p-4">
-            <div className="grid grid-cols-1 gap-3">
-              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Bank</p><b className="mt-1 block text-[13px]">{loading ? 'Loading…' : session?.bankName || 'Not configured'}</b></div>
-              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Account number</p><div className="mt-1 flex items-center justify-between gap-3"><b className="text-[20px] tracking-wide">{session?.accountNumber || 'Not configured'}</b>{session?.accountNumber && <button onClick={() => copy(session.accountNumber)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFFDFB]" aria-label="Copy account number"><Copy size={16}/></button>}</div></div>
-              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Account name</p><b className="mt-1 block text-[12px]">{session?.accountName || 'Not configured'}</b></div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {(session?.banks ?? []).map((bank: any) => <button key={bank.id} type="button" onClick={() => setSelectedBankId(bank.id)} className={`rounded-xl border p-3 text-left ${selectedBankId === bank.id ? 'border-[#D86F68] bg-[#F9E8E5]' : 'border-[#E1D5D1] bg-white'}`}><b className="block text-[10px]">{bank.bankName}</b><span className="mt-1 block text-[9px] text-[#8E7772]">{bank.accountNumber || 'Account number pending configuration'}</span></button>)}
+          </div>
+          <div className="mt-3 rounded-[22px] bg-[#F8F2F0] p-4">
+            <div className="flex items-center justify-between"><p className="text-[9px] font-black uppercase tracking-widest text-[#D86F68]">Transfer window</p><b className="text-[12px]">{Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}</b></div>
+            <div className="mt-3 grid grid-cols-1 gap-3">
+              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Bank</p><b className="mt-1 block text-[13px]">{loading ? 'Loading…' : selectedBank?.bankName || 'Not configured'}</b></div>
+              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Account number</p><div className="mt-1 flex items-center justify-between gap-3"><b className="text-[20px] tracking-wide">{selectedBank?.accountNumber || 'Not configured'}</b>{selectedBank?.accountNumber && <button onClick={() => copy(selectedBank.accountNumber)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFFDFB]" aria-label="Copy account number"><Copy size={16}/></button>}</div></div>
+              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Account name</p><b className="mt-1 block text-[12px]">{selectedBank?.accountName || 'Not configured'}</b></div>
             </div>
           </div>
           <div className="mt-4"><AmountEntry value={amount} onChange={setAmount} currency="NGN" label="How much are you depositing?"/></div>
+          <p className="mt-3 text-[9px] leading-4 text-[#8E7772]">After transferring, submit the proof details before the timer expires. Keep the record ID for support.</p>
           <div className="mt-3 space-y-3">
             <Select value={senderBank} onValueChange={setSenderBank}><SelectTrigger className="h-12 rounded-xl bg-[#FFFDFB]"><SelectValue placeholder="Select your sending bank"/></SelectTrigger><SelectContent>{banks.map(b=><SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}</SelectContent></Select>
             <input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Transfer reference (optional)" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/>
           </div>
-          <button disabled={submitting || !session} onClick={submitFiat} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#E1D5D1] bg-[#FFFDFB] text-[10px] font-black text-[#342A28] disabled:opacity-50">I already made a bank transfer <ArrowRight size={14}/></button>
+          {remainingSeconds <= 0 && <p className="mt-3 rounded-xl bg-red-50 p-3 text-[10px] font-bold text-red-700">This transfer window expired. Reload the page to receive a new reference window.</p>}
+          <button disabled={submitting || !session || remainingSeconds <= 0} onClick={submitFiat} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#E1D5D1] bg-[#FFFDFB] text-[10px] font-black text-[#342A28] disabled:opacity-50">I already made a bank transfer <ArrowRight size={14}/></button>
         </Card>}
 
         {method === 'p2p' && <Card className="rounded-[28px] border-[#E1D5D1] bg-[#FFFDFB] p-5 shadow-none">
@@ -162,7 +179,7 @@ export default function FundAccountPage() {
         </Card>}
       </>}
 
-      {stage === 'pending' && <Card className="rounded-[30px] border-[#E1D5D1] bg-[#FFFDFB] p-7 text-center shadow-none"><CheckCircle2 size={52} className="mx-auto text-[#B86B64]"/><h2 className="mt-4 text-[21px] font-black">Deposit submitted</h2><p className="mt-2 text-[10px] leading-5 text-[#8E7772]">Your deposit proof is recorded for operational review. The balance is not credited until the configured confirmation process approves it.</p><button onClick={() => router.push('/transactions')} className="mt-5 w-full rounded-2xl bg-[#342A28] py-3 text-[10px] font-black text-white">View activity</button></Card>}
+      {stage === 'pending' && <Card className="rounded-[30px] border-[#E1D5D1] bg-[#FFFDFB] p-7 text-center shadow-none"><CheckCircle2 size={52} className="mx-auto text-[#B86B64]"/><h2 className="mt-4 text-[21px] font-black">Deposit submitted</h2><p className="mt-2 text-[10px] leading-5 text-[#8E7772]">Your deposit proof is recorded for operational review. The balance is not credited until the configured confirmation process approves it.</p><div className="mt-4 rounded-2xl bg-[#F8F2F0] p-4 text-left text-[10px]"><p>Deposit record ID: <b>{submittedRecord?.depositId || 'Pending'}</b></p><p className="mt-2">Transfer reference: <b>{submittedRecord?.referenceId || 'Pending'}</b></p></div><button onClick={() => router.push('/transactions')} className="mt-5 w-full rounded-2xl bg-[#342A28] py-3 text-[10px] font-black text-white">View activity</button></Card>}
     </div>
     <BottomNav/>
   </main>
