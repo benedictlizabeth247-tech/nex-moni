@@ -22,7 +22,7 @@ export async function createClient() {
   return createServerClient(url, key, {
     cookieOptions: {
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     },
     cookies: {
         getAll() {
