@@ -3,10 +3,15 @@ import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
-const supabaseSecret = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY
-if (!supabaseUrl || !supabaseSecret) throw new Error('Supabase server configuration is missing.')
-const sources = createClient(supabaseUrl, supabaseSecret, { auth: { autoRefreshToken: false, persistSession: false } })
+function getSourcesClient() {
+  const supabaseUrl = 'https://mhklbqlsdwudysfpklzx.supabase.co'
+  const supabaseSecret =
+    process.env.JWT_2 ??
+    process.env.SUPABASE_SECRET_KEY ??
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !supabaseSecret) throw new Error('Supabase server configuration is missing.')
+  return createClient(supabaseUrl, supabaseSecret, { auth: { autoRefreshToken: false, persistSession: false } })
+}
 const timeoutMs = 12_000
 
 type NormalizedOpportunity = {
@@ -60,6 +65,7 @@ async function discoverSuperteam(): Promise<NormalizedOpportunity[]> {
 }
 
 export async function syncOpportunitySources() {
+  const sources = getSourcesClient()
   const startedAt = new Date().toISOString()
   const run = await sources.from('opportunity_sync_runs').insert({ source: 'superteam_earn', status: 'RUNNING', started_at: startedAt }).select('id').maybeSingle()
   const runId = run.data?.id ?? null
