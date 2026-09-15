@@ -23,7 +23,7 @@ export async function GET() {
 
   const [{ data: authUsers, error: usersError }, ...tableResults] = await Promise.all([
     admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-    ...adminTables.map((table) => admin.from(table).select('*').order('created_at', { ascending: false }).limit(250)),
+    ...adminTables.map((table) => admin.from(table).select('*').limit(250)),
   ])
   if (usersError) return NextResponse.json({ error: 'Unable to load registered users.' }, { status: 502 })
 
