@@ -13,8 +13,8 @@ export async function GET() {
   const { data: { user } } = await authClient.auth.getUser()
   if (!user?.id) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 })
 
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!serviceKey || !supabaseUrl) return NextResponse.json({ error: 'Admin service role is not configured.' }, { status: 503 })
 
   const admin = createSupabaseClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
