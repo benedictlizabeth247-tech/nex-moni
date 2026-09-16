@@ -18,7 +18,13 @@ export async function GET() {
   if (!serviceKey || !supabaseUrl) return NextResponse.json({ error: 'Admin service role is not configured.' }, { status: 503 })
 
   const admin = createSupabaseClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-  const { data: staff, error: staffError } = await admin.from('admin_staff').select('user_id,role,active').eq('user_id', user.id).eq('active', true).maybeSingle()
+  const { data: staff, error: staffError } = await admin
+    .from('admin_staff')
+    .select('user_id,email,active')
+    .eq('active', true)
+    .or(`user_id.eq.${user.id},email.ilike.${user.email ?? ''}`)
+    .limit(1)
+    .maybeSingle()
   if (staffError || !staff) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 })
 
   const [{ data: authUsers, error: usersError }, ...tableResults] = await Promise.all([

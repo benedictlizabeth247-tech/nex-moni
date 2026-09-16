@@ -34,9 +34,10 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     const admin = createAdminClient()
     const { data: staff, error } = await admin
       .from('admin_staff')
-      .select('user_id,role,active')
-      .eq('user_id', user.id)
+      .select('user_id,email,active')
       .eq('active', true)
+      .or(`user_id.eq.${user.id},email.ilike.${user.email ?? ''}`)
+      .limit(1)
       .maybeSingle()
 
     if (error || !staff) return null
