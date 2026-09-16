@@ -12,7 +12,7 @@ export interface DepositSession {
 
 export interface DepositRequestInput {
   amount: number
-  bankId?: 'uba' | 'access'
+  bankId?: string
   senderBank: string
   reference?: string
   screenshotUrl?: string | null

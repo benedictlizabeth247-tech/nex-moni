@@ -28,14 +28,18 @@ const DEPOSIT_NETWORKS: Record<string, DepositNetwork[]> = {
 export default function FundAccountPage() {
   const router = useRouter(); const { user } = useUser(); const { toast } = useToast()
   const [method, setMethod] = useState<Method>('crypto'); const [session, setSession] = useState<DepositSession|null>(null)
-  const [banks, setBanks] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false)
-  const [selectedBankId, setSelectedBankId] = useState<'uba'|'access'>('uba'); const [remainingSeconds, setRemainingSeconds] = useState(0); const [submittedRecord, setSubmittedRecord] = useState<{depositId?: string; referenceId?: string} | null>(null)
+  const [banks, setBanks] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false); const [depositError, setDepositError] = useState('')
+  const [selectedBankId, setSelectedBankId] = useState(''); const [remainingSeconds, setRemainingSeconds] = useState(0); const [submittedRecord, setSubmittedRecord] = useState<{depositId?: string; referenceId?: string} | null>(null)
   const [stage, setStage] = useState<'choose'|'details'|'pending'>('choose')
   const [amount, setAmount] = useState(''); const [senderBank, setSenderBank] = useState(''); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
   const networkOptions = DEPOSIT_NETWORKS[asset] ?? []
   const selectedNetwork = networkOptions.find((item) => item.id === network) ?? networkOptions[0]
-  const selectedBank = session?.banks?.find((bank) => bank.id === selectedBankId) ?? session
+  const selectedBank = session?.banks?.find((bank) => bank.id === selectedBankId) ?? session?.banks?.[0] ?? session
   const hasFiatConfig = Boolean(selectedBank?.bankName && selectedBank?.accountNumber && selectedBank?.accountName)
+
+  useEffect(() => {
+    if (!selectedBankId && session?.banks?.[0]?.id) setSelectedBankId(session.banks[0].id)
+  }, [selectedBankId, session])
 
   useEffect(() => {
     if (!session) return
@@ -45,7 +49,7 @@ export default function FundAccountPage() {
   }, [session])
 
   useEffect(() => { Promise.all([
-    getDepositSession().then(setSession).catch(()=>setSession(null)),
+    getDepositSession().then((nextSession) => { setDepositError(''); setSession(nextSession) }).catch((error) => { setSession(null); setDepositError(error instanceof Error ? error.message : 'Deposit configuration could not be loaded.') }),
     fetch('/api/banks').then(r=>r.json()).then(setBanks).catch(()=>setBanks([])),
     fetch('/api/custody/deposit-address', {
       method: 'POST',
@@ -153,7 +157,7 @@ export default function FundAccountPage() {
           <div className="mt-4 grid grid-cols-2 gap-2">
             {(session?.banks ?? []).map((bank: any) => <button key={bank.id} type="button" onClick={() => setSelectedBankId(bank.id)} className={`rounded-xl border p-3 text-left ${selectedBankId === bank.id ? 'border-[#D86F68] bg-[#F9E8E5]' : 'border-[#E1D5D1] bg-white'}`}><b className="block text-[10px]">{bank.bankName}</b><span className="mt-1 block text-[9px] text-[#8E7772]">{bank.accountNumber || 'Account number pending configuration'}</span></button>)}
           </div>
-          {!session && !loading && <div className="mt-3 rounded-[22px] border border-amber-200 bg-amber-50 p-4"><p className="text-[10px] font-black text-amber-800">Fiat deposit is temporarily unavailable</p><p className="mt-1 text-[9px] leading-5 text-amber-700">The existing operational deposit configuration could not be loaded. No bank details are shown until the backend provides them.</p></div>}
+          {!session && !loading && <div className="mt-3 rounded-[22px] border border-amber-200 bg-amber-50 p-4"><p className="text-[10px] font-black text-amber-800">Fiat deposit is temporarily unavailable</p><p className="mt-1 text-[9px] leading-5 text-amber-700">{depositError || 'The operational deposit configuration could not be loaded.'}</p></div>}
           <div className="mt-3 rounded-[22px] bg-[#F8F2F0] p-4">
             <div className="flex items-center justify-between"><p className="text-[9px] font-black uppercase tracking-widest text-[#D86F68]">Transfer window</p><b className="text-[12px]">{Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, '0')}</b></div>
             <div className="mt-3 grid grid-cols-1 gap-3">

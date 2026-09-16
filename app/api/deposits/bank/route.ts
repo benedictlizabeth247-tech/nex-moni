@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto'
 const schema = z.object({
   amount: z.number().finite().positive().max(1_000_000_000),
   senderBank: z.string().trim().min(2).max(120),
-  bankId: z.enum(['uba', 'access']).default('uba'),
+  bankId: z.string().trim().min(1).max(120).optional(),
   reference: z.string().trim().max(120).optional(),
   screenshotUrl: z.string().url().max(2000).nullable().optional(),
 })
@@ -37,16 +37,38 @@ async function requireUser() {
   return user
 }
 
+async function getConfiguredBanks(admin: ReturnType<typeof createAdminClient>) {
+  const { data, error } = await admin
+    .from('operational_rail_config')
+    .select('id,asset,network,label,config,active,updated_at')
+    .eq('rail_type', 'fiat_deposit')
+    .eq('active', true)
+    .order('updated_at', { ascending: false })
+
+  if (error) throw error
+
+  const rail = (data ?? []).find((item) => {
+    const asset = String(item.asset || '').toUpperCase()
+    const label = String(item.label || '').toLowerCase()
+    const config = item.config && typeof item.config === 'object' ? item.config as Record<string, unknown> : {}
+    return asset === 'NGN' || label.includes('ngn') || String(config.currency || config.asset || '').toUpperCase() === 'NGN'
+  }) ?? data?.[0]
+
+  return configuredBanks(rail?.config && typeof rail.config === 'object' ? rail.config as Record<string, unknown> : null)
+}
+
 export async function GET() {
   const user = await requireUser()
   if (!user?.id) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
 
   const admin = createAdminClient()
-  const { data, error } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  if (error) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
-
-  const value = data?.value as Record<string, unknown> | null
-  const banks = configuredBanks(value)
+  let banks: ReturnType<typeof configuredBanks>
+  try {
+    banks = await getConfiguredBanks(admin)
+  } catch (error) {
+    console.error('[v0] NGN deposit rail lookup failed', error)
+    return NextResponse.json({ error: 'Deposit configuration could not be read from the operational backend.' }, { status: 503 })
+  }
   const available = banks.filter((bank) => bank.accountNumber && bank.accountName)
   if (!available.length) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
 
@@ -66,10 +88,13 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'Enter a valid amount, sending bank and reference.' }, { status: 400 })
 
   const admin = createAdminClient()
-  const { data: config, error: configError } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  if (configError) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
-  const value = config?.value as Record<string, unknown> | null
-  const banks = configuredBanks(value)
+  let banks: ReturnType<typeof configuredBanks>
+  try {
+    banks = await getConfiguredBanks(admin)
+  } catch (error) {
+    console.error('[v0] NGN deposit rail lookup failed during submit', error)
+    return NextResponse.json({ error: 'Deposit configuration could not be read from the operational backend.' }, { status: 503 })
+  }
   const selected = banks.find((bank) => bank.id === parsed.data.bankId) ?? banks[0]
   const bankName = String(selected?.bankName || '').trim()
   const accountNumber = String(selected?.accountNumber || '').trim()
