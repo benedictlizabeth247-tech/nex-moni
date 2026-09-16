@@ -24,7 +24,10 @@ export async function updateSession(request: NextRequest) {
     supabaseAnonKey,
     {
       // Secure cookies in production; not in dev, so localhost still works.
-      cookieOptions: { secure: process.env.NODE_ENV === 'production' },
+      cookieOptions: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll()

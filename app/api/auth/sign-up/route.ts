@@ -15,7 +15,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please check the details entered.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
+  let admin
+  try {
+    admin = createAdminClient()
+  } catch (error) {
+    console.error('[v0] signup backend configuration failed', error)
+    return NextResponse.json({ error: 'Signup is temporarily unavailable. Please try again later.' }, { status: 503 })
+  }
 
   const { data, error } = await admin.auth.admin.createUser({
     email: parsed.data.email.toLowerCase(),
@@ -53,7 +59,7 @@ export async function POST(request: NextRequest) {
   // transferred project has a different optional profile column or trigger.
   if (profileError) {
     console.error('[v0] profile bootstrap failed after auth signup', { code: profileError.code })
-    return NextResponse.json({ userId: data.user.id, verified: true, profilePending: true })
+    return NextResponse.json({ error: 'Your account was created, but profile setup did not complete. Please contact support before using the account.', code: 'PROFILE_CREATE_FAILED', userId: data.user.id }, { status: 500 })
   }
 
   return NextResponse.json({ userId: data.user.id, verified: true, profilePending: false })
