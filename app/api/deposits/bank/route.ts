@@ -50,8 +50,7 @@ export async function GET() {
   if (!user?.id) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
 
   const admin = createAdminClient()
-  const { data, error } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  if (error) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
+  const { data } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
 
   const accounts = resolveReceivingAccounts(data?.value)
   const account = accounts[0]
@@ -73,8 +72,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: 'Enter a valid amount, sending bank and reference.' }, { status: 400 })
 
   const admin = createAdminClient()
-  const { data: config, error: configError } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  if (configError) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
+  const { data: config } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
   const accounts = resolveReceivingAccounts(config?.value)
   const account = accounts.find((item) => item.id === parsed.data.bankAccountId) ?? accounts[0]
   if (!account) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })

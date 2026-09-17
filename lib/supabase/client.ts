@@ -7,10 +7,6 @@ export function createClient() {
   if (!url || !key) {
     throw new Error('Supabase browser configuration is missing.')
   }
-  if (new URL(url).hostname !== 'mhklbqlsdwudysfpklzx.supabase.co') {
-    console.error('[v0] SUPABASE_CONFIGURATION_FAILURE', { expected: 'mhklbqlsdwudysfpklzx.supabase.co', received: new URL(url).hostname })
-  }
-
   return createBrowserClient(url, key, {
     // Secure cookies in production; not in dev, so localhost still works.
     cookieOptions: { secure: process.env.NODE_ENV === 'production' },
