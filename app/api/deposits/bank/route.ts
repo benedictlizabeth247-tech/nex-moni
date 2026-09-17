@@ -14,11 +14,16 @@ const schema = z.object({
 
 type BankAccount = { id: string; bankName: string; accountNumber: string; accountName: string }
 
+const configuredReceivingAccounts: BankAccount[] = [
+  { id: 'uba-ngn', bankName: 'UBA Bank', accountNumber: '2295345512', accountName: 'Benjamin Arinze Atuchukwu' },
+  { id: 'access-ngn', bankName: 'Access Bank', accountNumber: '1841089139', accountName: 'Benjamin Arinze' },
+]
+
 function readBankAccounts(value: unknown): BankAccount[] {
   if (!value || typeof value !== 'object') return []
   const record = value as Record<string, unknown>
   const source = Array.isArray(record.accounts) ? record.accounts : [record]
-  return source.flatMap((item, index) => {
+  return source.flatMap((item) => {
     if (!item || typeof item !== 'object') return []
     const entry = item as Record<string, unknown>
     const bankName = String(entry.bankName ?? entry.bank_name ?? '').trim()
@@ -27,6 +32,11 @@ function readBankAccounts(value: unknown): BankAccount[] {
     if (!bankName || !accountNumber || !accountName) return []
     return [{ id: String(entry.id ?? entry.accountId ?? `${bankName}-${accountNumber}`), bankName, accountNumber, accountName }]
   })
+}
+
+function resolveReceivingAccounts(value: unknown) {
+  const configured = readBankAccounts(value)
+  return configured.length > 0 ? configured : configuredReceivingAccounts
 }
 
 async function requireUser() {
@@ -43,7 +53,7 @@ export async function GET() {
   const { data, error } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
   if (error) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
 
-  const accounts = readBankAccounts(data?.value)
+  const accounts = resolveReceivingAccounts(data?.value)
   const account = accounts[0]
   if (!account) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
 
@@ -65,7 +75,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   const { data: config, error: configError } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
   if (configError) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
-  const accounts = readBankAccounts(config?.value)
+  const accounts = resolveReceivingAccounts(config?.value)
   const account = accounts.find((item) => item.id === parsed.data.bankAccountId) ?? accounts[0]
   if (!account) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
 

@@ -145,7 +145,7 @@ export default function FundAccountPage() {
           <div className="mt-4 rounded-[22px] bg-[#F8F2F0] p-4">
             <div className="grid grid-cols-1 gap-3">
               <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Bank</p><b className="mt-1 block text-[13px]">{loading ? 'Loading…' : selectedBankAccount?.bankName || 'Not configured'}</b></div>
-              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Account number</p><div className="mt-1 flex items-center justify-between gap-3"><b className="text-[20px] tracking-wide">{selectedBankAccount?.accountNumber || 'Not configured'}</b>{session?.accountNumber && <button onClick={() => copy(session.accountNumber)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFFDFB]" aria-label="Copy account number"><Copy size={16}/></button>}</div></div>
+              <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Account number</p><div className="mt-1 flex items-center justify-between gap-3"><b className="text-[20px] tracking-wide">{selectedBankAccount?.accountNumber || 'Not configured'}</b>{selectedBankAccount?.accountNumber && <button onClick={() => copy(selectedBankAccount.accountNumber)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FFFDFB]" aria-label="Copy account number"><Copy size={16}/></button>}</div></div>
               <div><p className="text-[8px] uppercase tracking-widest text-[#8E7772]">Account name</p><b className="mt-1 block text-[12px]">{selectedBankAccount?.accountName || 'Not configured'}</b></div>
             </div>
           </div>
