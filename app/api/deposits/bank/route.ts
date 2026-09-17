@@ -7,9 +7,27 @@ import { randomUUID } from 'node:crypto'
 const schema = z.object({
   amount: z.number().finite().positive().max(1_000_000_000),
   senderBank: z.string().trim().min(2).max(120),
+  bankAccountId: z.string().trim().min(1).optional(),
   reference: z.string().trim().max(120).optional(),
   screenshotUrl: z.string().url().max(2000).nullable().optional(),
 })
+
+type BankAccount = { id: string; bankName: string; accountNumber: string; accountName: string }
+
+function readBankAccounts(value: unknown): BankAccount[] {
+  if (!value || typeof value !== 'object') return []
+  const record = value as Record<string, unknown>
+  const source = Array.isArray(record.accounts) ? record.accounts : [record]
+  return source.flatMap((item, index) => {
+    if (!item || typeof item !== 'object') return []
+    const entry = item as Record<string, unknown>
+    const bankName = String(entry.bankName ?? entry.bank_name ?? '').trim()
+    const accountNumber = String(entry.accountNumber ?? entry.account_number ?? '').trim()
+    const accountName = String(entry.accountName ?? entry.account_name ?? '').trim()
+    if (!bankName || !accountNumber || !accountName) return []
+    return [{ id: String(entry.id ?? entry.accountId ?? `${bankName}-${accountNumber}`), bankName, accountNumber, accountName }]
+  })
+}
 
 async function requireUser() {
   const client = await createClient()
@@ -25,19 +43,14 @@ export async function GET() {
   const { data, error } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
   if (error) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
 
-  const value = data?.value as Record<string, unknown> | null
-  const bankName = typeof value?.bankName === 'string' ? value.bankName.trim() : ''
-  const accountNumber = typeof value?.accountNumber === 'string' ? value.accountNumber.trim() : ''
-  const accountName = typeof value?.accountName === 'string' ? value.accountName.trim() : ''
-  if (!bankName || !accountNumber || !accountName) {
-    return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
-  }
+  const accounts = readBankAccounts(data?.value)
+  const account = accounts[0]
+  if (!account) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
 
   return NextResponse.json({
     sessionId: randomUUID(),
-    bankName,
-    accountNumber,
-    accountName,
+    ...account,
+    accounts,
     expiryTime: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
   }, { headers: { 'cache-control': 'no-store' } })
 }
@@ -52,18 +65,16 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   const { data: config, error: configError } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
   if (configError) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
-  const value = config?.value as Record<string, unknown> | null
-  const bankName = typeof value?.bankName === 'string' ? value.bankName.trim() : ''
-  const accountNumber = typeof value?.accountNumber === 'string' ? value.accountNumber.trim() : ''
-  const accountName = typeof value?.accountName === 'string' ? value.accountName.trim() : ''
-  if (!bankName || !accountNumber || !accountName) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
+  const accounts = readBankAccounts(config?.value)
+  const account = accounts.find((item) => item.id === parsed.data.bankAccountId) ?? accounts[0]
+  if (!account) return NextResponse.json({ error: 'Fiat funding account is not configured.' }, { status: 503 })
 
   const reference = parsed.data.reference?.trim() || `DEP-${randomUUID().replaceAll('-', '').slice(0, 20).toUpperCase()}`
   const { data, error } = await admin.from('deposits').insert({
     user_id: user.id,
-    bank_name: bankName,
-    account_number: accountNumber,
-    account_name: accountName,
+    bank_name: account.bankName,
+    account_number: account.accountNumber,
+    account_name: account.accountName,
     amount: parsed.data.amount,
     sender_bank: parsed.data.senderBank.trim(),
     reference,

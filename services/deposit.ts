@@ -1,10 +1,14 @@
 'use client'
 
-export interface DepositSession {
+export interface DepositBankAccount {
   id: string
   bankName: string
   accountNumber: string
   accountName: string
+}
+
+export interface DepositSession extends DepositBankAccount {
+  accounts: DepositBankAccount[]
   expiryTime: Date
   status: 'active' | 'expired'
 }
@@ -12,6 +16,7 @@ export interface DepositSession {
 export interface DepositRequestInput {
   amount: number
   senderBank: string
+  bankAccountId?: string
   reference?: string
   screenshotUrl?: string | null
 }
@@ -25,6 +30,7 @@ export async function getDepositSession(): Promise<DepositSession> {
     bankName: String(payload.bankName),
     accountNumber: String(payload.accountNumber),
     accountName: String(payload.accountName),
+    accounts: Array.isArray(payload.accounts) ? payload.accounts : [{ id: String(payload.id ?? payload.sessionId), bankName: String(payload.bankName), accountNumber: String(payload.accountNumber), accountName: String(payload.accountName) }],
     expiryTime: new Date(String(payload.expiryTime)),
     status: 'active',
   }
