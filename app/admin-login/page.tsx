@@ -4,7 +4,7 @@ import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ShieldCheck, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,24 +26,20 @@ function AdminLoginForm() {
     setError(null)
     const normalized = email.trim().toLowerCase()
     try {
-      const supabase = createClient()
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({ email: normalized, password })
-      if (signInError) {
-        console.error('[v0] AUTH_FAILURE', { host: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? window.location.origin).host, message: signInError.message, status: signInError.status, code: signInError.code })
-        throw signInError
-      }
-      if (!authData.session || !authData.user) {
-        console.error('[v0] SESSION_FAILURE', { host: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? window.location.origin).host })
-        throw new Error('SESSION_FAILURE')
-      }
-      console.info('[v0] AUTHENTICATED_USER', { id: authData.user.id })
+  const loginResponse = await fetch('/api/admin/session', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: normalized, password }), cache: 'no-store' })
+  const loginResult = await loginResponse.json().catch(() => ({}))
+  if (!loginResponse.ok) {
+  console.error('[v0] AUTH_FAILURE', { status: loginResponse.status, code: loginResult.code })
+  throw Object.assign(new Error(loginResult.code || 'AUTH_FAILURE'), { code: loginResult.code })
+  }
+  console.info('[v0] AUTHENTICATED_USER', { id: loginResult.userId })
 
       // Do not trust the typed email. The server must confirm the authenticated
       // Supabase user has an active admin_staff record before we enter /admin.
       const authorization = await fetch('/api/admin/session', { cache: 'no-store' })
       if (!authorization.ok) {
-        await supabase.auth.signOut()
-        throw new Error('ADMIN_ACCESS_REQUIRED')
+  await fetch('/api/auth/signout', { method: 'POST' }).catch(() => undefined)
+  throw new Error('ADMIN_ACCESS_REQUIRED')
       }
 
       const destination = searchParams.get("next") || "/admin"
