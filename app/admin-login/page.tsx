@@ -27,8 +27,16 @@ function AdminLoginForm() {
     const normalized = email.trim().toLowerCase()
     try {
       const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email: normalized, password })
-      if (signInError) throw signInError
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({ email: normalized, password })
+      if (signInError) {
+        console.error('[v0] AUTH_FAILURE', { host: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? window.location.origin).host, message: signInError.message, status: signInError.status, code: signInError.code })
+        throw signInError
+      }
+      if (!authData.session || !authData.user) {
+        console.error('[v0] SESSION_FAILURE', { host: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? window.location.origin).host })
+        throw new Error('SESSION_FAILURE')
+      }
+      console.info('[v0] AUTHENTICATED_USER', { id: authData.user.id })
 
       // Do not trust the typed email. The server must confirm the authenticated
       // Supabase user has an active admin_staff record before we enter /admin.

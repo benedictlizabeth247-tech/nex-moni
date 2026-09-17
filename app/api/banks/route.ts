@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { NIGERIAN_BANKS } from '@/lib/nigerian-banks';
 
-const EMPTY_BANKS: Array<{ id: string; name: string }> = [];
+const LOCAL_BANKS = NIGERIAN_BANKS.map((bank) => ({ id: bank.id, name: bank.name, code: bank.code }));
 
 /**
  * GET /api/banks
@@ -16,12 +17,9 @@ export async function GET() {
       .select('*')
       .order('name', { ascending: true });
 
-    if (error || !banks) {
-      return NextResponse.json(EMPTY_BANKS, { status: 200 });
-    }
-
-    return NextResponse.json(banks);
-  } catch (error: any) {
-    return NextResponse.json(EMPTY_BANKS, { status: 200 });
+    if (!error && banks?.length) return NextResponse.json(banks);
+    return NextResponse.json(LOCAL_BANKS, { status: 200 });
+  } catch {
+    return NextResponse.json(LOCAL_BANKS, { status: 200 });
   }
 }
