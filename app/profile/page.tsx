@@ -79,7 +79,7 @@ export default function ProfileScreen() {
     const supabase = createClient()
     const { error } = await supabase.auth.signOut()
     if (error) { toast({variant:'destructive', title:'Sign out failed', description:error.message}); return }
-    router.replace('/auth/login')
+    router.replace('/')
   }
 
   return (

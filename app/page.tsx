@@ -6,7 +6,7 @@ import { Bell, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AuthGuard } from '@/components/auth/AuthGuard';
+;
 import { NexLogo } from '@/components/ui/NexLogo';
 import { CommandCenter } from '@/components/dashboard/CommandCenter';
 import { QuickActionGrid } from '@/components/dashboard/QuickActionGrid';
@@ -167,9 +167,5 @@ function HomeContent() {
 }
 
 export default function HomePage() {
-  return (
-    <AuthGuard>
-      <HomeContent />
-    </AuthGuard>
-  );
+  return <HomeContent />;
 }

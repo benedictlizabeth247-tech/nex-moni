@@ -46,29 +46,7 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getUser() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
-  const isPublicPath =
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/admin-login') ||
-    pathname.startsWith('/api/market') ||
-    pathname === '/finances' ||
-    pathname.startsWith('/_next') ||
-    pathname === '/favicon.ico'
-
-  // NexMonie is an authenticated-only app (wallet, orders, dashboard, etc.),
-  // so any non-auth route requires a session. Founder-only routes get an
-  // additional role check server-side in their own layout.
-  if (!isPublicPath && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = pathname.startsWith('/admin') ? '/admin-login' : '/auth/login'
-    url.searchParams.set(pathname.startsWith('/admin') ? 'next' : 'redirectedFrom', pathname)
-    return NextResponse.redirect(url)
-  }
+  await supabase.auth.getUser()
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
