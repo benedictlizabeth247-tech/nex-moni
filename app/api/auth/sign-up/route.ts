@@ -58,11 +58,10 @@ export async function POST(request: NextRequest) {
   }
   const { error: profileError } = await admin.from('profiles').upsert(profile, { onConflict: 'id' })
 
-  // Auth creation is the source of truth. A transferred project can have a
-  // profile trigger or a slightly different profile schema; neither should
-  // leave a valid auth user unable to sign in.
   if (profileError) {
-    console.error('[v0] Profile creation warning:', profileError.message)
+    console.error('[v0] SIGNUP_PROFILE_FAILURE', { userId: data.user.id, message: profileError.message, code: profileError.code })
+    await admin.auth.admin.deleteUser(data.user.id)
+    return NextResponse.json({ error: 'We could not finish setting up your account. Please try again.', code: 'PROFILE_SETUP_FAILED' }, { status: 500 })
   }
 
   return NextResponse.json({ userId: data.user.id, verified: true })
