@@ -60,13 +60,14 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico'
 
-  // NexMonie is an authenticated-only app (wallet, orders, dashboard, etc.),
-  // so any non-auth route requires a session. Founder-only routes get an
-  // additional role check server-side in their own layout.
-  if (!isPublicPath && !user) {
+  // End-user routes are intentionally public: users may browse the app before
+  // signing in. Admin routes remain protected by their server-side session and
+  // role checks; the admin login screen itself is public.
+  const isAdminRoute = pathname.startsWith('/admin')
+  if (isAdminRoute && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = pathname.startsWith('/admin') ? '/admin-login' : '/auth/login'
-    url.searchParams.set(pathname.startsWith('/admin') ? 'next' : 'redirectedFrom', pathname)
+    url.pathname = '/admin-login'
+    url.searchParams.set('next', pathname)
     return NextResponse.redirect(url)
   }
 
