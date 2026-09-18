@@ -21,6 +21,9 @@ export async function GET(request: Request) {
         available: anyProviderUp,
         generatedAt: new Date().toISOString(),
         total: result.total,
+        sourceHealth: result.sourceHealth,
+        syncErrors: result.syncErrors,
+        syncRan: result.syncRan,
       },
       { headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=600' } },
     )

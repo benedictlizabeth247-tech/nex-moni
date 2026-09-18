@@ -1,7 +1,9 @@
 import 'server-only'
 
-import { createClient } from '@/lib/supabase/server'
-import { syncOpportunitySources } from './opportunityIngestion'
+import { createClient } from '@supabase/supabase-js'
+import { expireStaleOpportunities, getSourceHealth, syncGigWorks } from './opportunityIngestion'
+
+const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)!)
 
 export type DiscoveryCategory = 'Job' | 'Bounty' | 'Hackathon' | 'Grant' | 'Quest' | 'Project' | 'Task' | 'Open Source'
 
@@ -73,12 +75,15 @@ export async function getDiscoveryOpportunities(options: { page?: number; limit?
   const limit = Math.min(50, Math.max(1, options.limit || 24))
   const from = (page - 1) * limit
   const to = from + limit - 1
-  const supabase = await createClient()
+  const supabase = db
 
+  await expireStaleOpportunities()
   const { count: liveCount } = await supabase.from('opportunities').select('id', { count: 'exact', head: true }).eq('status', 'LIVE').eq('is_verified', true).or(`deadline.is.null,deadline.gt.${new Date().toISOString()}`)
-  if ((liveCount || 0) === 0) {
-    try { await syncOpportunitySources() } catch { /* feed remains available with its current persisted snapshot */ }
-  }
+  const health = await getSourceHealth()
+  const latestSync = health.reduce<string | null>((latest, row) => row.last_successful_sync && (!latest || row.last_successful_sync > latest) ? row.last_successful_sync : latest, null)
+  const stale = !latestSync || Date.now() - Date.parse(latestSync) > 15 * 60 * 1000
+  let sync: Awaited<ReturnType<typeof syncGigWorks>> | null = null
+  if (stale || (liveCount || 0) === 0) sync = await syncGigWorks()
 
   let query = supabase
     .from('opportunities')
@@ -97,5 +102,8 @@ export async function getDiscoveryOpportunities(options: { page?: number; limit?
   const { data, error, count } = await query
   if (error) throw error
   const opportunities = (data || []).map((row) => mapOpportunity(row as Record<string, unknown>))
-  return { opportunities, providers: { catalog: true }, hasMore: from + opportunities.length < (count || 0), total: count || 0 }
+  const refreshedHealth = sync ? await getSourceHealth() : health
+  const providers = Object.fromEntries(refreshedHealth.map((row) => [row.source, row.status === 'CONNECTED']))
+  const syncErrors = refreshedHealth.filter((row) => row.status === 'ERROR').map((row) => ({ source: row.source, message: row.error_message }))
+  return { opportunities, providers, sourceHealth: refreshedHealth, syncErrors, syncRan: Boolean(sync), hasMore: from + opportunities.length < (count || 0), total: count || 0 }
 }

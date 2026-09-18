@@ -11,7 +11,18 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useUser } from "@/supabase"
 import type { DiscoveryOpportunity } from "@/services/discovery"
 
-const categories = ["All", "Bounty", "Project", "Job", "Grant", "Development", "Design", "Content", "Community", "Growth", "Other"]
+const categories = ["All", "Bounty", "Project", "Job", "Grant", "Hackathon", "Open Source", "DAO Task", "Quest"]
+
+const sourceLabels: Record<string, string> = {
+  superteam_earn: "Superteam Earn",
+  web3_career: "Web3.career",
+  gitcoin: "Gitcoin",
+  onlydust: "OnlyDust",
+  layer3: "Layer3",
+  dorahacks: "DoraHacks",
+  dework: "Dework",
+  github: "GitHub",
+}
 
 export default function EarnScreen() {
   const { user } = useUser()
@@ -34,8 +45,8 @@ export default function EarnScreen() {
       if (!response.ok) throw new Error()
       const data = await response.json()
       const incoming: DiscoveryOpportunity[] = data.opportunities ?? []
-      // Only treat as an error when every provider is down and we have nothing to show.
-      if (nextPage === 1 && incoming.length === 0 && data.available === false) throw new Error()
+      // An empty response with source failures is unavailable, not a genuine empty marketplace.
+      if (nextPage === 1 && incoming.length === 0 && (data.available === false || (data.syncErrors?.length > 0 && data.total === 0))) throw new Error()
       setItems((current) => nextPage === 1 ? incoming : [...current, ...incoming.filter((item: DiscoveryOpportunity) => !current.some((old) => old.id === item.id))])
       setFeedState(incoming.length > 0 || nextPage > 1 ? 'live' : 'empty')
       setPage(nextPage)
@@ -81,10 +92,10 @@ export default function EarnScreen() {
 function OpportunityCard({ item, onClick }: { item: DiscoveryOpportunity; onClick: () => void }) {
   return <button onClick={onClick} className="flex w-full items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-nex-soft transition-transform active:scale-[.99]">
     <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <Globe2 size={22} className="text-gray-300" />}</div>
-    <div className="min-w-0 flex-1"><div className="mb-1 flex items-center gap-2"><span className="truncate text-[10px] font-bold uppercase tracking-wider text-accent">{item.source}</span>{item.creatorAvatarUrl && <img src={item.creatorAvatarUrl} alt="" className="h-4 w-4 rounded-full object-cover" />}</div><h3 className="truncate text-sm font-bold text-foreground">{item.title}</h3><p className="mt-1 truncate text-xs text-gray-500">{item.organizationName} · {item.category}</p><div className="mt-2 flex items-center gap-3 text-[10px] text-gray-400">{item.rewardLabel && <span className="font-semibold text-primary">{item.rewardLabel}</span>}{item.deadline && <span className="flex items-center gap-1"><Clock3 size={11} /> {item.deadline}</span>}</div></div><ChevronRight size={18} className="shrink-0 text-gray-300" />
+    <div className="min-w-0 flex-1"><div className="mb-1 flex items-center gap-2"><span className="truncate text-[10px] font-bold uppercase tracking-wider text-accent">{sourceLabels[item.source] || item.source}</span>{item.creatorAvatarUrl && <img src={item.creatorAvatarUrl} alt="" className="h-4 w-4 rounded-full object-cover" />}</div><h3 className="truncate text-sm font-bold text-foreground">{item.title}</h3><p className="mt-1 truncate text-xs text-gray-500">{item.organizationName} · {item.category}</p><div className="mt-2 flex items-center gap-3 text-[10px] text-gray-400">{item.rewardLabel && <span className="font-semibold text-primary">{item.rewardLabel}</span>}{item.deadline && <span className="flex items-center gap-1"><Clock3 size={11} /> {item.deadline}</span>}</div></div><ChevronRight size={18} className="shrink-0 text-gray-300" />
   </button>
 }
 
 function OpportunityDetail({ item, onClose }: { item: DiscoveryOpportunity; onClose: () => void }) {
-  return <div className="fixed inset-0 z-[60] overflow-y-auto bg-background"><div className="mx-auto min-h-screen max-w-screen-md bg-background"><header className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5"><button onClick={onClose} aria-label="Close"><ArrowLeft size={20} /></button><span className="text-xs font-bold uppercase tracking-widest text-gray-400">Opportunity</span><button onClick={onClose} aria-label="Close"><X size={20} className="text-gray-400" /></button></header><div className="px-6 pb-12 pt-6"><div className="mb-6 flex h-40 items-center justify-center overflow-hidden rounded-2xl bg-gray-50">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <Globe2 size={38} className="text-gray-300" />}</div><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">{item.source}</span><h1 className="mt-2 text-2xl font-bold leading-tight text-foreground">{item.title}</h1><p className="mt-2 text-sm text-gray-500">{item.organizationName}</p><div className="mt-5 flex flex-wrap gap-2">{[item.category, ...item.tags.slice(0, 3)].map((tag) => <Badge key={tag} variant="outline" className="rounded-full text-[10px]">{tag}</Badge>)}</div><div className="mt-8 space-y-6"><div><h2 className="text-sm font-bold text-foreground">About</h2><p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{item.description || item.shortDescription}</p></div>{item.rewardLabel && <div><h2 className="text-sm font-bold text-foreground">Compensation</h2><p className="mt-2 text-sm text-gray-600">{item.rewardLabel}</p></div>}{item.deadline && <div><h2 className="text-sm font-bold text-foreground">Deadline</h2><p className="mt-2 text-sm text-gray-600">{item.deadline}</p></div>}</div><a className="mt-9 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href={item.sourceUrl} target="_blank" rel="noreferrer">View on {item.source}<ExternalLink size={16} /></a></div></div></div>
+  return <div className="fixed inset-0 z-[60] overflow-y-auto bg-background"><div className="mx-auto min-h-screen max-w-screen-md bg-background"><header className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-5"><button onClick={onClose} aria-label="Close"><ArrowLeft size={20} /></button><span className="text-xs font-bold uppercase tracking-widest text-gray-400">Opportunity</span><button onClick={onClose} aria-label="Close"><X size={20} className="text-gray-400" /></button></header><div className="px-6 pb-12 pt-6"><div className="mb-6 flex h-40 items-center justify-center overflow-hidden rounded-2xl bg-gray-50">{item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : <Globe2 size={38} className="text-gray-300" />}</div><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">{sourceLabels[item.source] || item.source}</span><h1 className="mt-2 text-2xl font-bold leading-tight text-foreground">{item.title}</h1><p className="mt-2 text-sm text-gray-500">{item.organizationName}</p><div className="mt-5 flex flex-wrap gap-2">{[item.category, ...item.tags.slice(0, 3)].map((tag) => <Badge key={tag} variant="outline" className="rounded-full text-[10px]">{tag}</Badge>)}</div><div className="mt-8 space-y-6"><div><h2 className="text-sm font-bold text-foreground">About</h2><p className="mt-2 whitespace-pre-line text-sm leading-6 text-gray-600">{item.description || item.shortDescription}</p></div>{item.rewardLabel && <div><h2 className="text-sm font-bold text-foreground">Compensation</h2><p className="mt-2 text-sm text-gray-600">{item.rewardLabel}</p></div>}{item.deadline && <div><h2 className="text-sm font-bold text-foreground">Deadline</h2><p className="mt-2 text-sm text-gray-600">{item.deadline}</p></div>}</div><a className="mt-9 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href={item.sourceUrl} target="_blank" rel="noreferrer">View on {item.source}<ExternalLink size={16} /></a></div></div></div>
 }
