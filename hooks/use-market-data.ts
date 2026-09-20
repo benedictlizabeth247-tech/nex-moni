@@ -398,8 +398,9 @@ const REFRESH_BY_TIMEFRAME: Record<Timeframe, number> = {
   '4H': 300_000,
   '1D': 600_000,
   '1W': 900_000,
-  '1M': 900_000,
-}
+'1M': 900_000,
+    '1Y': 900_000,
+  }
 
 export function useCandles(id: string | null, timeframe: Timeframe) {
   const [series, setSeries] = useState<CandleSeries | null>(null)

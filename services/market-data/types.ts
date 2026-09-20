@@ -24,7 +24,7 @@ export type ProviderId =
   /** Keyless forex fallback (daily reference rates, incl. NGN). */
   | 'exchangerate'
 
-export type Timeframe = '1m' | '5m' | '15m' | '1H' | '4H' | '1D' | '1W' | '1M'
+export type Timeframe = '1m' | '5m' | '15m' | '1H' | '4H' | '1D' | '1W' | '1M' | '1Y'
 
 /** Category label rendered by the existing UI badges. */
 export type CategoryLabel = 'Crypto' | 'Stocks' | 'ETF' | 'Forex' | 'Commodity' | 'Index'

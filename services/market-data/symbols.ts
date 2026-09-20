@@ -302,7 +302,7 @@ export const MARKET_PULSE_IDS = [
 /* Timeframes                                                                 */
 /* -------------------------------------------------------------------------- */
 
-export const TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '1H', '4H', '1D', '1W', '1M']
+export const TIMEFRAMES: Timeframe[] = ['1m', '5m', '15m', '1H', '4H', '1D', '1W', '1M', '1Y']
 
 /** Bybit v5 kline interval codes. */
 export const BYBIT_INTERVAL: Record<Timeframe, string> = {
@@ -313,8 +313,9 @@ export const BYBIT_INTERVAL: Record<Timeframe, string> = {
   '4H': '240',
   '1D': 'D',
   '1W': 'W',
-  '1M': 'M',
-}
+'1M': 'M',
+    '1Y': 'M',
+  }
 
 /** Yahoo chart interval + range pairs. */
 export const YAHOO_RANGE: Record<Timeframe, { interval: string; range: string }> = {
@@ -325,8 +326,9 @@ export const YAHOO_RANGE: Record<Timeframe, { interval: string; range: string }>
   '4H': { interval: '1h', range: '1y' },
   '1D': { interval: '1d', range: '1y' },
   '1W': { interval: '1wk', range: '5y' },
-  '1M': { interval: '1mo', range: '10y' },
-}
+'1M': { interval: '1mo', range: '10y' },
+    '1Y': { interval: '1mo', range: '10y' },
+  }
 
 /** Approximate CoinGecko OHLC window (days) per timeframe. */
 export const COINGECKO_DAYS: Record<Timeframe, number> = {
@@ -337,8 +339,9 @@ export const COINGECKO_DAYS: Record<Timeframe, number> = {
   '4H': 30,
   '1D': 180,
   '1W': 365,
-  '1M': 365,
-}
+'1M': 365,
+    '1Y': 3650,
+  }
 
 /** Twelve Data interval codes. */
 export const TWELVEDATA_INTERVAL: Record<Timeframe, string> = {
@@ -349,5 +352,6 @@ export const TWELVEDATA_INTERVAL: Record<Timeframe, string> = {
   '4H': '4h',
   '1D': '1day',
   '1W': '1week',
-  '1M': '1month',
-}
+'1M': '1month',
+    '1Y': '1month',
+  }

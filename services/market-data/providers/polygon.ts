@@ -40,8 +40,9 @@ const AGG: Record<Timeframe, { multiplier: number; timespan: string; lookbackMs:
   '4H': { multiplier: 4, timespan: 'hour', lookbackMs: 180 * 24 * 60 * 60 * 1000 },
   '1D': { multiplier: 1, timespan: 'day', lookbackMs: 365 * 24 * 60 * 60 * 1000 },
   '1W': { multiplier: 1, timespan: 'week', lookbackMs: 5 * 365 * 24 * 60 * 60 * 1000 },
-  '1M': { multiplier: 1, timespan: 'month', lookbackMs: 10 * 365 * 24 * 60 * 60 * 1000 },
-}
+'1M': { multiplier: 1, timespan: 'month', lookbackMs: 10 * 365 * 24 * 60 * 60 * 1000 },
+    '1Y': { multiplier: 1, timespan: 'month', lookbackMs: 10 * 365 * 24 * 60 * 60 * 1000 },
+  }
 
 interface AggBar {
   t: number

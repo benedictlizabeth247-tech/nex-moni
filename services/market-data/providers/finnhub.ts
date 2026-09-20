@@ -74,8 +74,9 @@ const RESOLUTION: Record<Timeframe, string> = {
   '4H': '60',
   '1D': 'D',
   '1W': 'W',
-  '1M': 'M',
-}
+'1M': 'M',
+    '1Y': 'M',
+  }
 
 const LOOKBACK_SECONDS: Record<Timeframe, number> = {
   '1m': 60 * 60 * 8,
@@ -85,8 +86,9 @@ const LOOKBACK_SECONDS: Record<Timeframe, number> = {
   '4H': 60 * 60 * 24 * 180,
   '1D': 60 * 60 * 24 * 365,
   '1W': 60 * 60 * 24 * 365 * 5,
-  '1M': 60 * 60 * 24 * 365 * 10,
-}
+'1M': 60 * 60 * 24 * 365 * 10,
+    '1Y': 60 * 60 * 24 * 365 * 10,
+  }
 
 export async function getCandles(
   type: AssetType,

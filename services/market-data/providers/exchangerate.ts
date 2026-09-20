@@ -132,8 +132,9 @@ const HISTORY_DAYS: Record<Timeframe, number> = {
   '4H': 120,
   '1D': 365,
   '1W': 365 * 3,
-  '1M': 365 * 10,
-}
+'1M': 365 * 10,
+    '1Y': 365 * 10,
+  }
 
 const isoDate = (ms: number): string => new Date(ms).toISOString().slice(0, 10)
 

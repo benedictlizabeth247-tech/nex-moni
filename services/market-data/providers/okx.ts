@@ -35,8 +35,9 @@ const BAR: Record<Timeframe, string> = {
   '4H': '4H',
   '1D': '1D',
   '1W': '1W',
-  '1M': '1M',
-}
+'1M': '1M',
+    '1Y': '1M',
+  }
 
 /** `BTCUSDT` -> `BTC-USDT` (OKX instrument id). */
 export const toInstId = (symbol: string): string | null => {
