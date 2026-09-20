@@ -30,11 +30,20 @@ export default function FundAccountPage() {
   const [method, setMethod] = useState<Method>('crypto'); const [session, setSession] = useState<DepositSession|null>(null)
   const [banks, setBanks] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false)
   const [stage, setStage] = useState<'choose'|'details'|'pending'>('choose')
-  const [amount, setAmount] = useState(''); const [senderBank, setSenderBank] = useState(''); const [receivingBank, setReceivingBank] = useState('UBA'); const [copiedAccount, setCopiedAccount] = useState(false); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
+  const [amount, setAmount] = useState(''); const [senderBank, setSenderBank] = useState(''); const [senderAccountName, setSenderAccountName] = useState(''); const [senderAccountNumber, setSenderAccountNumber] = useState(''); const [bankQuery, setBankQuery] = useState(''); const [showBankList, setShowBankList] = useState(false); const [receivingBank, setReceivingBank] = useState('UBA'); const [copiedAccount, setCopiedAccount] = useState(false); const [countdown, setCountdown] = useState(15 * 60); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
   const networkOptions = DEPOSIT_NETWORKS[asset] ?? []
   const selectedNetwork = networkOptions.find((item) => item.id === network) ?? networkOptions[0]
   const receivingAccounts = session?.receivingAccounts ?? [{ bankName: 'UBA', accountNumber: '2295345512', accountName: 'Benjamin Arinze Atuchukwu' }, { bankName: 'Access Bank', accountNumber: '1841089139', accountName: 'Benjamin Arinze' }]
   const selectedReceiving = receivingAccounts.find((account) => account.bankName === receivingBank) ?? receivingAccounts[0]
+  const matchingBanks = banks.filter((bank) => String(bank.name ?? '').toLowerCase().includes(bankQuery.toLowerCase())).slice(0, 8)
+  const countdownLabel = `${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}`
+
+  useEffect(() => {
+    if (stage !== 'pending') return
+    setCountdown(method === 'crypto' ? 25 * 60 : 15 * 60)
+    const timer = window.setInterval(() => setCountdown((value) => Math.max(0, value - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [stage, method])
 
   useEffect(() => { Promise.all([
     getDepositSession().then(setSession).catch(()=>setSession(null)),
@@ -64,7 +73,7 @@ export default function FundAccountPage() {
   const copy = (v:string, account = false) => { navigator.clipboard?.writeText(v); if (account) { setCopiedAccount(true); window.setTimeout(() => setCopiedAccount(false), 1800) }; toast({title:'Copied'}) }
   const fiatAmount = useMemo(()=>Number(amount||0),[amount])
   const submitFiat = async () => {
-    if (!user || !session || fiatAmount <= 0 || !senderBank) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter the amount and sending bank.'}); return }
+    if (!user || !session || fiatAmount <= 0 || !senderBank || senderAccountName.trim().length < 2 || senderAccountNumber.length !== 10) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter your account name, select your bank, enter a valid 10-digit account number, and provide an amount.'}); return }
     setSubmitting(true)
     try {
       const result=await submitDepositRequest({amount:fiatAmount,senderBank,reference,receivingBank})
@@ -114,14 +123,14 @@ export default function FundAccountPage() {
             <div><p className="text-[9px] font-black uppercase tracking-[.18em] text-[#8E7772]">Crypto deposit</p><h2 className="mt-1 text-[19px] font-black">Receive crypto</h2><p className="mt-1 text-[9px] leading-4 text-[#8E7772]">Select the asset and network before sending funds to this deposit address.</p></div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F9E8E5] text-[#D86F68]"><QrCode size={20}/></div>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2">
+          <div className="mt-5 space-y-3">
             <div><p className="mb-1 text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Asset</p><Select value={asset} onValueChange={setAsset}><SelectTrigger className="h-11 rounded-xl"><SelectValue/></SelectTrigger><SelectContent>{['USDT','BTC','ETH','USDC','SOL','XRP'].map(x=><SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select></div>
             <div><p className="mb-1 text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Network</p><Select value={selectedNetwork?.id ?? ''} onValueChange={setNetwork}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select network"/></SelectTrigger><SelectContent>{networkOptions.map((option)=><SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>)}</SelectContent></Select></div>
           </div>
           {address ? <div className="mt-4 rounded-[22px] bg-[#F8F2F0] p-4">
             <div className="flex items-center justify-between"><div><p className="text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Deposit address</p><p className="mt-1 text-[8px] text-[#8E7772]">{asset} · {selectedNetwork?.label ?? 'Unavailable'}</p></div><button onClick={() => copy(address)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FFFDFB]" aria-label="Copy deposit address"><Copy size={15}/></button></div>
             <p className="mt-3 break-all text-[12px] font-black leading-5 text-[#342A28]">{address}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-[9px]">
+            <div className="mt-3 space-y-2 text-[9px]">
               <div className="rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] p-3"><span className="block text-[#8E7772]">Network fee</span><b className="mt-1 block">{selectedNetwork?.feeLabel ?? 'Shown before send'}</b></div>
               <div className="rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] p-3"><span className="block text-[#8E7772]">Confirmations</span><b className="mt-1 block">{selectedNetwork?.confirmations ?? 'Required on-chain'}</b></div>
             </div>
@@ -133,7 +142,7 @@ export default function FundAccountPage() {
             <label className="mt-4 flex cursor-pointer items-start gap-2 text-[9px] leading-4 text-[#6F5C57]"><input type="checkbox" checked={cryptoAcknowledged} onChange={(event) => setCryptoAcknowledged(event.target.checked)} className="mt-0.5 accent-[#D86F68]"/>I confirm the asset and network match before sending.</label>
             <button type="button" disabled={!cryptoAcknowledged} onClick={() => toast({ title: 'Deposit marked for review', description: 'Send only after confirming the network. Your transfer will remain pending until on-chain confirmation.' })} className="mt-3 h-11 w-full rounded-xl bg-[#342A28] text-[10px] font-black text-white disabled:cursor-not-allowed disabled:opacity-40">I&apos;ve sent the deposit</button>
           </div> : <div className="mt-4 rounded-[22px] border border-amber-200 bg-amber-50 p-4"><p className="text-[10px] font-black text-amber-800">Deposit address not configured</p><p className="mt-1 text-[9px] leading-5 text-amber-700">No wallet address is invented. Configure this asset/network in the operational deposit-wallet settings before accepting on-chain deposits.</p></div>}
-          <div className="mt-4 flex items-start gap-3 rounded-2xl bg-[#FAF7F5] p-3"><Clock3 size={16} className="mt-0.5 shrink-0 text-[#D86F68]"/><p className="text-[9px] leading-5 text-[#8E7772]">A blockchain transfer is not treated as a completed deposit until the configured confirmation process records it.</p></div>
+          <div className="mt-4 flex items-start gap-3 rounded-2xl bg-[#FAF7F5] p-3"><Clock3 size={16} className="mt-0.5 shrink-0 text-[#D86F68]"/><p className="text-[9px] leading-5 text-[#8E7772]">Crypto deposits are reviewed after on-chain confirmations. Allow up to <b>25 minutes</b> after sending.</p></div>
         </Card>}
 
         {method === 'fiat' && <Card className="rounded-[28px] border-[#E1D5D1] bg-[#FFFDFB] p-5 shadow-none"><div className="mb-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-[#8E7772]"><span className="rounded-full bg-[#D86F68] px-2 py-1 text-white">1</span> Bank transfer deposit</div>
@@ -145,7 +154,9 @@ export default function FundAccountPage() {
           </div>
           <div className="mt-4"><AmountEntry value={amount} onChange={setAmount} currency="NGN" label="How much are you depositing?"/></div>
           <div className="mt-3 space-y-3">
-            <Select value={senderBank} onValueChange={setSenderBank}><SelectTrigger className="h-12 rounded-xl bg-[#FFFDFB]"><SelectValue placeholder="Select your sending bank"/></SelectTrigger><SelectContent>{banks.map(b=><SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}</SelectContent></Select>
+            <div><label className="mb-1 block text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Account name</label><input value={senderAccountName} onChange={e=>setSenderAccountName(e.target.value)} placeholder="Name on your sending account" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/></div>
+            <div><label className="mb-1 block text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Bank name</label><input value={bankQuery || senderBank} onFocus={() => setShowBankList(true)} onChange={e=>{setBankQuery(e.target.value); setSenderBank('')}} placeholder="Search and select your bank" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/>{showBankList && <div className="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-2xl border border-[#E1D5D1] bg-[#FFFDFB] p-2">{matchingBanks.length ? matchingBanks.map((bank) => <button key={bank.id} type="button" onClick={() => {setSenderBank(bank.name); setBankQuery(''); setShowBankList(false)}} className={`block min-h-11 w-full rounded-xl px-3 text-left text-[10px] ${senderBank === bank.name ? 'bg-[#F9E8E5] font-black' : 'hover:bg-[#FAF7F5]'}`}>{bank.name}</button>) : <p className="p-3 text-[10px] text-[#8E7772]">No configured banks found. Connect the operational bank directory to select a bank.</p>}</div>}</div>
+            <div><label className="mb-1 block text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Account number</label><input inputMode="numeric" value={senderAccountNumber} onChange={e=>setSenderAccountNumber(e.target.value.replace(/\\D/g, '').slice(0, 10))} placeholder="10-digit account number" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/></div>
             <input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Transfer reference (optional)" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/>
           </div>
           <button disabled={submitting || !session} onClick={submitFiat} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#E1D5D1] bg-[#FFFDFB] text-[10px] font-black text-[#342A28] disabled:opacity-50">I already made a bank transfer <ArrowRight size={14}/></button>
@@ -153,7 +164,7 @@ export default function FundAccountPage() {
 
       </>}
 
-      {stage === 'pending' && <Card className="rounded-[30px] border-[#E1D5D1] bg-[#FFFDFB] p-7 text-center shadow-none"><CheckCircle2 size={52} className="mx-auto text-[#B86B64]"/><h2 className="mt-4 text-[21px] font-black">Deposit submitted</h2><p className="mt-2 text-[10px] leading-5 text-[#8E7772]">Your deposit proof is recorded for operational review. The balance is not credited until the configured confirmation process approves it.</p><button onClick={() => router.push('/transactions')} className="mt-5 w-full rounded-2xl bg-[#342A28] py-3 text-[10px] font-black text-white">View activity</button></Card>}
+      {stage === 'pending' && <Card className="rounded-[30px] border-[#E1D5D1] bg-[#FFFDFB] p-7 text-center shadow-none"><CheckCircle2 size={52} className="mx-auto text-[#B86B64]"/><h2 className="mt-4 text-[21px] font-black">Deposit submitted</h2><div className="mt-4 rounded-2xl bg-[#F9E8E5] p-4"><p className="text-[9px] font-black uppercase tracking-widest text-[#8E7772]">Pending review</p><p className="mt-1 text-[26px] font-black tabular-nums">{countdownLabel}</p><p className="text-[9px] text-[#8E7772]">Estimated {method === 'crypto' ? '25-minute crypto' : '15-minute bank transfer'} review window</p></div><p className="mt-4 text-[10px] leading-5 text-[#8E7772]">Your deposit proof is recorded for operational review. The balance is not credited until the configured confirmation process approves it.</p><button onClick={() => router.push('/transactions')} className="mt-5 w-full rounded-2xl bg-[#342A28] py-3 text-[10px] font-black text-white">View activity</button></Card>}
     </div>
     <BottomNav/>
   </main>
