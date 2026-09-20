@@ -180,13 +180,13 @@ export default function MarketsFeed() {
                     </tr>
                   ))
                 : rows.map((row) => (
-                    <tr key={row.id} onClick={() => openAsset(row.id)} className="group cursor-pointer border-b border-border/70 transition-all hover:bg-primary/[0.06] hover:shadow-[inset_3px_0_0_var(--primary)] focus-within:bg-primary/[0.06]">
-                      <td className="py-3.5">
-                        <div className="flex items-center gap-2">
-                          <AssetAvatar symbol={row.symbol} name={row.name} type={row.type} iconUrl={row.iconUrl} size={28} />
+                    <tr key={row.id} onClick={() => openAsset(row.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openAsset(row.id) } }} tabIndex={0} role="link" aria-label={`Trade ${row.display}`} className="group cursor-pointer border-b border-border/70 outline-none transition-all hover:bg-primary/[0.08] hover:shadow-[inset_4px_0_0_var(--primary)] focus-visible:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-primary/30">
+                      <td className="py-4">
+                        <div className="flex items-center gap-3">
+                          <AssetAvatar symbol={row.symbol} name={row.name} type={row.type} iconUrl={row.iconUrl} size={34} />
                           <button
                             onClick={(event) => { event.stopPropagation(); handleToggleFavorite(row.id) }}
-                            className="text-muted-foreground hover:text-foreground"
+                            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                             aria-label={
                               favoriteSet.has(row.id)
                                 ? `Remove ${row.display} from favorites`
@@ -201,11 +201,11 @@ export default function MarketsFeed() {
                           </button>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-foreground tabular-nums">
+                              <span className="text-sm font-black tracking-tight text-foreground tabular-nums">
                                 {row.display}
                               </span>
                               <span
-                                className={`text-[7px] font-black px-1 rounded uppercase ${
+                                className={`rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-wide ${
                                   row.type === "crypto"
                                     ? "bg-teal-50 text-primary"
                                     : "bg-blue-50 text-blue-600"
@@ -214,7 +214,7 @@ export default function MarketsFeed() {
                                 {CATEGORY_LABEL[row.type]}
                               </span>
                             </div>
-                            <span className="text-[9px] text-muted-foreground block mt-0.5">{row.name}</span>
+                            <span className="mt-1 block text-[11px] leading-tight text-muted-foreground">{row.name}</span>
                           </div>
                         </div>
                       </td>
@@ -240,7 +240,7 @@ export default function MarketsFeed() {
                       <td className="py-3 text-right">
                         <button
                           onClick={() => openAsset(row.id)}
-                          className="text-[11px] font-bold text-primary hover:underline"
+                          className="rounded-lg bg-primary px-3 py-1.5 text-[11px] font-black text-primary-foreground shadow-sm transition-transform hover:scale-[1.03]"
                         >
                           Trade
                         </button>
