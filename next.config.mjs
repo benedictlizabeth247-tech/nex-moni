@@ -18,6 +18,9 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: supabasePublicKey,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: supabasePublicKey,
+    // Make the Vercel-provided server variable available to client modules.
+    SUPABASE_PUBLISHABLE_KEY: supabasePublicKey,
+    SUPABASE_ANON_KEY: supabasePublicKey,
   },
 }
 
