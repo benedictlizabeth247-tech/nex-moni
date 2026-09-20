@@ -61,7 +61,7 @@ export function CandleChart({ candles, up }: CandleChartProps) {
       </div>
       <div className="min-h-0 flex-1 w-full overflow-hidden rounded-lg">
       {chartMode === 'candles' ? (
-        <svg viewBox="0 0 1000 180" className="h-full w-full" role="img" aria-label="Candlestick price chart" preserveAspectRatio="none">
+        <svg viewBox="0 0 1000 180" className="block h-full w-full overflow-hidden" role="img" aria-label="Candlestick price chart" preserveAspectRatio="none">
           {data.map((candle, index) => {
             const x = 10 + (index / Math.max(data.length - 1, 1)) * 980
             const bodyTop = Math.min(scaleY(candle.open), scaleY(candle.close))
@@ -71,7 +71,7 @@ export function CandleChart({ candles, up }: CandleChartProps) {
           })}
         </svg>
       ) : (
-      <ResponsiveContainer width="100%" height="100%">
+      <div className="h-full w-full overflow-hidden"><ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 4 }}>
           <defs>
             <linearGradient id={`${gradientId}-assetFill`} x1="0" y1="0" x2="0" y2="1">
@@ -100,7 +100,7 @@ export function CandleChart({ candles, up }: CandleChartProps) {
             isAnimationActive={false}
           />
         </AreaChart>
-      </ResponsiveContainer>
+      </ResponsiveContainer></div>
       )}
       </div>
     </div>
