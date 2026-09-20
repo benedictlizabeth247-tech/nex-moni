@@ -201,7 +201,7 @@ export default function MarketsFeed() {
                           </button>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-sm font-black tracking-tight text-primary tabular-nums transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                              <span className="rounded-md bg-primary px-2 py-1 text-sm font-black tracking-tight text-primary-foreground shadow-sm tabular-nums transition-all group-hover:brightness-110 group-hover:shadow-md">
                                 {row.display}
                               </span>
                               <span
