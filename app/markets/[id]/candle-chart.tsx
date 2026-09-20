@@ -54,12 +54,12 @@ export function CandleChart({ candles, up }: CandleChartProps) {
   }, [data])
 
   return (
-    <div className="w-full">
+    <div className="flex h-full w-full min-h-0 flex-col">
       <div className="mb-2 flex items-center justify-end gap-1" role="group" aria-label="Chart type">
         <button type="button" onClick={() => setChartMode('line')} aria-pressed={chartMode === 'line'} className={`rounded-md px-2 py-1 text-[10px] font-bold ${chartMode === 'line' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Line</button>
         <button type="button" onClick={() => setChartMode('candles')} aria-pressed={chartMode === 'candles'} className={`rounded-md px-2 py-1 text-[10px] font-bold ${chartMode === 'candles' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Candles</button>
       </div>
-      <div className="h-56 w-full">
+      <div className="min-h-0 flex-1 w-full overflow-hidden">
       {chartMode === 'candles' ? (
         <svg viewBox="0 0 1000 180" className="h-full w-full" role="img" aria-label="Candlestick price chart" preserveAspectRatio="none">
           {data.map((candle, index) => {
