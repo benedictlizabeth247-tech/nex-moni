@@ -39,6 +39,7 @@ export default async function OpportunityProfile({ params }: { params: Promise<{
             <a className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href={destination} target="_blank" rel="noopener noreferrer">Apply on {item.source} <ExternalLink size={15} /></a>
             {item.projectWebsiteUrl && <a className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-semibold" href={item.projectWebsiteUrl} target="_blank" rel="noopener noreferrer">Project website <ExternalLink size={15} /></a>}
             {item.projectProfileUrl && <a className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-semibold" href={item.projectProfileUrl} target="_blank" rel="noopener noreferrer">Project profile <ExternalLink size={15} /></a>}
+            {item.sourceProfileUrl && <a className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 text-sm font-semibold" href={item.sourceProfileUrl} target="_blank" rel="noopener noreferrer">Source profile <ExternalLink size={15} /></a>}
           </div>
           <p className="mt-5 text-xs text-gray-400">Original source: <a className="underline" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{item.sourceUrl}</a></p>
         </section>

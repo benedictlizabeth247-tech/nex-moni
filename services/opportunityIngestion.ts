@@ -25,12 +25,24 @@ async function json(url: string, headers: Record<string, string> = {}) {
 }
 
 type NormalizedOpportunity = Omit<OpportunityInsert, 'id' | 'discoveredAt' | 'updatedAt'> & { id?: string }
+
+const approvedSourceProfiles: Record<string, string> = {
+  superteam_earn: 'https://superteam.fun/earn',
+  railway: 'https://railway.com/',
+  web3_career: 'https://web3.career/',
+  gitcoin: 'https://grants.gitcoin.co/',
+  onlydust: 'https://app.onlydust.com/',
+  layer3: 'https://layer3.xyz/',
+  dorahacks: 'https://dorahacks.io/',
+  dework: 'https://dework.xyz/',
+}
+
 type SourceInput = { source: string; sourceId: string; sourceUrl: string; applicationUrl?: string | null; projectName?: string | null; projectLogo?: string | null; projectProfileUrl?: string | null; projectWebsiteUrl?: string | null; sourceProfileUrl?: string | null; title: string; description?: string | null; opportunityType: string; category: string; rewardDescription?: string | null; rewardAmount?: string | null; rewardCurrency?: string | null; deadline?: Date | null; ecosystem?: string | null; location?: string | null; remote?: boolean | null; skills?: string[]; tags?: string[]; metadata?: Record<string, unknown> }
 
 function normalize(input: SourceInput): NormalizedOpportunity {
   const deduplicationKey = `${input.source}:${input.sourceId}`
   const expired = Boolean(input.deadline && input.deadline <= new Date())
-  return { id: hash(deduplicationKey), source: input.source, sourceId: input.sourceId, sourceUrl: input.sourceUrl, applicationUrl: input.applicationUrl || input.sourceUrl, projectName: input.projectName || null, projectLogo: input.projectLogo || null, projectProfileUrl: input.projectProfileUrl || null, projectWebsiteUrl: input.projectWebsiteUrl || null, sourceProfileUrl: input.sourceProfileUrl || null, title: input.title, description: input.description || null, opportunityType: input.opportunityType, category: input.category, ecosystem: input.ecosystem || null, rewardAmount: input.rewardAmount || null, rewardCurrency: input.rewardCurrency || null, rewardDescription: input.rewardDescription || null, deadline: input.deadline || null, location: input.location || null, remote: input.remote ?? null, skills: input.skills || [], tags: input.tags || [], verificationStatus: 'validated', liveStatus: expired ? 'expired' : 'live', publishedAt: null, expiresAt: input.deadline || null, deduplicationKey, metadata: input.metadata || {} }
+  return { id: hash(deduplicationKey), source: input.source, sourceId: input.sourceId, sourceUrl: input.sourceUrl || approvedSourceProfiles[input.source] || '#', applicationUrl: input.applicationUrl || input.sourceUrl || approvedSourceProfiles[input.source] || '#', projectName: input.projectName || null, projectLogo: input.projectLogo || null, projectProfileUrl: input.projectProfileUrl || null, projectWebsiteUrl: input.projectWebsiteUrl || null, sourceProfileUrl: input.sourceProfileUrl || approvedSourceProfiles[input.source] || null, title: input.title, description: input.description || null, opportunityType: input.opportunityType, category: input.category, ecosystem: input.ecosystem || null, rewardAmount: input.rewardAmount || null, rewardCurrency: input.rewardCurrency || null, rewardDescription: input.rewardDescription || null, deadline: input.deadline || null, location: input.location || null, remote: input.remote ?? null, skills: input.skills || [], tags: input.tags || [], verificationStatus: 'validated', liveStatus: expired ? 'expired' : 'live', publishedAt: null, expiresAt: input.deadline || null, deduplicationKey, metadata: input.metadata || {} }
 }
 
 async function fetchConfiguredPages(endpoint: string, headers?: Record<string, string>) {
