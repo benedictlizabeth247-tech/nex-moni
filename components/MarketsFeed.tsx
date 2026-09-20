@@ -181,12 +181,12 @@ export default function MarketsFeed() {
                   ))
                 : rows.map((row) => (
                     <tr key={row.id} onClick={() => openAsset(row.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openAsset(row.id) } }} tabIndex={0} role="link" aria-label={`Trade ${row.display}`} className="group cursor-pointer border-b border-border/70 outline-none transition-all hover:bg-primary/[0.08] hover:shadow-[inset_4px_0_0_var(--primary)] focus-visible:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-primary/30">
-                      <td className="py-4">
-                        <div className="flex items-center gap-3">
-                          <AssetAvatar symbol={row.symbol} name={row.name} type={row.type} iconUrl={row.iconUrl} size={34} />
+                      <td className="py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <AssetAvatar symbol={row.symbol} name={row.name} type={row.type} iconUrl={row.iconUrl} size={30} />
                           <button
                             onClick={(event) => { event.stopPropagation(); handleToggleFavorite(row.id) }}
-                            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                            className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                             aria-label={
                               favoriteSet.has(row.id)
                                 ? `Remove ${row.display} from favorites`
@@ -194,18 +194,18 @@ export default function MarketsFeed() {
                             }
                           >
                             <Star
-                              className={`w-3 h-3 ${
+                              className={`h-3 w-3 ${
                                 favoriteSet.has(row.id) ? "fill-amber-400 text-amber-400" : ""
                               }`}
                             />
                           </button>
                           <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="rounded-md bg-primary px-2 py-1 text-sm font-black tracking-tight text-primary-foreground shadow-sm tabular-nums transition-all group-hover:brightness-110 group-hover:shadow-md">
+                            <div className="flex items-center gap-1">
+                              <span className="rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-black tracking-tight text-primary-foreground shadow-sm tabular-nums transition-all group-hover:brightness-110 group-hover:shadow-md">
                                 {row.display}
                               </span>
                               <span
-                                className={`rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-wide ${
+                                className={`rounded-full px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wide ${
                                   row.type === "crypto"
                                     ? "bg-teal-50 text-primary"
                                     : "bg-blue-50 text-blue-600"
@@ -214,7 +214,7 @@ export default function MarketsFeed() {
                                 {CATEGORY_LABEL[row.type]}
                               </span>
                             </div>
-                            <span className="mt-1 block text-[11px] leading-tight text-muted-foreground">{row.name}</span>
+                            <span className="mt-0.5 block text-[10px] leading-tight text-muted-foreground">{row.name}</span>
                           </div>
                         </div>
                       </td>
