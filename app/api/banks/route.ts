@@ -42,7 +42,20 @@ export async function GET() {
       return NextResponse.json(DIRECTORY_BANKS, { status: 200 });
     }
 
-    return NextResponse.json(banks.filter((bank) => bank.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name))));
+    const activeBanks = banks
+      .filter((bank) => bank.active !== false && typeof bank.name === 'string' && bank.name.trim().length > 0)
+      .map((bank) => ({
+        id: String(bank.id ?? bank.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        name: String(bank.name).trim(),
+        normalized_name: String(bank.normalized_name ?? bank.name).trim().toLowerCase(),
+        institution_type: bank.institution_type ?? 'commercial_bank',
+        bank_code: bank.bank_code ?? null,
+        nip_code: bank.nip_code ?? null,
+        active: true,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return NextResponse.json(activeBanks.length > 0 ? activeBanks : DIRECTORY_BANKS);
   } catch (error: any) {
     return NextResponse.json(DIRECTORY_BANKS, { status: 200 });
   }
