@@ -1,47 +1,18 @@
-import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, integer, jsonb, numeric, pgTable, text, timestamp, unique } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  emailVerified: boolean('emailVerified').notNull().default(false),
-  image: text('image'),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
-  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  id: text('id').primaryKey(), name: text('name').notNull(), email: text('email').notNull().unique(), emailVerified: boolean('emailVerified').notNull().default(false), image: text('image'), createdAt: timestamp('createdAt').notNull().defaultNow(), updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })
+export const session = pgTable('session', { id: text('id').primaryKey(), expiresAt: timestamp('expiresAt').notNull(), token: text('token').notNull().unique(), createdAt: timestamp('createdAt').notNull().defaultNow(), updatedAt: timestamp('updatedAt').notNull().defaultNow(), ipAddress: text('ipAddress'), userAgent: text('userAgent'), userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }) })
+export const account = pgTable('account', { id: text('id').primaryKey(), accountId: text('accountId').notNull(), providerId: text('providerId').notNull(), userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }), accessToken: text('accessToken'), refreshToken: text('refreshToken'), idToken: text('idToken'), accessTokenExpiresAt: timestamp('accessTokenExpiresAt'), refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt'), scope: text('scope'), password: text('password'), createdAt: timestamp('createdAt').notNull().defaultNow(), updatedAt: timestamp('updatedAt').notNull().defaultNow() })
+export const verification = pgTable('verification', { id: text('id').primaryKey(), identifier: text('identifier').notNull(), value: text('value').notNull(), expiresAt: timestamp('expiresAt').notNull(), createdAt: timestamp('createdAt').defaultNow(), updatedAt: timestamp('updatedAt').defaultNow() })
 
-export const session = pgTable('session', {
-  id: text('id').primaryKey(),
-  expiresAt: timestamp('expiresAt').notNull(),
-  token: text('token').notNull().unique(),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
-  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
-  ipAddress: text('ipAddress'),
-  userAgent: text('userAgent'),
-  userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
-})
+export const opportunities = pgTable('opportunities', {
+  id: text('id').primaryKey(), source: text('source').notNull(), sourceId: text('source_id').notNull(), sourceUrl: text('source_url').notNull(), applicationUrl: text('application_url'), projectName: text('project_name'), projectLogo: text('project_logo'), title: text('title').notNull(), description: text('description'), opportunityType: text('opportunity_type').notNull(), category: text('category').notNull(), ecosystem: text('ecosystem'), rewardAmount: numeric('reward_amount'), rewardCurrency: text('reward_currency'), rewardDescription: text('reward_description'), deadline: timestamp('deadline', { withTimezone: true }), location: text('location'), remote: boolean('remote'), skills: text('skills').array().notNull().default([]), tags: text('tags').array().notNull().default([]), verificationStatus: text('verification_status').notNull().default('validated'), liveStatus: text('live_status').notNull().default('live'), publishedAt: timestamp('published_at', { withTimezone: true }), discoveredAt: timestamp('discovered_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(), expiresAt: timestamp('expires_at', { withTimezone: true }), deduplicationKey: text('deduplication_key').notNull(), metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
+}, (table) => [unique('opportunities_source_source_id').on(table.source, table.sourceId), unique('opportunities_deduplication_key').on(table.deduplicationKey)])
 
-export const account = pgTable('account', {
-  id: text('id').primaryKey(),
-  accountId: text('accountId').notNull(),
-  providerId: text('providerId').notNull(),
-  userId: text('userId').notNull().references(() => user.id, { onDelete: 'cascade' }),
-  accessToken: text('accessToken'),
-  refreshToken: text('refreshToken'),
-  idToken: text('idToken'),
-  accessTokenExpiresAt: timestamp('accessTokenExpiresAt'),
-  refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt'),
-  scope: text('scope'),
-  password: text('password'),
-  createdAt: timestamp('createdAt').notNull().defaultNow(),
-  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
-})
+export const opportunitySources = pgTable('opportunity_sources', { provider: text('provider').primaryKey(), status: text('status').notNull().default('unavailable'), lastSuccessfulSync: timestamp('last_successful_sync', { withTimezone: true }), lastAttemptedSync: timestamp('last_attempted_sync', { withTimezone: true }), error: text('error'), recordsDiscovered: integer('records_discovered').notNull().default(0), recordsValid: integer('records_valid').notNull().default(0), recordsRejected: integer('records_rejected').notNull().default(0), recordsExpired: integer('records_expired').notNull().default(0), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow() })
 
-export const verification = pgTable('verification', {
-  id: text('id').primaryKey(),
-  identifier: text('identifier').notNull(),
-  value: text('value').notNull(),
-  expiresAt: timestamp('expiresAt').notNull(),
-  createdAt: timestamp('createdAt').defaultNow(),
-  updatedAt: timestamp('updatedAt').defaultNow(),
-})
+export type Opportunity = typeof opportunities.$inferSelect
+export type OpportunityInsert = typeof opportunities.$inferInsert
+export type OpportunitySource = typeof opportunitySources.$inferSelect

@@ -30,7 +30,10 @@ export default function EarnScreen() {
     nextPage === 1 ? setLoading(true) : setLoadingMore(true)
     setError(false)
     try {
-      const response = await fetch(`/api/discovery?page=${nextPage}&limit=24`, { cache: "no-store" })
+      const params = new URLSearchParams({ page: String(nextPage), limit: "24" })
+      if (query.trim()) params.set("search", query.trim())
+      if (category !== "All") params.set("category", category)
+      const response = await fetch(`/api/discovery?${params.toString()}`, { cache: "no-store" })
       if (!response.ok) throw new Error()
       const data = await response.json()
       const incoming: DiscoveryOpportunity[] = data.opportunities ?? []
@@ -43,7 +46,10 @@ export default function EarnScreen() {
     } catch { if (nextPage === 1) { setError(true); setFeedState('unavailable') } } finally { setLoading(false); setLoadingMore(false) }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    const timer = window.setTimeout(() => load(), query.trim() || category !== "All" ? 250 : 0)
+    return () => window.clearTimeout(timer)
+  }, [query, category])
 
   const filtered = useMemo(() => items.filter((item) => {
     const haystack = [item.title, item.organizationName, item.shortDescription, item.category, ...item.tags].join(" ").toLowerCase()

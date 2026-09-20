@@ -1,101 +1,27 @@
 import 'server-only'
 
-import { createClient } from '@/lib/supabase/server'
+import { and, asc, count, desc, eq, ilike, lt, or, sql } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { opportunities, opportunitySources, type Opportunity } from '@/lib/db/schema'
 import { syncOpportunitySources } from './opportunityIngestion'
 
-export type DiscoveryCategory = 'Job' | 'Bounty' | 'Hackathon' | 'Grant' | 'Quest' | 'Project' | 'Task' | 'Open Source'
+export type DiscoveryCategory = 'Job' | 'Bounty' | 'Hackathon' | 'Grant' | 'Gig' | 'Quest' | 'Project' | 'Task' | 'Open Source' | 'Other'
+export interface DiscoveryOpportunity { id: string; title: string; organizationName: string; source: string; sourceUrl: string; category: DiscoveryCategory; shortDescription: string; description: string; imageUrl?: string; creatorAvatarUrl?: string; rewardLabel?: string; deadline?: string; tags: string[]; isFeatured: boolean; ecosystem?: string; location?: string; remote?: boolean; applicationUrl?: string; verificationStatus: string; opportunityType: string; projectName?: string; sourceId: string }
+const text = (value: unknown) => typeof value === 'string' && value.trim() ? value.trim() : undefined
+function map(row: Opportunity): DiscoveryOpportunity { const description = row.description || ''; const reward = row.rewardDescription || (row.rewardAmount ? `${Number(row.rewardAmount).toLocaleString()}${row.rewardCurrency ? ` ${row.rewardCurrency}` : ''}` : undefined); return { id: row.id, title: row.title, organizationName: row.projectName || 'Web3 opportunity', source: row.source, sourceUrl: row.sourceUrl, category: row.category as DiscoveryCategory, shortDescription: description.slice(0, 180), description, imageUrl: row.projectLogo || undefined, creatorAvatarUrl: row.projectLogo || undefined, rewardLabel: reward || undefined, deadline: row.deadline?.toISOString(), tags: [...(row.skills || []), ...(row.tags || [])], isFeatured: row.verificationStatus === 'validated', ecosystem: row.ecosystem || undefined, location: row.location || undefined, remote: row.remote || undefined, applicationUrl: row.applicationUrl || undefined, verificationStatus: row.verificationStatus, opportunityType: row.opportunityType, projectName: row.projectName || undefined, sourceId: row.sourceId } }
 
-export interface DiscoveryOpportunity {
-  id: string
-  title: string
-  organizationName: string
-  source: string
-  sourceUrl: string
-  category: DiscoveryCategory
-  shortDescription: string
-  description: string
-  imageUrl?: string
-  creatorAvatarUrl?: string
-  rewardLabel?: string
-  deadline?: string
-  tags: string[]
-  isFeatured: boolean
-  ecosystem?: string
-  chain?: string
-  location?: string
-  remote?: boolean
-  applicationUrl?: string
-  lastSyncedAt?: string
+export async function getDiscoveryOpportunities(options: { page?: number; limit?: number; search?: string; category?: string; ecosystem?: string; source?: string } = {}) {
+  const page = Math.max(1, options.page || 1); const limit = Math.min(50, Math.max(1, options.limit || 24)); const offset = (page - 1) * limit; const now = new Date()
+  const conditions = [eq(opportunities.liveStatus, 'live'), or(sql`${opportunities.deadline} is null`, sql`${opportunities.deadline} > ${now}`)]
+  const query = options.search?.trim(); if (query) conditions.push(or(ilike(opportunities.title, `%${query}%`), ilike(opportunities.description, `%${query}%`), ilike(opportunities.projectName, `%${query}%`), ilike(opportunities.source, `%${query}%`), sql`${query} = any(${opportunities.skills})`, sql`${query} = any(${opportunities.tags})`) as any)
+  if (options.category && options.category !== 'All') conditions.push(eq(opportunities.category, options.category))
+  if (options.ecosystem && options.ecosystem !== 'All') conditions.push(eq(opportunities.ecosystem, options.ecosystem))
+  if (options.source && options.source !== 'All') conditions.push(eq(opportunities.source, options.source))
+  let rows = await db.select().from(opportunities).where(and(...conditions)).orderBy(asc(opportunities.deadline), desc(opportunities.updatedAt)).limit(limit).offset(offset)
+  const totalResult = await db.select({ total: count() }).from(opportunities).where(and(...conditions)); const total = Number(totalResult[0]?.total || 0)
+  if (total === 0 && page === 1 && !query && !options.category) { try { await syncOpportunitySources(); rows = await db.select().from(opportunities).where(and(...conditions)).orderBy(asc(opportunities.deadline), desc(opportunities.updatedAt)).limit(limit) } catch {} }
+  const sources = await db.select().from(opportunitySources).orderBy(asc(opportunitySources.provider))
+  return { opportunities: rows.map(map), providers: Object.fromEntries(sources.map((source) => [source.provider, source.status === 'healthy'])), sourceHealth: sources, hasMore: offset + rows.length < total, total: Math.max(total, rows.length) }
 }
 
-function label(value: unknown) {
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined
-}
-
-function rewardText(row: Record<string, unknown>) {
-  const explicit = label(row.reward_text)
-  if (explicit) return explicit
-  const amount = row.reward_amount
-  const currency = label(row.reward_currency)
-  if (amount !== null && amount !== undefined) return `${Number(amount).toLocaleString()}${currency ? ` ${currency}` : ''}`
-  return undefined
-}
-
-function mapOpportunity(row: Record<string, unknown>): DiscoveryOpportunity {
-  const description = label(row.description) || ''
-  const category = (label(row.category) || label(row.type) || 'Project') as DiscoveryCategory
-  return {
-    id: String(row.id),
-    title: String(row.title),
-    organizationName: label(row.organization_name) || 'Verified Web3 organization',
-    source: String(row.source),
-    sourceUrl: String(row.source_url),
-    category,
-    shortDescription: description.slice(0, 180),
-    description,
-    imageUrl: label(row.organization_logo),
-    creatorAvatarUrl: label(row.organization_logo),
-    rewardLabel: rewardText(row),
-    deadline: label(row.deadline),
-    tags: Array.isArray(row.skills) ? row.skills.filter((tag): tag is string => typeof tag === 'string') : [],
-    isFeatured: row.is_featured === true,
-    ecosystem: label(row.ecosystem),
-    chain: label(row.chain),
-    location: label(row.location),
-    remote: row.remote === true,
-    applicationUrl: label(row.application_url),
-    lastSyncedAt: label(row.last_synced_at),
-  }
-}
-
-export async function getDiscoveryOpportunities(options: { page?: number; limit?: number; search?: string; category?: string; ecosystem?: string } = {}) {
-  const page = Math.max(1, options.page || 1)
-  const limit = Math.min(50, Math.max(1, options.limit || 24))
-  const from = (page - 1) * limit
-  const to = from + limit - 1
-  const supabase = await createClient()
-
-  const { count: liveCount } = await supabase.from('opportunities').select('id', { count: 'exact', head: true }).eq('status', 'LIVE').eq('is_verified', true).or(`deadline.is.null,deadline.gt.${new Date().toISOString()}`)
-  if ((liveCount || 0) === 0) {
-    try { await syncOpportunitySources() } catch { /* feed remains available with its current persisted snapshot */ }
-  }
-
-  let query = supabase
-    .from('opportunities')
-    .select('id,title,organization_name,source,source_url,type,description,organization_logo,reward_amount,reward_currency,reward_text,category,skills,ecosystem,chain,location,remote,deadline,application_url,is_featured,last_synced_at', { count: 'exact' })
-    .eq('status', 'LIVE')
-    .eq('is_verified', true)
-    .or(`deadline.is.null,deadline.gt.${new Date().toISOString()}`)
-    .order('is_featured', { ascending: false })
-    .order('deadline', { ascending: true, nullsFirst: false })
-    .range(from, to)
-
-  if (options.search?.trim()) query = query.ilike('title', `%${options.search.trim()}%`)
-  if (options.category && options.category !== 'All') query = query.ilike('category', options.category)
-  if (options.ecosystem && options.ecosystem !== 'All') query = query.ilike('ecosystem', options.ecosystem)
-
-  const { data, error, count } = await query
-  if (error) throw error
-  const opportunities = (data || []).map((row) => mapOpportunity(row as Record<string, unknown>))
-  return { opportunities, providers: { catalog: true }, hasMore: from + opportunities.length < (count || 0), total: count || 0 }
-}
+export async function getDiscoveryOpportunity(id: string) { const rows = await db.select().from(opportunities).where(eq(opportunities.id, id)).limit(1); return rows[0] ? map(rows[0]) : null }
