@@ -6,6 +6,7 @@ import {
   ArrowDownCircle,
   Banknote,
   TrendingUp,
+  BarChart3,
   Repeat,
   Grid2x2
 } from 'lucide-react'
@@ -19,6 +20,7 @@ const ACTIONS = [
   { id: 'deposit', icon: <ArrowDownCircle size={22} />, label: "Fund", iconColor: "text-[#D86F68]", path: "/fund" },
   { id: 'send', icon: <Banknote size={21} />, label: "Send Money", iconColor: "text-[#D86F68]", path: "/send-money" },
   { id: 'receive', icon: <ArrowDownCircle size={21} />, label: "Receive", iconColor: "text-[#D86F68]", path: "/wallet-details" },
+  { id: 'markets', icon: <BarChart3 size={20} />, label: "Markets", iconColor: "text-accent", path: "/markets" },
   { id: 'futures', icon: <TrendingUp size={20} />, label: "Futures", iconColor: "text-accent", path: "/futures" },
   { id: 'spot', icon: <Repeat size={20} />, label: "Spot Trading", iconColor: "text-accent", path: "/spot" },
   { id: 'scan', icon: <Grid2x2 size={21} />, label: "Scan & Pay", iconColor: "text-[#D86F68]", path: "/scan-pay" },
