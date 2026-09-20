@@ -6,7 +6,7 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  const supabaseUrl = 'https://mhklbqlsdwudysfpklzx.supabase.co'
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://mhklbqlsdwudysfpklzx.supabase.co'
   const supabaseAnonKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY
   if (!supabaseAnonKey) {
     return supabaseResponse

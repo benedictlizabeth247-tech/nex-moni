@@ -10,12 +10,13 @@ export async function createClient() {
   const cookieStore = await cookies()
 
   const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://mhklbqlsdwudysfpklzx.supabase.co'
   if (!supabaseKey) {
     throw new Error('Supabase publishable key is not configured.')
   }
 
   return createServerClient(
-    'https://mhklbqlsdwudysfpklzx.supabase.co',
+    supabaseUrl,
     supabaseKey,
     {
       // Secure cookies in production; not in dev, so localhost still works.
