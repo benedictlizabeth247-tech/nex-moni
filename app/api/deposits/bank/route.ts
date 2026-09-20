@@ -24,8 +24,6 @@ export async function GET() {
 
   const admin = createAdminClient()
   const { data, error } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  if (error) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
-
   const value = data?.value as Record<string, unknown> | null
   const configured = Array.isArray(value?.receivingAccounts) ? value.receivingAccounts : []
   const receivingAccounts = configured.length ? configured : [
@@ -53,7 +51,6 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient()
   const { data: config, error: configError } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  if (configError) return NextResponse.json({ error: 'Deposit configuration unavailable.' }, { status: 503 })
   const value = config?.value as Record<string, unknown> | null
   const configured = Array.isArray(value?.receivingAccounts) ? value.receivingAccounts : []
   const receivingAccounts = configured.length ? configured : [
