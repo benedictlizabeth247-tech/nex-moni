@@ -5,6 +5,7 @@ export interface DepositSession {
   bankName: string
   accountNumber: string
   accountName: string
+  receivingAccounts?: Array<{ bankName: string; accountNumber: string; accountName: string }>
   expiryTime: Date
   status: 'active' | 'expired'
 }
@@ -14,6 +15,7 @@ export interface DepositRequestInput {
   senderBank: string
   reference?: string
   screenshotUrl?: string | null
+  receivingBank?: string
 }
 
 export async function getDepositSession(): Promise<DepositSession> {
@@ -25,6 +27,7 @@ export async function getDepositSession(): Promise<DepositSession> {
     bankName: String(payload.bankName),
     accountNumber: String(payload.accountNumber),
     accountName: String(payload.accountName),
+    receivingAccounts: Array.isArray(payload.receivingAccounts) ? payload.receivingAccounts : undefined,
     expiryTime: new Date(String(payload.expiryTime)),
     status: 'active',
   }
