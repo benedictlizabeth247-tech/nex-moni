@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'https://mhklbqlsdwudysfpklzx.supabase.co'
+// Supabase provides the publishable key as a server environment variable in
+// Vercel. Explicitly expose only that public key to the browser bundle.
 const supabasePublicKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  process.env.SUPABASE_PUBLISHABLE_KEY ??
-  process.env.SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  ''
 
 const nextConfig = {
   images: {
