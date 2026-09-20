@@ -6,10 +6,9 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Keep the preview bootable until the connected Supabase credentials are injected.
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const supabaseUrl = 'https://mhklbqlsdwudysfpklzx.supabase.co'
+  const supabaseAnonKey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY
+  if (!supabaseAnonKey) {
     return supabaseResponse
   }
 
