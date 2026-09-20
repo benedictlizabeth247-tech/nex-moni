@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +14,7 @@ import { Suspense, useState } from 'react'
 // whether an email is registered. Errors the user can act on are passed through,
 // and anything unexpected is reported as such instead of as a wrong password.
 function loginErrorMessage(error: unknown): string {
-  const { code, status } = (error ?? {}) as { code?: string; status?: number }
+  const { code, status, message } = (error ?? {}) as { code?: string; status?: number; message?: string }
 
   if (code === 'email_not_confirmed') {
     return 'Please confirm your email address — check your inbox for the link.'
@@ -44,9 +44,8 @@ function LoginForm() {
     setError(null)
 
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { error } = await authClient.signIn.email({
+        email: email.trim().toLowerCase(),
         password,
       })
       if (error) throw error

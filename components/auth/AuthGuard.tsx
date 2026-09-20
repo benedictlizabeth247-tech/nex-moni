@@ -14,9 +14,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isPublicPath = PUBLIC_PREFIXES.some((prefix) => pathname?.startsWith(prefix))
 
-  // Server-side middleware (lib/supabase/proxy.ts) is the real enforcement
-  // boundary. This is a client-side fallback so an already-loaded page
-  // doesn't keep rendering protected content if the session drops.
+  // Server-rendered routes remain the authorization boundary; this guard keeps
+  // the client view in sync while Better Auth restores the session cookie.
   useEffect(() => {
     if (!loading && !user && !isPublicPath) {
       const destination = pathname?.startsWith('/admin') ? '/admin-login' : '/auth/login'
