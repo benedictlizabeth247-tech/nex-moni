@@ -72,7 +72,7 @@ export default function MarketsFeed() {
     openAsset(id);
   };
 
-  const openAsset = (id: string) => router.push(`/markets/${encodeURIComponent(id)}`);
+  const openAsset = (id: string) => router.push(`/spot?market=${encodeURIComponent(id)}`);
 
   return (
     <div className="px-2 sm:px-4 lg:px-6 mb-8 sm:mb-10 min-w-0">
@@ -159,7 +159,7 @@ export default function MarketsFeed() {
               {isLoading && !rows.length
                 ? Array.from({ length: 5 }).map((_, idx) => (
                     <tr key={`skeleton-${idx}`} className="animate-pulse">
-                      <td className="py-3">
+                      <td className="py-3.5">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded bg-gray-100" />
                           <div>
@@ -168,24 +168,24 @@ export default function MarketsFeed() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3">
+                      <td className="py-3.5">
                         <div className="h-3 w-16 rounded bg-gray-100 ml-auto" />
                       </td>
-                      <td className="py-3">
+                      <td className="py-3.5">
                         <div className="h-5 w-14 rounded-lg bg-gray-100 ml-auto" />
                       </td>
-                      <td className="py-3">
+                      <td className="py-3.5">
                         <div className="h-3 w-10 rounded bg-gray-100 ml-auto" />
                       </td>
                     </tr>
                   ))
                 : rows.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-3">
+                    <tr key={row.id} onClick={() => openAsset(row.id)} className="group cursor-pointer border-b border-border/70 transition-all hover:bg-primary/[0.06] hover:shadow-[inset_3px_0_0_var(--primary)] focus-within:bg-primary/[0.06]">
+                      <td className="py-3.5">
                         <div className="flex items-center gap-2">
                           <AssetAvatar symbol={row.symbol} name={row.name} type={row.type} iconUrl={row.iconUrl} size={28} />
                           <button
-                            onClick={() => handleToggleFavorite(row.id)}
+                            onClick={(event) => { event.stopPropagation(); handleToggleFavorite(row.id) }}
                             className="text-muted-foreground hover:text-foreground"
                             aria-label={
                               favoriteSet.has(row.id)

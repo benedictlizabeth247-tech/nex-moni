@@ -36,6 +36,10 @@ export function TradingTerminal({ mode }: { mode: TradingMode }) {
   const router = useRouter()
   const [selectedId,setSelectedId] = useState(DEFAULT_IDS[0]); const [query,setQuery]=useState(""); const [showMarkets,setShowMarkets]=useState(false)
   const [side,setSide]=useState<Side>("buy"); const [orderType,setOrderType]=useState("market"); const [quantity,setQuantity]=useState(""); const [triggerPrice,setTriggerPrice]=useState(""); const [leverage,setLeverage]=useState(5); const [takeProfit,setTakeProfit]=useState(""); const [stopLoss,setStopLoss]=useState(""); const [riskFor,setRiskFor]=useState<string|null>(null)
+  useEffect(() => {
+    const market = new URLSearchParams(window.location.search).get("market")
+    if (market) setSelectedId(market)
+  }, [])
   const [wallet,setWallet]=useState<WalletType|null>(null); const [account,setAccount]=useState<TradingAccount|null>(null); const [positions,setPositions]=useState<TradingPosition[]>([]); const [closedPositions,setClosedPositions]=useState<TradingPosition[]>([]); const [orders,setOrders]=useState<TradingOrder[]>([])
   const [monitor,setMonitor]=useState<MonitorTab>("positions"); const [notice,setNotice]=useState<string|null>(null); const [busy,setBusy]=useState(false); const [transfer,setTransfer]=useState("")
   const {results,isSearching}=useMarketSearch(query,{limit:40}); const {quotes,isDegraded}=useMarketBoard({tab:"hot",limit:24,refreshMs:10000}); const {detail,quote}=useAssetDetail(selectedId)
