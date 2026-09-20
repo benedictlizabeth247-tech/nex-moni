@@ -18,6 +18,8 @@ export default function EarnScreen() {
   const [items, setItems] = useState<DiscoveryOpportunity[]>([])
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("All")
+  const [source, setSource] = useState("All")
+  const platforms = ["All", "superteam_earn", "railway", "web3_career", "gitcoin", "onlydust", "layer3", "dorahacks", "dework"]
   const [selected, setSelected] = useState<DiscoveryOpportunity | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -33,6 +35,7 @@ export default function EarnScreen() {
       const params = new URLSearchParams({ page: String(nextPage), limit: "24" })
       if (query.trim()) params.set("search", query.trim())
       if (category !== "All") params.set("category", category)
+      if (source !== "All") params.set("source", source)
       const response = await fetch(`/api/discovery?${params.toString()}`, { cache: "no-store" })
       if (!response.ok) throw new Error()
       const data = await response.json()
@@ -49,13 +52,14 @@ export default function EarnScreen() {
   useEffect(() => {
     const timer = window.setTimeout(() => load(), query.trim() || category !== "All" ? 250 : 0)
     return () => window.clearTimeout(timer)
-  }, [query, category])
+  }, [query, category, source])
 
   const filtered = useMemo(() => items.filter((item) => {
     const haystack = [item.title, item.organizationName, item.shortDescription, item.category, ...item.tags].join(" ").toLowerCase()
     const matchesQuery = !query.trim() || haystack.includes(query.toLowerCase().trim())
     const matchesCategory = category === "All" || item.category.toLowerCase() === category.toLowerCase() || item.tags.some((tag) => tag.toLowerCase() === category.toLowerCase())
-    return matchesQuery && matchesCategory
+    const matchesSource = source === "All" || item.source === source
+    return matchesQuery && matchesCategory && matchesSource
   }), [items, query, category])
 
   return (
@@ -70,6 +74,7 @@ export default function EarnScreen() {
       <section className="px-6 pt-5">
         <div className="relative"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={17} /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search opportunities..." className="h-12 rounded-2xl border-gray-100 bg-white pl-11 shadow-nex-soft" /></div>
         <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">{categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`shrink-0 rounded-full border px-4 py-2 text-[11px] font-bold transition-colors ${category === item ? "border-primary bg-primary text-white" : "border-gray-100 bg-white text-gray-500"}`}>{item}</button>)}</div>
+        <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">{platforms.map((item) => <button key={item} onClick={() => setSource(item)} className={`shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-bold transition-colors ${source === item ? "border-accent bg-accent/10 text-accent" : "border-gray-100 bg-white text-gray-400"}`}>{item === "All" ? "All platforms" : item.replaceAll("_", " ")}</button>)}</div>
       </section>
 
       <section className="px-6 pt-7">

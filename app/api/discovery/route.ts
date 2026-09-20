@@ -15,6 +15,9 @@ export async function GET(request: Request) {
       category: searchParams.get('category') || undefined,
       ecosystem: searchParams.get('ecosystem') || undefined,
       source: searchParams.get('source') || undefined,
+      remote: searchParams.get('remote') === 'true',
+      reward: searchParams.get('reward') === 'true',
+      skill: searchParams.get('skill') || undefined,
     })
     const available = Object.values(result.providers).some(Boolean) || result.opportunities.length > 0
     return NextResponse.json({ ...result, page, limit, available, generatedAt: new Date().toISOString() }, { headers: { 'Cache-Control': 's-maxage=300, stale-while-revalidate=600' } })
