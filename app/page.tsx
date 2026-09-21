@@ -94,8 +94,8 @@ function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#F2F1EF] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-      <header className="sticky top-0 z-30 border-b border-border bg-white/95 px-4 py-3 backdrop-blur-sm">
+    <div className="min-h-screen overflow-x-hidden bg-[#0b1714] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <header className="sticky top-0 z-30 border-b border-[#29463b] bg-[#0b1714]/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-center gap-1">
             <NexLogo />
@@ -132,13 +132,13 @@ function HomeContent() {
               <MarketsFeed />
             </section>
             <section className="w-1/2 shrink-0 pl-2">
-              <div className="mb-5 rounded-[26px] border border-[#E1D5D1] bg-[#FFFDFB] p-5 shadow-[0_14px_40px_rgba(80,55,50,.06)]">
+              <div className="mb-5 rounded-[26px] border border-[#29463b] bg-[#11221d] p-5 shadow-[0_18px_50px_rgba(0,0,0,.22)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#9A7772]">Home services</p>
-                    <h2 className="mt-1 text-[20px] font-black tracking-tight text-[#342A28]">Everyday money tools</h2>
+                    <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#8eafa0]">Home services</p>
+                    <h2 className="mt-1 text-[20px] font-black tracking-tight text-[#f4f7f1]">Everyday money tools</h2>
                   </div>
-                  <button onClick={() => setHomePage(0)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E5D9D6] bg-[#F8F2F0]" aria-label="Back to home"><ChevronRight className="rotate-180" size={18}/></button>
+                  <button onClick={() => setHomePage(0)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#29463b] bg-[#19312a]" aria-label="Back to home"><ChevronRight className="rotate-180" size={18}/></button>
                 </div>
                 <div className="mt-5 grid grid-cols-3 gap-2.5">
                   {[
@@ -152,9 +152,9 @@ function HomeContent() {
                     ['Profile', '/profile', '◎'],
                     ['More', '/actions-hub', '⋯'],
                   ].map(([label, path, icon]) => (
-                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[76px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-muted/60 px-1.5 py-2.5 text-center transition-colors hover:bg-secondary active:scale-[.98]">
-                      <span aria-hidden="true" className="text-[18px] font-semibold leading-none text-[#8D554D]">{icon}</span>
-                      <span className="truncate text-[11px] font-black text-[#4A3936]">{label}</span>
+                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[76px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#29463b] bg-[#13251f] px-1.5 py-2.5 text-center transition-colors hover:bg-secondary active:scale-[.98]">
+                      <span aria-hidden="true" className="text-[18px] font-semibold leading-none text-[#a7f36c]">{icon}</span>
+                      <span className="truncate text-[11px] font-black text-[#e8f4df]">{label}</span>
                     </button>
                   ))}
                 </div>
@@ -163,9 +163,9 @@ function HomeContent() {
           </div>
         </div>
         <div className="mb-3 flex items-center justify-center gap-1.5" aria-label="Home pages">
-          {[0,1].map((page) => <button key={page} onClick={() => setHomePage(page as 0 | 1)} className={`h-1.5 rounded-full transition-all ${homePage === page ? 'w-6 bg-[#D86F68]' : 'w-1.5 bg-[#C9B8B4]'}`} aria-label={`Show home page ${page + 1}`} />)}
+          {[0,1].map((page) => <button key={page} onClick={() => setHomePage(page as 0 | 1)} className={`h-1.5 rounded-full transition-all ${homePage === page ? 'w-6 bg-[#a7f36c]' : 'w-1.5 bg-[#29463b]'}`} aria-label={`Show home page ${page + 1}`} />)}
         </div>
-        <p className="mb-4 text-center text-[8px] font-bold uppercase tracking-[.18em] text-[#9A7772]">Swipe left for services</p>
+        <p className="mb-4 text-center text-[8px] font-bold uppercase tracking-[.18em] text-[#8eafa0]">Swipe left for services</p>
       </main>
 
       <BottomNav />
