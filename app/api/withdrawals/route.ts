@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
+import { withdrawals as neonWithdrawals, auditLog } from '@/lib/db/schema'
+import { randomUUID } from 'node:crypto'
 
 const schema = z.object({
   amount: z.number().finite().positive(),
@@ -55,6 +58,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ ...data, autopilot_routing: 'pending', autopilot_error: routeError.message }, { status: 201 })
     }
     return NextResponse.json({ ...data, ...routed, autopilot_routing: 'processing' }, { status: 201 })
+  }
+
+  if (data?.request_id && data?.status === 'created') {
+    const now = new Date()
+    await db.insert(neonWithdrawals).values({
+      id: String(data.request_id),
+      userId: user.id,
+      amount: parsed.data.amount.toFixed(2),
+      currency: parsed.data.currency.toUpperCase(),
+      destinationType: parsed.data.destinationType,
+      destination: parsed.data.destination,
+      status: 'PENDING',
+      updatedAt: now,
+    }).onConflictDoNothing()
+    await db.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'WITHDRAWAL_CREATED', resourceType: 'withdrawal', resourceId: String(data.request_id), metadata: { amount: parsed.data.amount, currency: parsed.data.currency.toUpperCase(), destinationType: parsed.data.destinationType } })
   }
 
   return NextResponse.json(data, { status: data?.status === 'already_created' ? 200 : 201 })
