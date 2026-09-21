@@ -4,7 +4,6 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { Wallet, Landmark, Target, Umbrella, ArrowRight } from 'lucide-react'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
 const PRODUCTS = [
@@ -51,7 +50,7 @@ export function ProductDiscovery() {
 
   return (
     <div className="mb-10">
-      <div className="px-5 flex items-center justify-between mb-5">
+      <div className="mb-3 flex items-center justify-between px-5 sm:mb-5">
         <h2 className="text-[17px] font-bold text-[#1A1A1A] tracking-tight">Financial Products</h2>
         <button 
           onClick={() => router.push('/finances')}
@@ -60,33 +59,30 @@ export function ProductDiscovery() {
           View Portfolio
         </button>
       </div>
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex w-max space-x-5 px-5 pb-6">
-          {PRODUCTS.map((prod, idx) => (
-            <div 
-              key={idx} 
-              onClick={() => router.push(prod.path)}
-              className={cn(
-                "w-[160px] p-6 rounded-[32px] flex flex-col shrink-0 relative h-[200px] shadow-soft border border-white/50 cursor-pointer group active:scale-[0.98] transition-all", 
-                prod.color
-              )}
-            >
-              <div className={cn("mb-5 transition-transform group-hover:scale-110", prod.iconColor)}>
-                {prod.icon}
-              </div>
-              <h3 className="text-[#1A1A1A] font-bold text-[15px] leading-tight mb-2 whitespace-normal">{prod.title}</h3>
-              <p className="text-gray-500 text-[11px] leading-snug whitespace-normal font-medium opacity-80">{prod.desc}</p>
-              
-              <button 
-                className={cn("absolute bottom-5 right-6 w-9 h-9 rounded-full flex items-center justify-center text-white shadow-lg group-hover:translate-x-1 transition-all", prod.btnColor)}
-              >
-                <ArrowRight size={18} />
-              </button>
+      <div className="grid grid-cols-3 gap-2.5 px-5 pb-4 sm:gap-4">
+        {PRODUCTS.map((prod, idx) => (
+          <div
+            key={idx}
+            onClick={() => router.push(prod.path)}
+            className={cn(
+              "relative flex min-w-0 h-[176px] cursor-pointer flex-col rounded-[24px] border border-white/50 p-3.5 shadow-soft transition-all active:scale-[0.98] group sm:h-[210px] sm:rounded-[30px] sm:p-5",
+              prod.color
+            )}
+          >
+            <div className={cn("mb-3 [&_svg]:size-5 transition-transform group-hover:scale-110 sm:mb-4 sm:[&_svg]:size-6", prod.iconColor)}>
+              {prod.icon}
             </div>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+            <h3 className="mb-1.5 text-[12px] font-bold leading-tight tracking-tight text-[#1A1A1A] sm:text-[15px]">{prod.title}</h3>
+            <p className="max-w-[13ch] text-[9px] font-medium leading-snug text-gray-500 opacity-80 sm:text-[11px]">{prod.desc}</p>
+            <button
+              aria-label={`Open ${prod.title}`}
+              className={cn("absolute bottom-3 right-3 flex size-8 items-center justify-center rounded-full text-white shadow-lg transition-all group-hover:translate-x-1 sm:bottom-4 sm:right-4 sm:size-9", prod.btnColor)}
+            >
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
