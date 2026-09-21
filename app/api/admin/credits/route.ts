@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin"
+import { db } from "@/lib/db"
+import { wallets, ledgerEntries, auditLog } from "@/lib/db/schema"
+import { sql } from "drizzle-orm"
+import { randomUUID } from "node:crypto"
 import { z } from "zod"
 
 const schema = z.object({
   userId: z.string().trim().min(1).max(128),
-  amount: z.number().finite().positive("Amount must be greater than zero"),
+  amount: z.number().finite().refine((value) => value !== 0, "Amount cannot be zero"),
   currency: z.enum(["NGN", "USD", "USDT"]).default("USDT"),
   reference: z.string().trim().max(120).optional(),
   reason: z.string().trim().min(3).max(500),
@@ -19,7 +22,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Admin access required." }, { status: 403 })
   }
   const user = adminContext.user
-  const admin = createAdminClient()
   const body = await request.json().catch(() => null)
   const parsed = schema.safeParse({
     userId: body?.userId,
@@ -31,17 +33,23 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid amount, currency and reason." }, { status: 400 })
 
   try {
-    const { data, error } = await admin.rpc("admin_fund_wallet", {
-      p_actor_user_id: user.id,
-      p_user_id: parsed.data.userId,
-      p_amount: parsed.data.amount,
-      p_currency: parsed.data.currency,
-      p_reason: parsed.data.reason,
-      p_reference: parsed.data.reference ?? null,
+    const now = new Date()
+    const walletId = randomUUID()
+    const reference = parsed.data.reference || `ADMIN-${randomUUID().replaceAll('-', '').slice(0, 12).toUpperCase()}`
+    const amount = parsed.data.amount.toFixed(2)
+    const direction = parsed.data.amount > 0 ? 'CREDIT' : 'DEBIT'
+    const absoluteAmount = Math.abs(parsed.data.amount).toFixed(2)
+
+    const result = await db.transaction(async (tx) => {
+      const [wallet] = await tx.insert(wallets).values({ id: walletId, userId: parsed.data.userId, currency: parsed.data.currency, availableBalance: '0', updatedAt: now }).onConflictDoNothing().returning()
+      const [updated] = await tx.update(wallets).set({ availableBalance: sql`${wallets.availableBalance} + ${amount}`, updatedAt: now }).where(sql`${wallets.userId} = ${parsed.data.userId} AND ${wallets.currency} = ${parsed.data.currency} AND ${wallets.availableBalance} + ${amount} >= 0`).returning()
+      if (!updated) throw new Error('Insufficient available balance for this debit.')
+      await tx.insert(ledgerEntries).values({ id: randomUUID(), userId: parsed.data.userId, walletId: updated.id, kind: 'ADMIN_ADJUSTMENT', direction, amount: absoluteAmount, currency: parsed.data.currency, reference, metadata: { reason: parsed.data.reason, actorUserId: user.id } })
+      await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'ADMIN_WALLET_ADJUSTMENT', resourceType: 'wallet', resourceId: updated.id, metadata: { userId: parsed.data.userId, amount, currency: parsed.data.currency, reason: parsed.data.reason, reference } })
+      return updated
     })
-    if (error) return NextResponse.json({ error: error.message, code: error.code ?? "RPC_FAILED", details: error.details ?? null }, { status: 422 })
-    return NextResponse.json({ wallet: data, committed: true })
+    return NextResponse.json({ wallet: result, committed: true })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Wallet funding failed." }, { status: 422 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Wallet adjustment failed.' }, { status: 422 })
   }
 }
