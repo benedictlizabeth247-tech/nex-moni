@@ -32,8 +32,8 @@ export function CreditForm({ userId }: { userId: string }) {
     finally { setSaving(false) }
   }
 
-  return <form onSubmit={submit} className="mt-5 grid gap-3 rounded-2xl border border-[#29413A] bg-[#101A18] p-4 sm:grid-cols-2"><p className="text-xs font-bold text-[#8DE0BD] sm:col-span-2">Production wallet funding/debit · every change is recorded in the audit ledger.</p>
-    <label className="text-xs font-bold">Amount (credit)<input value={amount} onChange={e => setAmount(e.target.value)} inputMode="decimal" required className="mt-2 w-full rounded-xl border border-[#29413A] bg-[#15231F] px-3 py-3 text-sm outline-none focus:border-[#55D6A7]" placeholder="25.00" /></label>
+  return <form onSubmit={submit} className="mt-5 grid gap-3 rounded-2xl border border-[#29413A] bg-[#101A18] p-4 sm:grid-cols-2"><p className="text-xs font-bold text-[#8DE0BD] sm:col-span-2">Production wallet funding/debit · use a positive amount to credit and a negative amount to debit. Every change is atomic and audited.</p>
+    <label className="text-xs font-bold">Amount (credit or debit)<input value={amount} onChange={e => setAmount(e.target.value)} inputMode="decimal" required className="mt-2 w-full rounded-xl border border-[#29413A] bg-[#15231F] px-3 py-3 text-sm outline-none focus:border-[#55D6A7]" placeholder="25.00" /></label>
     <label className="text-xs font-bold">Currency<select value={currency} onChange={e => setCurrency(e.target.value)} className="mt-2 w-full rounded-xl border border-[#29413A] bg-[#15231F] px-3 py-3 text-sm outline-none focus:border-[#55D6A7]"><option value="USDT">USDT</option></select></label>
     <label className="text-xs font-bold">Reason<input value={reason} onChange={e => setReason(e.target.value)} minLength={3} required className="mt-2 w-full rounded-xl border border-[#29413A] bg-[#15231F] px-3 py-3 text-sm outline-none focus:border-[#55D6A7]" placeholder="Verified adjustment" /></label>
     <button disabled={saving} className="rounded-xl bg-[#55D6A7] px-4 py-3 text-xs font-black text-[#101A18] disabled:opacity-50">{saving ? "Updating…" : "Update credits"}</button>

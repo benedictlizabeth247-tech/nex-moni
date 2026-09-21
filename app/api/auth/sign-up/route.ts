@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
+import { db } from '@/lib/db'
+import { operationalRecords } from '@/lib/db/schema'
 
 const schema = z.object({
   email: z.string().trim().email(),
@@ -62,6 +64,8 @@ export async function POST(request: NextRequest) {
     await admin.auth.admin.deleteUser(data.user.id)
     return NextResponse.json({ error: 'Unable to create your profile.', code: 'PROFILE_CREATE_FAILED' }, { status: 500 })
   }
+
+  await db.insert(operationalRecords).values({ recordId: `USER-${data.user.id}`, userId: data.user.id, metadata: { source: 'signup', accountType: 'user' } }).onConflictDoNothing()
 
   return NextResponse.json({ userId: data.user.id, verified: true })
 }

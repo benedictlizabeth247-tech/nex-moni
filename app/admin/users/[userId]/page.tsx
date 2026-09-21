@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { use, useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, RefreshCw, ShieldAlert, WalletCards } from 'lucide-react'
 import { CreditForm } from '@/components/admin/credit-form'
-import { WalletControls } from '@/components/admin/wallet-controls'
 
 type Row = Record<string, unknown>
 type AdminData = Record<string, unknown>
@@ -51,6 +50,6 @@ export default function AdminUserDetail({ params }: { params: Promise<{ userId: 
     {error && <div className="mt-6 flex gap-2 rounded-2xl border border-[#713B3B] bg-[#321E20] p-4 text-xs text-[#FFB4B4]"><ShieldAlert size={17} />{error}</div>}
     <section className="mt-8 rounded-3xl border border-[#29413A] bg-[#15231F] p-5"><p className="text-[10px] uppercase tracking-[.2em] text-[#55D6A7]">Neon account</p><h1 className="mt-2 text-2xl font-black">{String(user?.email || userId)}</h1><p className="mt-2 text-xs text-[#9BB8AF]">Registered {user?.created_at ? new Date(String(user.created_at)).toLocaleString() : '—'} · Confirmed {user?.email_confirmed_at ? 'yes' : 'no'}</p></section>
     <section className="mt-4 rounded-3xl border border-[#29413A] bg-[#15231F] p-5"><div className="flex items-center gap-2"><WalletCards size={18} className="text-[#55D6A7]" /><h2 className="font-black">Related account records</h2></div>{related.length ? <div className="mt-4 divide-y divide-[#29413A]">{related.map(({ source, row }, index) => <div key={`${source}-${index}`} className="flex justify-between gap-3 py-3 text-xs"><span className="font-bold">{source}</span><span className="text-right text-[#9BB8AF]">{String(row.status || row.currency || row.amount || row.kind || 'record')} · {row.created_at || row.createdAt ? new Date(String(row.created_at || row.createdAt)).toLocaleString() : 'live'}</span></div>)}</div> : <p className="mt-4 text-sm text-[#9BB8AF]">No operational records are currently linked to this account.</p>}</section>
-    <section className="mt-4 rounded-3xl border border-[#29413A] bg-[#15231F] p-5"><h2 className="font-black">Manage credits</h2><p className="mt-1 text-xs text-[#9BB8AF]">Every adjustment is recorded in the Supabase ledger and applied atomically.</p><CreditForm userId={userId} /><WalletControls userId={userId} currency="USDT" /></section>
+    <section className="mt-4 rounded-3xl border border-[#29413A] bg-[#15231F] p-5"><h2 className="font-black">Manage credits</h2><p className="mt-1 text-xs text-[#9BB8AF]">Every adjustment is recorded in the Neon ledger and applied atomically.</p><CreditForm userId={userId} /></section>
   </div></main>
 }
