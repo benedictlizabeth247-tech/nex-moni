@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { Home, Compass, Wallet, User } from 'lucide-react'
+import { Home, Compass, Blocks, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -43,7 +43,7 @@ export function BottomNav() {
         <NavItem id="home" path="/" icon={<Home />} label="Home" />
         <NavItem id="discovery" path="/earn" icon={<Compass />} label="Discovery" />
         
-        <NavItem id="finances" path="/finances" icon={<Wallet />} label="Finance" />
+        <NavItem id="extensions" path="/utilities-hub" icon={<Blocks />} label="Extensions" />
         <NavItem id="profile" path="/profile" icon={<User />} label="Profile" />
       </div>
     </div>

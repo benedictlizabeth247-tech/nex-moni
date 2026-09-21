@@ -52,7 +52,7 @@ export function NexTipsBanner() {
   return (
     <div className="px-5 mb-8">
       <Card 
-        onClick={() => router.push('/finances')}
+        onClick={() => router.push('/utilities-hub')}
         className="bg-[#005F56] border-none rounded-[24px] p-5 sm:p-6 flex items-center overflow-hidden relative min-h-[140px] sm:min-h-[160px] cursor-pointer group active:scale-[0.99] transition-all"
       >
         <div className="flex-1 relative z-10">

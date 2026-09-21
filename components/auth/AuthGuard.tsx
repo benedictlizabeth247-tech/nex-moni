@@ -6,7 +6,7 @@ import { useUser } from '@/supabase'
 import { Loader2 } from 'lucide-react'
 import { NexLogo } from '@/components/ui/NexLogo'
 
-const PUBLIC_PREFIXES = ['/auth', '/admin-login', '/finances']
+const PUBLIC_PREFIXES = ['/auth', '/admin-login']
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useUser()

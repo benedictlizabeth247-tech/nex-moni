@@ -83,7 +83,7 @@ export default function UtilitiesHub() {
   return (
     <main 
       className={cn(
-        "min-h-screen pb-32 bg-[#F8FAF9] will-change-transform overflow-x-hidden",
+        "min-h-screen overflow-x-hidden bg-background pb-32 text-foreground will-change-transform",
         !isDragging.current && "transition-transform duration-500 cubic-bezier(0.23, 1, 0.32, 1)"
       )}
       style={{ transform: `translateX(${offsetX}px)` }}
@@ -95,14 +95,14 @@ export default function UtilitiesHub() {
         <div className="flex items-center justify-between">
           <button 
             onClick={() => router.push('/')}
-            className="flex items-center gap-1 text-[14px] font-medium text-[#005F56] active:opacity-60"
+            className="flex items-center gap-1 text-sm font-semibold text-primary active:opacity-60"
           >
             <ChevronLeft size={20} />
             Back Home
           </button>
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Bell size={24} className="text-[#1A1A1A]" />
+              <Bell className="size-5 text-foreground" />
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full border-2 border-background flex items-center justify-center">
                 <span className="sr-only">Notifications</span>
               </div>
@@ -117,14 +117,14 @@ export default function UtilitiesHub() {
       </header>
 
       <div className="px-4 mb-6">
-        <h1 className="text-[28px] font-bold text-[#1A1A1A] leading-tight mb-1">Utilities Hub</h1>
-        <p className="text-[14px] text-gray-500 font-medium">All your everyday services in one place.</p>
+        <h1 className="mb-1 text-2xl font-black leading-tight tracking-tight text-foreground sm:text-3xl">Extensions</h1>
+        <p className="text-sm font-medium text-muted-foreground">Everyday services, connected in one place.</p>
       </div>
 
       <section className="px-4 mb-4">
         <Card className="p-4 border-none shadow-soft rounded-[16px] bg-white">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[15px] font-bold text-[#1A1A1A]">Music</h3>
+            <h3 className="text-[15px] font-bold text-foreground">Music</h3>
             <button className="text-[14px] font-bold text-primary">View all</button>
           </div>
           <div className="flex items-center justify-between">
@@ -208,7 +208,7 @@ export default function UtilitiesHub() {
       <section className="px-4 mb-4">
         <Card className="p-4 border-none shadow-soft rounded-[16px] bg-white">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[15px] font-bold text-[#1A1A1A]">Social</h3>
+            <h3 className="text-[15px] font-bold text-foreground">Social</h3>
             <button className="text-[14px] font-bold text-primary">View all</button>
           </div>
           <div className="flex items-center justify-between">
@@ -393,12 +393,12 @@ function BrandItem({ children, label, onClick }: { children: React.ReactNode, la
   return (
     <div 
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 w-[64px] active:scale-95 transition-transform"
+      className="flex w-[60px] flex-col items-center gap-1.5 transition-transform active:scale-95 sm:w-[68px]"
     >
       <div className="transition-transform active:scale-90 duration-200 cursor-pointer">
         {children}
       </div>
-      <span className="text-[11px] text-gray-500 text-center leading-tight truncate w-full font-medium">{label}</span>
+      <span className="w-full truncate text-center text-[10px] font-semibold leading-tight text-muted-foreground sm:text-[11px]">{label}</span>
     </div>
   )
 }
@@ -407,7 +407,7 @@ function SmallBrand({ logo, label, onClick }: { logo: React.ReactNode, label: st
   return (
     <div 
       onClick={onClick}
-      className="flex flex-col items-center gap-1 active:scale-95 transition-transform"
+      className="flex min-w-0 flex-col items-center gap-1 transition-transform active:scale-95"
     >
       <div className="transition-transform active:scale-90 duration-200 cursor-pointer">
         {logo}

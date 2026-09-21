@@ -46,10 +46,10 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
           </div>
 
           <button 
-            onClick={() => router.push('/finances')} 
+            onClick={() => router.push('/utilities-hub')} 
             className="mb-4 inline-flex min-h-9 items-center gap-1 rounded-lg border border-primary-foreground/25 bg-white/10 px-3 py-1.5 text-[10px] font-bold text-primary-foreground transition-colors hover:bg-primary-foreground/15 active:scale-95 sm:mb-6"
           >
-            Portfolio Breakdown <ChevronRight size={10} className="sm:w-3 sm:h-3" />
+            Open Extensions <ChevronRight size={10} className="sm:w-3 sm:h-3" />
           </button>
         </div>
 

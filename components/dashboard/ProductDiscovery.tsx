@@ -53,10 +53,10 @@ export function ProductDiscovery() {
       <div className="mb-3 flex items-center justify-between px-5 sm:mb-5">
         <h2 className="text-[17px] font-bold text-[#1A1A1A] tracking-tight">Financial Products</h2>
         <button 
-          onClick={() => router.push('/finances')}
+          onClick={() => router.push('/utilities-hub')}
           className="text-[13px] font-bold text-primary active:opacity-60 transition-opacity"
         >
-          View Portfolio
+          View Extensions
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2.5 px-5 pb-4 sm:gap-4">

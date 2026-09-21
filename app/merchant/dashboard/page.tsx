@@ -42,7 +42,7 @@ export default function MerchantDashboard() {
     <main className="min-h-screen pb-32 bg-[#F8FAF9]">
       <header className="px-6 pt-10 pb-6 bg-white sticky top-0 z-30 shadow-sm">
         <div className="flex items-center justify-between mb-6">
-          <button onClick={() => router.push('/finances')} className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-[#1A1A1A]"><ChevronLeft size={22} /></button>
+          <button onClick={() => router.push('/utilities-hub')} className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-[#1A1A1A]"><ChevronLeft size={22} /></button>
           <NexLogo />
           <button className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-primary"><Settings size={20} /></button>
         </div>

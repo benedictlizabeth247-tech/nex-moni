@@ -6,7 +6,7 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { NexLogo } from '@/components/ui/NexLogo'
 import { cn } from '@/lib/utils'
 import { InviteDialog } from '@/components/dashboard/InviteDialog'
-import { ArrowLeft, Bell, User, Send, Download, QrCode, FileText, Smartphone, Wifi, Zap, Coins, Lock, Umbrella, UserPlus, Repeat, Headset, Settings, CreditCard, CandlestickChart, ArrowDownUp, Bot, Rocket, GraduationCap, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Bell, User, Send, Download, QrCode, FileText, Smartphone, Wifi, Zap, Coins, Lock, Umbrella, UserPlus, Repeat, Headset, Settings, CreditCard, CandlestickChart, ArrowDownUp, Bot, Blocks, Rocket, GraduationCap, ShieldCheck } from 'lucide-react'
 
 type Service = { title:string; subtitle:string; icon:React.ReactNode; href?:string; tone?:'green'|'neutral' }
 
@@ -22,7 +22,7 @@ const services: Service[] = [
   {title:'Spot Trading',subtitle:'Trade supported pairs',icon:<CandlestickChart/>,href:'/spot'},
   {title:'Futures',subtitle:'Long & short markets',icon:<CreditCard/>,href:'/futures'},
   {title:'Convert',subtitle:'Swap supported assets',icon:<ArrowDownUp/>,href:'/spot'},
-  {title:'NexPilot',subtitle:'Automated portfolios',icon:<Bot/>,href:'/finances'},
+  {title:'Extensions',subtitle:'Connected mini apps',icon:<Blocks/>,href:'/utilities-hub'},
   {title:'Launchpad',subtitle:'Explore new assets',icon:<Rocket/>,href:'/markets'},
   {title:'Learn & Earn',subtitle:'Learn market basics',icon:<GraduationCap/>,href:'/earn'},
   {title:'Investments',subtitle:'Grow your portfolio',icon:<Coins/>,href:'/investments'},

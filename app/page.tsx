@@ -156,7 +156,7 @@ function HomeContent() {
                     ['P2P', '/finance/p2p', '⇄'],
                     ['Spot', '/markets', '◇'],
                     ['Futures', '/futures', '◈'],
-                    ['Finance', '/finances', '▣'],
+                    ['Extensions', '/utilities-hub', '▦'],
                     ['Profile', '/profile', '◎'],
                     ['More', '/actions-hub', '⋯'],
                   ].map(([label, path, icon]) => (
