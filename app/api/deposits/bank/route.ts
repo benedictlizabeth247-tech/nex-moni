@@ -70,6 +70,21 @@ export async function POST(request: Request) {
   const reference = `NXM-${randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`
   const depositId = randomUUID()
   try {
+    const { error: canonicalError } = await admin.from('deposits').insert({
+      id: depositId,
+      user_id: user.id,
+      bank_name: bankName,
+      account_number: parsed.data.senderAccountNumber,
+      account_name: parsed.data.senderAccountName.trim(),
+      amount: parsed.data.amount,
+      sender_bank: parsed.data.senderBank.trim(),
+      reference,
+      screenshot_url: parsed.data.screenshotUrl ?? null,
+      status: 'pending',
+      expiry_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    })
+    if (canonicalError) throw canonicalError
+
     await db.insert(deposits).values({
       id: depositId,
       userId: user.id,
@@ -91,6 +106,7 @@ export async function POST(request: Request) {
       updatedAt: new Date(),
     })
   } catch {
+    await admin.from('deposits').delete().eq('id', depositId).eq('user_id', user.id)
     return NextResponse.json({ error: 'Deposit request could not be recorded.' }, { status: 422 })
   }
 

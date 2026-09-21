@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/admin'
 import { z } from 'zod'
+import { db } from '@/lib/db'
+import { deposits as neonDeposits } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 const schema = z.object({
   depositId: z.string().uuid(),
@@ -28,5 +31,15 @@ export async function POST(request: Request) {
     p_note: parsed.data.note || null,
   })
   if (error) return NextResponse.json({ error: error.message }, { status: 422 })
-  return NextResponse.json(data)
+
+  const result = Array.isArray(data) ? data[0] : data
+  const status = parsed.data.action === 'approve' ? 'APPROVED' : 'REJECTED'
+  await db.update(neonDeposits).set({
+    status,
+    reviewedAt: new Date(),
+    reviewedBy: user.id,
+    rejectionReason: parsed.data.action === 'reject' ? parsed.data.note ?? null : null,
+    updatedAt: new Date(),
+  }).where(eq(neonDeposits.id, parsed.data.depositId))
+  return NextResponse.json(result)
 }
