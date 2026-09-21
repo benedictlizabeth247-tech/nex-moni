@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { db } from '@/lib/db'
+import { deposits as neonDeposits } from '@/lib/db/schema'
+import { desc } from 'drizzle-orm'
 
 const adminTables = [
   'profiles', 'wallets', 'wallet_transactions', 'deposits',
@@ -23,11 +26,19 @@ export async function GET() {
 
   const [{ data: authUsers, error: usersError }, ...tableResults] = await Promise.all([
     admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-    ...adminTables.map((table) => admin.from(table).select('*').order('created_at', { ascending: false }).limit(250)),
+    db.select().from(neonDeposits).orderBy(desc(neonDeposits.createdAt)).limit(250),
+    ...adminTables.filter((table) => table !== 'deposits').map((table) => admin.from(table).select('*').order('created_at', { ascending: false }).limit(250)),
   ])
   if (usersError) return NextResponse.json({ error: 'Unable to load registered users.' }, { status: 502 })
 
-  const records = Object.fromEntries(adminTables.map((table, index) => [table, tableResults[index]?.data || []]))
+  const neonDepositRows = tableResults[0] || []
+  const supabaseResults = tableResults.slice(1)
+  const records = Object.fromEntries(adminTables.map((table) => {
+    if (table === 'deposits') return [table, neonDepositRows]
+    const index = adminTables.filter((candidate) => candidate !== 'deposits').indexOf(table)
+    const result = supabaseResults[index]
+    return [table, Array.isArray(result) ? result : result?.data || []]
+  }))
   const users = (authUsers?.users || []).map(({ id, email, phone, created_at, last_sign_in_at, email_confirmed_at, user_metadata }) => ({
     id, email, phone, created_at, last_sign_in_at, email_confirmed_at,
     name: user_metadata?.full_name || user_metadata?.name || null,
