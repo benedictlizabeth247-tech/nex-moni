@@ -39,6 +39,7 @@ function HomeContent() {
   const router = useRouter();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [balanceUsdt, setBalanceUsdt] = useState(0);
   const [equity, setEquity] = useState<number | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -47,11 +48,17 @@ function HomeContent() {
 
   useEffect(() => {
     let mounted = true;
-    Promise.allSettled([getWallet(), getProfile(), getTradingAccountSummary()])
-      .then(([walletResult, profileResult, equityResult]) => {
+  const balanceRequest = fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Balance unavailable')))
+  Promise.allSettled([getWallet(), getProfile(), getTradingAccountSummary(), balanceRequest])
+  .then(([walletResult, profileResult, equityResult, balanceResult]) => {
         if (!mounted) return;
-        if (walletResult.status === 'fulfilled') setWallet(toCommandCenterWallet(walletResult.value));
-        if (profileResult.status === 'fulfilled') setProfile(profileResult.value);
+  if (walletResult.status === 'fulfilled') setWallet(toCommandCenterWallet(walletResult.value));
+  if (balanceResult.status === 'fulfilled') {
+    const syncedBalance = Number(balanceResult.value.balance_usdt ?? 0);
+    setBalanceUsdt(syncedBalance);
+    setWallet((current) => current ? { ...current, available: syncedBalance, currency: 'USDT' } : current);
+  }
+  if (profileResult.status === 'fulfilled') setProfile(profileResult.value);
         if (equityResult.status === 'fulfilled') setEquity(Number(equityResult.value?.equity ?? 0));
       })
       .finally(() => {
