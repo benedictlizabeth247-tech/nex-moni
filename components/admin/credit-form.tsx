@@ -26,7 +26,7 @@ export function CreditForm({ userId }: { userId: string }) {
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Credit update failed")
       setReference(requestReference)
-      setMessage(`${result.wallet?.status === "already_completed" ? "Funding already committed" : "Funding committed"}: ${result.wallet?.balance_after ?? result.wallet?.available ?? 0} ${result.wallet?.currency ?? currency} available · Transaction ${result.wallet?.transaction_id ?? "recorded"}.`)
+      setMessage(`${result.wallet?.status === "already_completed" ? "Funding already committed" : "Funding committed"}: ${result.wallet?.balance_after ?? result.wallet?.available ?? 0} ${result.wallet?.currency ?? currency} available · Transaction recorded.`)
       setAmount(""); setReason("")
     } catch (error) { setMessage(error instanceof Error ? error.message : "Credit update failed") }
     finally { setSaving(false) }
