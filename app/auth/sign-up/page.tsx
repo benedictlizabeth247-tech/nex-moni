@@ -73,26 +73,26 @@ export default function Page() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#F8FAF9] px-6 py-10">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background px-6 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-10 flex flex-col items-center gap-4">
           <NexLogo />
-          <p className="text-center text-[13px] font-medium text-gray-400">
+          <p className="text-center text-[13px] font-medium text-muted-foreground">
             Create your account to get started.
           </p>
         </div>
 
         <form onSubmit={handleSignUp} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="firstName" className="text-xs font-bold uppercase tracking-wide text-gray-500">First name</Label>
-            <Input id="firstName" type="text" placeholder="Jane" required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-2xl border-border bg-white" />
+            <Label htmlFor="firstName" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">First name</Label>
+            <Input id="firstName" type="text" placeholder="Jane" required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-12 rounded-2xl border-input bg-input" />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="surname" className="text-xs font-bold uppercase tracking-wide text-gray-500">Surname</Label>
-            <Input id="surname" type="text" placeholder="Doe" required autoComplete="family-name" value={surname} onChange={(e) => setSurname(e.target.value)} className="h-12 rounded-2xl border-border bg-white" />
+            <Label htmlFor="surname" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Surname</Label>
+            <Input id="surname" type="text" placeholder="Doe" required autoComplete="family-name" value={surname} onChange={(e) => setSurname(e.target.value)} className="h-12 rounded-2xl border-input bg-input" />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wide text-gray-500">
+            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Email
             </Label>
             <Input
@@ -103,22 +103,22 @@ export default function Page() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 rounded-2xl border-border bg-white"
+              className="h-12 rounded-2xl border-input bg-input"
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-gray-500">
+            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Password
             </Label>
             <div className="relative">
-              <Input id="password" type={showPassword ? 'text' : 'password'} required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl border-border bg-white pr-12" />
+              <Input id="password" type={showPassword ? 'text' : 'password'} required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl border-input bg-input pr-12" />
               <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-3 flex items-center text-muted-foreground" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="repeat-password" className="text-xs font-bold uppercase tracking-wide text-gray-500">
+            <Label htmlFor="repeat-password" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Repeat password
             </Label>
             <Input
@@ -128,7 +128,7 @@ export default function Page() {
               autoComplete="new-password"
               value={repeatPassword}
               onChange={(e) => setRepeatPassword(e.target.value)}
-              className="h-12 rounded-2xl border-border bg-white"
+              className="h-12 rounded-2xl border-input bg-input"
             />
           </div>
 
@@ -154,7 +154,7 @@ export default function Page() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{' '}
           <Link href="/auth/login" className="font-bold text-primary underline-offset-4 hover:underline">
             Sign in

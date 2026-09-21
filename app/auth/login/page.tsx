@@ -60,18 +60,18 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#0D0F11] px-4 py-6 text-[#F4F1EF] sm:px-6 sm:py-10">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background px-4 py-6 text-foreground sm:px-6 sm:py-10">
       <div className="w-full max-w-sm min-w-0">
         <div className="mb-7 flex flex-col items-center gap-3 sm:mb-10 sm:gap-4">
-          <div className="[&_*]:!text-[#F4F1EF]"><NexLogo className="scale-90 sm:scale-100" /></div>
-          <p className="text-center text-[13px] font-medium text-[#8D959D]">
+          <div className="[&_*]:!text-foreground"><NexLogo className="scale-90 sm:scale-100" /></div>
+          <p className="text-center text-[13px] font-medium text-muted-foreground">
             Welcome back. Sign in to continue.
           </p>
         </div>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4 sm:gap-5">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wide text-[#8D959D]">
+            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Email
             </Label>
             <Input
@@ -82,18 +82,18 @@ function LoginForm() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-11 rounded-xl border-[#30343A] bg-[#171A1E] text-[#F4F1EF] placeholder:text-[#8D959D] sm:h-12 sm:rounded-2xl"
+              className="h-11 rounded-xl border-input bg-input text-foreground placeholder:text-muted-foreground sm:h-12 sm:rounded-2xl"
             />
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-[#8D959D]">
+              <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 Password
               </Label>
             </div>
             <div className="relative">
-              <Input id="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl border-[#30343A] bg-[#171A1E] pr-12 text-[#F4F1EF] placeholder:text-[#8D959D] sm:h-12 sm:rounded-2xl" />
-              <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-3 flex items-center text-[#8D959D]" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+              <Input id="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl border-input bg-input pr-12 text-foreground placeholder:text-muted-foreground sm:h-12 sm:rounded-2xl" />
+              <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-3 flex items-center text-muted-foreground" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -121,7 +121,7 @@ function LoginForm() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-[#F4F1EF]">
+        <p className="mt-6 text-center text-sm text-foreground">
           Don&apos;t have an account?{' '}
           <Link href="/auth/sign-up" className="font-bold text-primary underline-offset-4 hover:underline">
             Create one
