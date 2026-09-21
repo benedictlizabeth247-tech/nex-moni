@@ -22,6 +22,7 @@ export async function GET() {
     const stored = Number(wallet?.availableBalance ?? 0)
 
     return NextResponse.json({
+      success: true,
       balance_usdt: stored,
       currency: "USDT",
       stored_balance: stored,

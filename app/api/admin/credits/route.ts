@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'ADMIN_WALLET_ADJUSTMENT', resourceType: 'wallet', resourceId: updated.id, metadata: { userId: parsed.data.userId, amount, currency: parsed.data.currency, reason: parsed.data.reason, reference } })
       return updated
     })
-    return NextResponse.json({ wallet: result, committed: true })
+    return NextResponse.json({ success: true, committed: true, wallet: { ...result, balance_after: result.availableBalance, available: result.availableBalance, currency: result.currency } })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Wallet adjustment failed.' }, { status: 422 })
   }
