@@ -6,7 +6,6 @@ import { ArrowLeft, RefreshCw, Search, ShieldAlert, Users } from "lucide-react"
 import { OrderActions } from "@/components/admin/order-actions"
 import { DepositActions } from "@/components/admin/deposit-actions"
 import { WithdrawalActions } from "@/components/admin/withdrawal-actions"
-import { createClient } from "@/lib/supabase/client"
 import { AdminServiceActions } from "@/components/admin/service-actions"
 
 const labels: Record<string, string> = { orders: "Trading order queue", allocations: "Autopilot allocations", users: "Users & affiliates", wallets: "Wallets & credits", deposits: "Funding controls", withdrawals: "Withdrawals", transfers: "Transfers", payments: "Payments", "audit-log": "Audit log", p2p: "P2P monitoring", merchants: "Merchants & tiers", risk: "Risk controls", "market-data": "Market data", "data-purchases": "Data purchase requests" }
@@ -30,7 +29,7 @@ export default function AdminSection({ params }: { params: Promise<{ section: st
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load admin records.") }
     finally { setLoading(false) }
   }
-  useEffect(() => { void load(); const timer = window.setInterval(() => void load(), 10000); const supabase = createClient(); const channel = supabase.channel("admin-live").on("postgres_changes", { event: "*", schema: "public" }, () => { void load() }).subscribe(); const onFocus = () => void load(); window.addEventListener("focus", onFocus); return () => { window.clearInterval(timer); window.removeEventListener("focus", onFocus); void supabase.removeChannel(channel) } }, [])
+  useEffect(() => { void load(); const timer = window.setInterval(() => void load(), 10000); const onFocus = () => void load(); window.addEventListener("focus", onFocus); return () => { window.clearInterval(timer); window.removeEventListener("focus", onFocus) } }, [])
 
   const requestedStatus = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("status") || "" : ""
   const records = useMemo(() => {

@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import { db } from "@/lib/db"
 import { wallets, transactions } from "@/lib/db/schema"
 import { and, desc, eq, inArray } from "drizzle-orm"
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const session = await auth.api.getSession({ headers: await headers() })
+    const user = session?.user
+    if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const [wallet] = await db.select().from(wallets).where(and(eq(wallets.userId, user.id), eq(wallets.currency, "USDT"))).limit(1)
     const rows = wallet

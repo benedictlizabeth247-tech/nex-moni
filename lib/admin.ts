@@ -18,9 +18,8 @@ export type AdminContext = {
 /**
  * Canonical server-side administrator boundary.
  *
- * public.admin_staff is the sole runtime source of truth. The designated
- * administrator identities are provisioned by the Supabase migration chain;
- * application code never authorizes a user merely from a typed email address.
+ * Neon Better Auth is the runtime session source. Administrator access is
+ * limited to explicitly configured staff identities.
  */
 function isConfiguredAdmin(email?: string | null) {
   const configuredEmails = (process.env.ADMIN_STAFF_EMAILS ?? '').split(',').map((value) => value.trim().toLowerCase()).filter(Boolean)
