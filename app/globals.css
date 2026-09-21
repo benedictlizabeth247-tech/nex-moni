@@ -213,3 +213,6 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   [role="tablist"] > [role="tab"], [data-slot="tabs-trigger"] { flex: 1 1 0%; min-width: 0; min-height: 44px; padding-inline: 0.5rem; white-space: nowrap; }
 }
 [role="tab"], [data-slot="tabs-trigger"] { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; }
+.candle-chart-shell:fullscreen { width: 100vw; height: 100vh; padding: 1rem; background: var(--background); }
+.candle-chart-shell:fullscreen > div:last-child { min-height: 0; }
+@media (max-width: 639px) { .candle-chart-shell { min-height: 205px; } }

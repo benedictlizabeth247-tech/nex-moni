@@ -27,6 +27,7 @@ interface CandleChartProps {
 
 export function CandleChart({ candles, up }: CandleChartProps) {
   const [chartMode, setChartMode] = useState<'line' | 'candles'>('line')
+  const [zoom, setZoom] = useState(1)
   const [activeTool, setActiveTool] = useState<'cursor' | 'line' | 'horizontal' | 'clear'>('cursor')
   const [drawnLines, setDrawnLines] = useState<Array<{ x1: number; y1: number; x2: number; y2: number; horizontal?: boolean }>>([])
   const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null)
@@ -38,14 +39,18 @@ export function CandleChart({ candles, up }: CandleChartProps) {
     () => candles.map((candle) => ({ ...candle })),
     [candles],
   )
+  const visibleData = useMemo(() => {
+    if (zoom === 1 || data.length < 2) return data
+    return data.slice(Math.max(0, data.length - Math.ceil(data.length / zoom)))
+  }, [data, zoom])
   const candleDomain = useMemo<[number, number]>(() => {
-    const values = data.flatMap((d) => [d.high, d.low]).filter(Number.isFinite)
+    const values = visibleData.flatMap((d) => [d.high, d.low]).filter(Number.isFinite)
     if (!values.length) return [0, 1]
     const min = Math.min(...values)
     const max = Math.max(...values)
     const pad = (max - min) * 0.08 || Math.abs(max) * 0.01 || 1
     return [min - pad, max + pad]
-  }, [data])
+  }, [visibleData])
   const scaleY = (value: number) => 8 + ((candleDomain[1] - value) / (candleDomain[1] - candleDomain[0])) * 164
   const handleDrawingClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (activeTool === 'cursor') return
@@ -64,17 +69,17 @@ export function CandleChart({ candles, up }: CandleChartProps) {
   }
 
   const domain = useMemo<[number, number]>(() => {
-    const closes = data.map((d) => d.close).filter((v) => Number.isFinite(v))
+    const closes = visibleData.map((d) => d.close).filter((v) => Number.isFinite(v))
     if (!closes.length) return [0, 1]
     const min = Math.min(...closes)
     const max = Math.max(...closes)
     // Pad so the line never touches the container edges.
     const pad = (max - min) * 0.08 || Math.abs(max) * 0.01 || 1
     return [min - pad, max + pad]
-  }, [data])
+  }, [visibleData])
 
   return (
-    <div ref={chartRef} className="flex h-full min-h-[220px] max-h-full w-full min-w-0 flex-col overflow-hidden bg-background" style={{ contain: 'layout paint size' }}>
+    <div ref={chartRef} className="candle-chart-shell flex h-full min-h-[220px] max-h-full w-full min-w-0 flex-col overflow-hidden bg-background" style={{ contain: 'layout paint size' }}>
       <div className="mb-1 flex min-w-0 items-center justify-between gap-1 border-b border-border/60 pb-1">
         <div className="flex min-w-0 items-center gap-0.5 rounded-lg border border-border bg-card p-0.5" role="toolbar" aria-label="Drawing tools">
           <button type="button" title="Select" aria-label="Select tool" onClick={() => setActiveTool('cursor')} className={`rounded p-1.5 ${activeTool === 'cursor' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><MousePointer2 className="size-3" /></button>
@@ -85,12 +90,15 @@ export function CandleChart({ candles, up }: CandleChartProps) {
         <div className="flex min-w-0 items-center justify-end gap-1" role="group" aria-label="Chart type">
         <button type="button" onClick={() => setChartMode('line')} aria-pressed={chartMode === 'line'} className={`rounded-md px-2 py-1 text-[10px] font-bold ${chartMode === 'line' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Line</button>
         <button type="button" onClick={() => setChartMode('candles')} aria-pressed={chartMode === 'candles'} className={`rounded-md px-2 py-1 text-[10px] font-bold ${chartMode === 'candles' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>Candles</button>
+        <button type="button" title="Zoom out" aria-label="Zoom out" onClick={() => setZoom((value) => Math.max(1, value - 1))} className="rounded-md px-1.5 py-1 text-[10px] font-bold text-muted-foreground hover:bg-muted">−</button>
+        <span className="min-w-8 text-center text-[9px] font-semibold tabular-nums text-muted-foreground">{zoom}×</span>
+        <button type="button" title="Zoom in" aria-label="Zoom in" onClick={() => setZoom((value) => Math.min(4, value + 1))} className="rounded-md px-1.5 py-1 text-[10px] font-bold text-muted-foreground hover:bg-muted">+</button>
         <button type="button" title="Fullscreen chart" aria-label="Fullscreen chart" onClick={() => chartRef.current?.requestFullscreen?.()} className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"><Maximize2 className="size-3.5" /></button>
       </div></div>
       <div className="relative min-h-0 max-h-full flex-1 w-full overflow-hidden rounded-lg" onClick={handleDrawingClick}>{drawnLines.length > 0 && <svg className="pointer-events-none absolute inset-0 z-10 h-full w-full" viewBox="0 0 1000 180" preserveAspectRatio="none" aria-label="Saved chart drawings">{drawnLines.map((line, index) => <line key={index} x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2} stroke="#9B5B52" strokeWidth="2" strokeDasharray={line.horizontal ? '6 4' : undefined} />)}</svg>}
       {chartMode === 'candles' ? (
         <svg viewBox="0 0 1000 180" className="block h-full w-full overflow-hidden" role="img" aria-label="Candlestick price chart" preserveAspectRatio="none">
-          {data.map((candle, index) => {
+          {visibleData.map((candle, index) => {
             const x = 10 + (index / Math.max(data.length - 1, 1)) * 980
             const bodyTop = Math.min(scaleY(candle.open), scaleY(candle.close))
             const bodyHeight = Math.max(Math.abs(scaleY(candle.open) - scaleY(candle.close)), 2)
@@ -100,7 +108,7 @@ export function CandleChart({ candles, up }: CandleChartProps) {
         </svg>
       ) : (
       <div className="h-full w-full overflow-hidden"><ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 4 }}>
+        <AreaChart data={visibleData} margin={{ top: 8, right: 4, bottom: 0, left: 4 }}>
           <defs>
             <linearGradient id={`${gradientId}-assetFill`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={stroke} stopOpacity={0.28} />
