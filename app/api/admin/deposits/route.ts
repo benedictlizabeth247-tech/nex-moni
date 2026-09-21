@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { deposits as neonDeposits, wallets, ledgerEntries, auditLog } from '@/lib/db/schema'
+import { deposits as neonDeposits, wallets, ledgerEntries, auditLog, transactions } from '@/lib/db/schema'
 import { and, eq, sql } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 
@@ -32,13 +32,18 @@ export async function POST(request: Request) {
   await db.transaction(async (tx) => {
     await tx.update(neonDeposits).set({ status, reviewedAt, reviewedBy: user.id, rejectionReason: parsed.data.action === 'reject' ? parsed.data.note ?? null : null, updatedAt: reviewedAt }).where(and(eq(neonDeposits.id, parsed.data.depositId), eq(neonDeposits.status, 'PENDING')))
     if (parsed.data.action === 'approve') {
-      const [wallet] = await tx.select().from(wallets).where(and(eq(wallets.userId, deposit.userId), eq(wallets.currency, deposit.currency))).limit(1)
+      const walletCurrency = 'USDT'
+      const [wallet] = await tx.select().from(wallets).where(and(eq(wallets.userId, deposit.userId), eq(wallets.currency, walletCurrency))).limit(1)
       if (wallet) {
         await tx.update(wallets).set({ availableBalance: sql`${wallets.availableBalance} + ${deposit.amount}`, updatedAt: reviewedAt }).where(eq(wallets.id, wallet.id))
       } else {
-        await tx.insert(wallets).values({ id: randomUUID(), userId: deposit.userId, currency: deposit.currency, availableBalance: deposit.amount, updatedAt: reviewedAt })
+        await tx.insert(wallets).values({ id: randomUUID(), userId: deposit.userId, currency: walletCurrency, availableBalance: deposit.amount, updatedAt: reviewedAt })
       }
-      await tx.insert(ledgerEntries).values({ id: randomUUID(), userId: deposit.userId, kind: 'DEPOSIT', direction: 'CREDIT', amount: deposit.amount, currency: deposit.currency, reference: `DEP-${deposit.reference}`, sourceId: deposit.id, metadata: { approvedBy: user.id } }).onConflictDoNothing({ target: ledgerEntries.reference })
+      await tx.insert(ledgerEntries).values({ id: randomUUID(), userId: deposit.userId, walletId: wallet?.id ?? null, kind: 'DEPOSIT', direction: 'CREDIT', amount: deposit.amount, currency: walletCurrency, reference: `DEP-${deposit.reference}`, sourceId: deposit.id, metadata: { approvedBy: user.id, sourceCurrency: deposit.currency } }).onConflictDoNothing({ target: ledgerEntries.reference })
+      {
+        const [creditedWallet] = await tx.select({ id: wallets.id }).from(wallets).where(and(eq(wallets.userId, deposit.userId), eq(wallets.currency, walletCurrency))).limit(1)
+        if (creditedWallet) await tx.insert(transactions).values({ id: randomUUID(), userId: deposit.userId, walletId: creditedWallet.id, type: 'deposit', amount: deposit.amount, currency: walletCurrency, status: 'completed', description: `Approved bank deposit ${deposit.reference}`, updatedAt: reviewedAt }).onConflictDoNothing()
+      }
     }
     await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: `DEPOSIT_${status}`, resourceType: 'deposit', resourceId: deposit.id, metadata: { reference: deposit.reference, amount: deposit.amount, currency: deposit.currency } })
   })
