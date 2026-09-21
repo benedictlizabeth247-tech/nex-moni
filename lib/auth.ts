@@ -6,8 +6,12 @@ const baseURL = process.env.BETTER_AUTH_URL
   ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined)
   ?? process.env.V0_RUNTIME_URL
 
+const secret = process.env.BETTER_AUTH_SECRET
+if (!secret) throw new Error('BETTER_AUTH_SECRET is required for Neon admin authentication')
+
 export const auth = betterAuth({
   database: pool,
+  secret,
   baseURL,
   emailAndPassword: {
     enabled: true,

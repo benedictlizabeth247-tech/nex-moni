@@ -4,7 +4,7 @@ import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ShieldCheck, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,15 +26,14 @@ function AdminLoginForm() {
     setError(null)
     const normalized = email.trim().toLowerCase()
     try {
-      const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email: normalized, password })
+      const { error: signInError } = await authClient.signIn.email({ email: normalized, password })
       if (signInError) throw signInError
 
       // Do not trust the typed email. The server must confirm the authenticated
       // Supabase user has an active admin_staff record before we enter /admin.
       const authorization = await fetch('/api/admin/session', { cache: 'no-store' })
       if (!authorization.ok) {
-        await supabase.auth.signOut()
+        await authClient.signOut()
         throw new Error('ADMIN_ACCESS_REQUIRED')
       }
 
