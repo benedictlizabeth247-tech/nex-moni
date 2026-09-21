@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Plus, Send, Landmark, CreditCard, ChevronRight } from 'lucide-react'
+import { Eye, EyeOff, Plus, Send, Landmark, CreditCard } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Wallet } from '@/types'
@@ -45,12 +45,7 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
             )}
           </div>
 
-          <button 
-            onClick={() => router.push('/utilities-hub')} 
-            className="mb-4 inline-flex min-h-9 items-center gap-1 rounded-lg border border-primary-foreground/25 bg-white/10 px-3 py-1.5 text-[10px] font-bold text-primary-foreground transition-colors hover:bg-primary-foreground/15 active:scale-95 sm:mb-6"
-          >
-            Open Extensions <ChevronRight size={10} className="sm:w-3 sm:h-3" />
-          </button>
+
         </div>
 
         <div className="mb-3 h-px w-full bg-primary-foreground/15 sm:mb-4" />
