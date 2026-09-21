@@ -22,22 +22,21 @@ export type AdminContext = {
  * administrator identities are provisioned by the Supabase migration chain;
  * application code never authorizes a user merely from a typed email address.
  */
-async function provisionConfiguredAdmins() {
+async function provisionConfiguredAdmin(user: { id: string; email?: string | null }) {
   const configuredEmails = (process.env.ADMIN_STAFF_EMAILS ?? '')
     .split(',')
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
-  if (!configuredEmails.length) return
+
+  const email = user.email?.trim().toLowerCase()
+  if (!email || !configuredEmails.includes(email)) return
 
   const admin = createAdminClient()
-  const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-  const matchingUsers = data.users.filter((candidate) => candidate.email && configuredEmails.includes(candidate.email.toLowerCase()))
-  if (!matchingUsers.length) return
-
-  await admin.from('admin_staff').upsert(
-    matchingUsers.map((candidate) => ({ user_id: candidate.id, email: candidate.email!.toLowerCase(), active: true })),
+  const { error } = await admin.from('admin_staff').upsert(
+    { user_id: user.id, email, active: true },
     { onConflict: 'user_id' },
   )
+  if (error) throw error
 }
 
 export async function getAdminContext(): Promise<AdminContext | null> {
@@ -49,7 +48,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
   if (!user?.id) return null
 
   try {
-    await provisionConfiguredAdmins()
+    await provisionConfiguredAdmin(user)
     const admin = createAdminClient()
     const { data: staff, error } = await admin
       .from('admin_staff')
