@@ -23,8 +23,8 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
   const parsed = schema.safeParse({
     userId: body?.userId,
-    amount: Number(body?.amount),
-    currency: body?.currency || "USDT",
+    amount: typeof body?.amount === "string" ? Number(body.amount.trim()) : Number(body?.amount),
+    currency: typeof body?.currency === "string" ? body.currency.trim().toUpperCase() : body?.currency || "USDT",
     reason: typeof body?.reason === "string" ? body.reason.trim() : body?.reason,
     reference: body?.reference,
   })

@@ -4,7 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const schema = z.object({
-  withdrawalId: z.string().uuid(),
+  withdrawalId: z.string().trim().min(1).max(128),
   action: z.enum(['approve','reject','hold','mark_processing','resume','complete','fail']),
   note: z.string().trim().max(500).optional().nullable(),
 })
