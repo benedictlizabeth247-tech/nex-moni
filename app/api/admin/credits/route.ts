@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin"
 import { db } from "@/lib/db"
-import { wallets, ledgerEntries, auditLog } from "@/lib/db/schema"
+import { wallets, ledgerEntries, auditLog, transactions } from "@/lib/db/schema"
 import { sql } from "drizzle-orm"
 import { randomUUID } from "node:crypto"
 import { z } from "zod"
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       const [updated] = await tx.update(wallets).set({ availableBalance: sql`${wallets.availableBalance} + ${amount}`, updatedAt: now }).where(sql`${wallets.userId} = ${parsed.data.userId} AND ${wallets.currency} = ${parsed.data.currency} AND ${wallets.availableBalance} + ${amount} >= 0`).returning()
       if (!updated) throw new Error('Insufficient available balance for this debit.')
       await tx.insert(ledgerEntries).values({ id: randomUUID(), userId: parsed.data.userId, walletId: updated.id, kind: 'ADMIN_ADJUSTMENT', direction, amount: absoluteAmount, currency: parsed.data.currency, reference, metadata: { reason: parsed.data.reason, actorUserId: user.id } }).onConflictDoNothing({ target: ledgerEntries.reference })
+      await tx.insert(transactions).values({ id: randomUUID(), userId: parsed.data.userId, walletId: updated.id, type: direction === 'CREDIT' ? 'deposit' : 'withdrawal', amount: absoluteAmount, currency: parsed.data.currency, status: 'completed', description: parsed.data.reason, updatedAt: now })
       await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'ADMIN_WALLET_ADJUSTMENT', resourceType: 'wallet', resourceId: updated.id, metadata: { userId: parsed.data.userId, amount, currency: parsed.data.currency, reason: parsed.data.reason, reference } })
       return updated
     })

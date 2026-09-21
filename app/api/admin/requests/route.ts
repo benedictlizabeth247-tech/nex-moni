@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { getAdminContext } from '@/lib/admin'
 import { db } from '@/lib/db'
-import { deposits as neonDeposits, withdrawals as neonWithdrawals, operationalRecords, user as neonUsers } from '@/lib/db/schema'
+import { deposits as neonDeposits, withdrawals as neonWithdrawals, operationalRecords, transactions, user as neonUsers } from '@/lib/db/schema'
 import { desc } from 'drizzle-orm'
 
 const adminTables = [
@@ -28,6 +28,7 @@ export async function GET() {
     db.select().from(neonDeposits).orderBy(desc(neonDeposits.createdAt)).limit(250),
     db.select().from(neonWithdrawals).orderBy(desc(neonWithdrawals.createdAt)).limit(250),
     db.select().from(operationalRecords).orderBy(desc(operationalRecords.createdAt)).limit(1000),
+    db.select().from(transactions).orderBy(desc(transactions.createdAt)).limit(1000),
     ...adminTables.filter((table) => !['deposits', 'withdrawal_requests'].includes(table)).map((table) => admin.from(table).select('*').order('created_at', { ascending: false }).limit(250)),
   ])
   const users = neonUserRows.map((record) => ({
@@ -41,7 +42,8 @@ export async function GET() {
   const neonDepositRows = tableResults[0] || []
   const neonWithdrawalRows = tableResults[1] || []
   const neonOperationalRows = tableResults[2] || []
-  const supabaseResults = tableResults.slice(3)
+  const neonTransactionRows = tableResults[3] || []
+  const supabaseResults = tableResults.slice(4)
   const records = Object.fromEntries(adminTables.map((table) => {
     if (table === 'deposits') return [table, neonDepositRows]
     if (table === 'withdrawal_requests') return [table, neonWithdrawalRows]
@@ -59,6 +61,7 @@ export async function GET() {
     deposits: records.deposits,
     withdrawals: records.withdrawal_requests,
     operationalRecords: neonOperationalRows,
+    transactions: neonTransactionRows,
     orders: records.trading_orders,
     positions: records.trading_positions,
     ledger: records.exchange_ledger,

@@ -14,7 +14,7 @@ export function CreditForm({ userId }: { userId: string }) {
     event.preventDefault()
     const numericAmount = Number(amount)
     const normalizedReason = reason.trim()
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0 || !currency.trim() || normalizedReason.length < 3) {
+    if (!Number.isFinite(numericAmount) || numericAmount === 0 || !currency.trim() || normalizedReason.length < 3) {
       setMessage("Enter an amount greater than 0, choose a currency, and add a reason with at least 3 characters.")
       return
     }
