@@ -154,15 +154,15 @@ export default function MarketsFeed() {
           </div>
         </div>
 
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full min-w-[520px] text-left">
+        <div className="w-full overflow-hidden">
+          <table className="w-full table-fixed text-left">
             <thead>
               <tr className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-gray-50">
-                <th className="pb-2">Trading Pairs</th>
-                <th className="pb-2 text-right">Price</th>
-                <th className="pb-2 text-right">24H Change</th>
-                <th className="pb-2 text-right">24H Volume</th>
-                <th className="pb-2 text-right">Trade</th>
+                <th className="w-[43%] pb-2 pr-1">Trading Pairs</th>
+                <th className="w-[17%] pb-2 text-right">Price</th>
+                <th className="w-[16%] pb-2 text-right">24H Change</th>
+                <th className="w-[12%] pb-2 text-right">Volume</th>
+                <th className="w-[12%] pb-2 text-right">Trade</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-[11px]">
@@ -191,12 +191,12 @@ export default function MarketsFeed() {
                   ))
                 : rows.map((row) => (
                     <tr key={row.id} onClick={() => openAsset(row.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openAsset(row.id) } }} tabIndex={0} role="link" aria-label={`Trade ${row.display}`} className="group cursor-pointer border-b border-border/70 outline-none transition-all hover:bg-primary/[0.08] hover:shadow-[inset_4px_0_0_var(--primary)] focus-visible:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-primary/30">
-                      <td className="py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <AssetAvatar symbol={row.symbol} name={row.name} type={row.type} iconUrl={row.iconUrl} size={30} />
+                      <td className="min-w-0 py-2.5 pr-1 sm:py-3.5">
+                        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
+                          <AssetAvatar symbol={row.symbol} name={row.name} type={row.type} iconUrl={row.iconUrl} size={28} />
                           <button
                             onClick={(event) => { event.stopPropagation(); handleToggleFavorite(row.id) }}
-                            className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                            className="hidden rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary sm:inline-flex"
                             aria-label={
                               favoriteSet.has(row.id)
                                 ? `Remove ${row.display} from favorites`
@@ -209,13 +209,13 @@ export default function MarketsFeed() {
                               }`}
                             />
                           </button>
-                          <div>
-                            <div className="flex items-center gap-1">
-                              <span className="rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-black tracking-tight text-primary-foreground shadow-sm tabular-nums transition-all group-hover:brightness-110 group-hover:shadow-md">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex min-w-0 items-center gap-1">
+                              <span className="max-w-[70%] truncate rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-black sm:text-[10px] tracking-tight text-primary-foreground shadow-sm tabular-nums transition-all group-hover:brightness-110 group-hover:shadow-md">
                                 {row.display}
                               </span>
                               <span
-                                className={`rounded-full px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wide ${
+                                className={`shrink-0 rounded-full px-1 py-0.5 text-[6px] font-black uppercase tracking-wide sm:px-1.5 sm:text-[7px] ${
                                   row.type === "crypto"
                                     ? "bg-teal-50 text-primary"
                                     : "bg-blue-50 text-blue-600"
@@ -224,16 +224,16 @@ export default function MarketsFeed() {
                                 {CATEGORY_LABEL[row.type]}
                               </span>
                             </div>
-                            <span className="mt-0.5 block text-[10px] leading-tight text-muted-foreground">{row.name}</span>
+                            <span className="mt-0.5 block truncate text-[9px] leading-tight text-muted-foreground sm:text-[10px]">{row.name}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 font-bold text-foreground text-right tabular-nums">
+                      <td className="py-2 text-right text-[10px] font-bold text-foreground tabular-nums sm:py-3 sm:text-[11px]">
                         {formatQuotePrice(row)}
                       </td>
-                      <td className="py-3 text-right font-extrabold">
+                      <td className="py-2 text-right font-extrabold sm:py-3">
                         <span
-                          className={`inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] tabular-nums ${
+                            className={`inline-flex max-w-full items-center gap-0.5 rounded-lg px-1 py-0.5 text-[8px] tabular-nums sm:px-2 sm:py-1 sm:text-[10px] ${
                             row.changePercent >= 0
                               ? "text-primary bg-emerald-50"
                               : "text-[#FF8882] bg-rose-50"
@@ -247,15 +247,15 @@ export default function MarketsFeed() {
                           {formatPercent(row.changePercent)}
                         </span>
                       </td>
-                      <td className="py-3 text-right tabular-nums">
-                        <span className="text-[10px] font-semibold text-muted-foreground">
+                      <td className="py-2 text-right tabular-nums sm:py-3">
+                        <span className="text-[8px] font-semibold text-muted-foreground sm:text-[10px]">
                           {formatCompactVolume(row.quoteVolume ?? row.volume)}
                         </span>
                       </td>
-                      <td className="py-3 text-right">
+                      <td className="py-2 text-right sm:py-3">
                         <button
                           onClick={() => openAsset(row.id)}
-                          className="rounded-lg bg-primary px-3 py-1.5 text-[11px] font-black text-primary-foreground shadow-sm transition-transform hover:scale-[1.03]"
+                          className="rounded-lg bg-primary px-2 py-1 text-[9px] font-black text-primary-foreground shadow-sm transition-transform hover:scale-[1.03] sm:px-3 sm:py-1.5 sm:text-[11px]"
                         >
                           Trade
                         </button>
