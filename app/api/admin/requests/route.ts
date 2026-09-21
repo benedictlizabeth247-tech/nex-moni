@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { getAdminContext } from '@/lib/admin'
 import { db } from '@/lib/db'
 import { deposits as neonDeposits } from '@/lib/db/schema'
 import { desc } from 'drizzle-orm'
@@ -12,17 +12,16 @@ const adminTables = [
 ] as const
 
 export async function GET() {
-  const authClient = await createServerClient()
-  const { data: { user } } = await authClient.auth.getUser()
-  if (!user?.id) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 })
+  const context = await getAdminContext()
+  if (!context) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 })
+  const user = context.user
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!serviceKey || !supabaseUrl) return NextResponse.json({ error: 'Admin service role is not configured.' }, { status: 503 })
 
   const admin = createSupabaseClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-  const { data: staff, error: staffError } = await admin.from('admin_staff').select('user_id,role,active').eq('user_id', user.id).eq('active', true).maybeSingle()
-  if (staffError || !staff) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 })
+  const staff = context.staff
 
   const [{ data: authUsers, error: usersError }, ...tableResults] = await Promise.all([
     admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
