@@ -282,11 +282,16 @@ export async function getBoard(options: {
       : category
       ? categoryIds(category)
       : [
-          ...CRYPTO_UNIVERSE.slice(0, 16).map((c) => buildAssetId('crypto', c.symbol)),
+          // Request the broadest supported universe first; the live provider
+          // volume fields decide the final order below rather than a static list.
+          ...CRYPTO_UNIVERSE.map((c) => buildAssetId('crypto', c.symbol)),
           ...(includeEquities
             ? [
-                ...STOCK_UNIVERSE.slice(0, 6).map((s) => buildAssetId('stock', s.symbol)),
-                ...ETF_UNIVERSE.slice(0, 3).map((s) => buildAssetId('etf', s.symbol)),
+                ...STOCK_UNIVERSE.map((s) => buildAssetId('stock', s.symbol)),
+                ...ETF_UNIVERSE.map((s) => buildAssetId('etf', s.symbol)),
+                ...FOREX_UNIVERSE.map((s) => buildAssetId('forex', s.symbol)),
+                ...COMMODITY_UNIVERSE.map((s) => buildAssetId('commodity', s.symbol)),
+                ...INDEX_UNIVERSE.map((s) => buildAssetId('index', s.symbol)),
               ]
             : []),
         ]

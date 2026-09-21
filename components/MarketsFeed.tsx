@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Search, Star, TrendingUp, TrendingDown } from "lucide-react";
+import { ChevronRight, Search, Star, TrendingUp, TrendingDown, Activity } from "lucide-react";
 
 import { useUser } from "@/supabase";
 import { useLiveQuotes, useMarketBoard, useMarketSearch } from "@/hooks/use-market-data";
@@ -17,6 +17,15 @@ import { AssetAvatar } from "@/components/markets/AssetAvatar";
 
 const TABS = ["Hot", "Recommended", "Losers", "Gainers"] as const;
 type Tab = (typeof TABS)[number];
+
+function formatCompactVolume(value?: number) {
+  if (!Number.isFinite(value) || !value) return "—";
+  const absolute = Math.abs(value);
+  if (absolute >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+  if (absolute >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (absolute >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
 
 const TAB_TO_BOARD: Record<Tab, "favorites" | "hot" | "gainers" | "losers"> = {
   Recommended: "favorites",
@@ -45,7 +54,10 @@ export default function MarketsFeed() {
   // Board (Hot / Gainers / Losers) comes from the Market Data Service.
   const board = useMarketBoard({
     tab: TAB_TO_BOARD[activeMarketTab],
-    limit: 12,
+    // Hot is the live volume leaderboard; the other boards stay compact and
+    // focused so users can compare movers without losing the vertical feed.
+    limit: activeMarketTab === "Hot" ? 79 : 14,
+    refreshMs: 10_000,
     enabled: !isFavoritesTab,
   });
 
@@ -127,6 +139,16 @@ export default function MarketsFeed() {
           )}
         </div>
 
+        {!isFavoritesTab && (
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2">
+            <Activity className="text-primary" aria-hidden="true" />
+            <p className="text-[10px] font-semibold text-muted-foreground">
+              {activeMarketTab === "Hot" ? "Live volume ranking · refreshes every 10 seconds" : `${activeMarketTab} ranked by live market data`}
+            </p>
+            {isDegraded && <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-warning">Delayed</span>}
+          </div>
+        )}
+
         <div className="w-full border-b border-gray-50 pb-0 mb-3">
           <div className="flex w-full gap-0 overflow-x-auto scrollbar-hide">
             {TABS.map((tab) => (
@@ -145,13 +167,14 @@ export default function MarketsFeed() {
           </div>
         </div>
 
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left">
+        <div className="max-h-[720px] overflow-y-auto overflow-x-auto scrollbar-hide">
+          <table className="w-full min-w-[520px] text-left">
             <thead>
               <tr className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-gray-50">
                 <th className="pb-2">Trading Pairs</th>
                 <th className="pb-2 text-right">Price</th>
                 <th className="pb-2 text-right">24H Change</th>
+                <th className="pb-2 text-right">24H Volume</th>
                 <th className="pb-2 text-right">Trade</th>
               </tr>
             </thead>
@@ -237,6 +260,11 @@ export default function MarketsFeed() {
                           {formatPercent(row.changePercent)}
                         </span>
                       </td>
+                      <td className="py-3 text-right tabular-nums">
+                        <span className="text-[10px] font-semibold text-muted-foreground">
+                          {formatCompactVolume(row.quoteVolume ?? row.volume)}
+                        </span>
+                      </td>
                       <td className="py-3 text-right">
                         <button
                           onClick={() => openAsset(row.id)}
@@ -250,7 +278,7 @@ export default function MarketsFeed() {
 
               {!isLoading && !rows.length && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-[10px] font-bold text-muted-foreground">
+                  <td colSpan={5} className="py-8 text-center text-[10px] font-bold text-muted-foreground">
                     {isFavoritesTab
                       ? "Tap the star on any market to add it here."
                       : "Market data is unavailable right now. Retrying automatically."}

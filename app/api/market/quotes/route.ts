@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const trending = searchParams.get('trending') === '1'
   const parsedLimit = Number(searchParams.get('limit'))
   const limit =
-    Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 60) : undefined
+    Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 79) : undefined
 
   try {
     if (trending) {
