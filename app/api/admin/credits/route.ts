@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   try {
     const now = new Date()
     const walletId = randomUUID()
-    const reference = parsed.data.reference || `ADMIN-${randomUUID().replaceAll('-', '').slice(0, 12).toUpperCase()}`
+    const reference = parsed.data.reference?.trim() || `ADMIN-${randomUUID()}`
     const amount = parsed.data.amount.toFixed(2)
     const direction = parsed.data.amount > 0 ? 'CREDIT' : 'DEBIT'
     const absoluteAmount = Math.abs(parsed.data.amount).toFixed(2)
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       const [wallet] = await tx.insert(wallets).values({ id: walletId, userId: parsed.data.userId, currency: parsed.data.currency, availableBalance: '0', updatedAt: now }).onConflictDoNothing().returning()
       const [updated] = await tx.update(wallets).set({ availableBalance: sql`${wallets.availableBalance} + ${amount}`, updatedAt: now }).where(sql`${wallets.userId} = ${parsed.data.userId} AND ${wallets.currency} = ${parsed.data.currency} AND ${wallets.availableBalance} + ${amount} >= 0`).returning()
       if (!updated) throw new Error('Insufficient available balance for this debit.')
-      await tx.insert(ledgerEntries).values({ id: randomUUID(), userId: parsed.data.userId, walletId: updated.id, kind: 'ADMIN_ADJUSTMENT', direction, amount: absoluteAmount, currency: parsed.data.currency, reference, metadata: { reason: parsed.data.reason, actorUserId: user.id } })
+      await tx.insert(ledgerEntries).values({ id: randomUUID(), userId: parsed.data.userId, walletId: updated.id, kind: 'ADMIN_ADJUSTMENT', direction, amount: absoluteAmount, currency: parsed.data.currency, reference, metadata: { reason: parsed.data.reason, actorUserId: user.id } }).onConflictDoNothing({ target: ledgerEntries.reference })
       await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'ADMIN_WALLET_ADJUSTMENT', resourceType: 'wallet', resourceId: updated.id, metadata: { userId: parsed.data.userId, amount, currency: parsed.data.currency, reason: parsed.data.reason, reference } })
       return updated
     })
