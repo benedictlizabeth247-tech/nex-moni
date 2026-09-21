@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowUpFromLine, CheckCircle2, ChevronRight, Loader2, Shield
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { BottomNav } from "@/components/layout/BottomNav"
-import { getWallet, type Wallet as WalletType } from "@/services/walletService"
 import { createWithdrawalRequest, type WithdrawalDestination } from "@/services/withdrawal"
 import { useToast } from "@/hooks/use-toast"
 
@@ -13,15 +12,16 @@ const money=(n:number)=>`${Number(n||0).toLocaleString(undefined,{minimumFractio
 
 export default function WithdrawPage(){
  const router=useRouter(); const {toast}=useToast()
- const [wallet,setWallet]=useState<WalletType|null>(null); const [amount,setAmount]=useState("")
+ const [amount,setAmount]=useState("")
  const [destinationType,setDestinationType]=useState<WithdrawalDestination>("bank")
  const [autopilot,setAutopilot]=useState(false)
  const rails=[{id:'bank' as const,label:'Bank account',hint:'Configured payout destination',icon:Building2},{id:'nex' as const,label:'nexMonie account',hint:'Internal transfer',icon:ArrowUpFromLine},{id:'card_refund' as const,label:'Card refund',hint:'Return to eligible card',icon:CreditCard},{id:'mobile_money' as const,label:'Mobile money',hint:'Supported regional rail',icon:Smartphone},{id:'crypto' as const,label:'Crypto wallet',hint:'Network-specific payout',icon:Coins}]
- const [destination,setDestination]=useState(""); const [busy,setBusy]=useState(false)
- const [submitted,setSubmitted]=useState(false); const [error,setError]=useState("")
- useEffect(()=>{void getWallet().then(setWallet)},[])
+  const [destination,setDestination]=useState(""); const [busy,setBusy]=useState(false)
+  const [submitted,setSubmitted]=useState(false); const [error,setError]=useState("")
+  const [neonBalance, setNeonBalance] = useState(0)
+  useEffect(()=>{ void fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).then((data) => setNeonBalance(Number(data?.balance_usdt ?? 0))) },[])
  const submit=async()=>{
-  setError(""); const n=Number(amount); const available=Number(wallet?.available||0)
+  setError(""); const n=Number(amount); const available=neonBalance
   if(!n||n<=0){setError("Enter a valid amount.");return}
   if(n>available){setError("Insufficient available balance.");return}
   if(!destination.trim()){setError(destinationType==='bank'?"Enter the bank account destination.":"Enter the nexMonie recipient.");return}
@@ -36,7 +36,7 @@ export default function WithdrawPage(){
  return <main className="min-h-screen bg-[#EEF2F1] pb-32 text-[#183A36]">
   <header className="sticky top-0 z-30 border-b border-[#D6E1DE] bg-[#EEF2F1]/95 p-4 backdrop-blur"><button onClick={()=>router.back()} className="h-10 w-10 rounded-xl bg-white border border-[#D6E1DE] flex items-center justify-center"><ArrowLeft size={18}/></button><h1 className="mt-4 text-[22px] font-black">Withdraw</h1><p className="text-[10px] text-[#708A85]">Create a withdrawal request from your nexMonie balance.</p></header>
   <div className="space-y-4 p-4">
-   <Card className="rounded-[26px] border-none bg-[#183A36] p-5 text-white"><p className="text-[9px] uppercase tracking-widest text-white/60">Available Funding Balance</p><p className="mt-2 text-[28px] font-black">{money(Number(wallet?.available||0))}</p></Card>
+   <Card className="rounded-[26px] border-none bg-[#183A36] p-5 text-white"><p className="text-[9px] uppercase tracking-widest text-white/60">Available Funding Balance</p><p className="mt-2 text-[28px] font-black">{money(neonBalance)}</p></Card>
    {!submitted?<>
     <Card className="rounded-[26px] border-[#D6E1DE] bg-white p-4 shadow-none">
      <p className="text-[9px] font-black uppercase tracking-widest text-[#708A85]">Withdraw to</p>
@@ -48,7 +48,7 @@ export default function WithdrawPage(){
      <Input value={destination} onChange={e=>setDestination(e.target.value)} placeholder={destinationType==='bank'?"Bank account number / configured destination":"Recipient nex ID / username"} className="mt-2 h-12 rounded-xl"/>
      <label className="mt-4 block text-[9px] font-black uppercase tracking-widest text-[#708A85]">Amount</label>
      <Input value={amount} onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,""))} inputMode="decimal" placeholder="0.00" className="mt-2 h-12 rounded-xl"/>
-     <button onClick={()=>setAmount(String(wallet?.available||0))} className="mt-2 text-[9px] font-black text-[#087F5B]">Use maximum available</button>
+     <button onClick={()=>setAmount(String(neonBalance))} className="mt-2 text-[9px] font-black text-[#087F5B]">Use maximum available</button>
      {error&&<p className="mt-3 rounded-xl bg-red-50 p-3 text-[9px] font-bold text-red-600">{error}</p>}
     </Card>
     <Card className="rounded-[24px] border-[#D6E1DE] bg-white p-4 shadow-none"><div className="flex gap-3"><ShieldCheck size={18} className="text-[#087F5B] shrink-0"/><p className="text-[9px] leading-5 text-[#708A85]">The request is recorded first. No client-side balance deduction occurs; final balance mutation must happen only when the configured payout rail confirms the withdrawal.</p></div></Card>

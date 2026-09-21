@@ -49,10 +49,9 @@ function HomeContent() {
   useEffect(() => {
     let mounted = true;
   const balanceRequest = fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Balance unavailable')))
-  Promise.allSettled([getWallet(), getProfile(), getTradingAccountSummary(), balanceRequest])
-  .then(([walletResult, profileResult, equityResult, balanceResult]) => {
+  Promise.allSettled([getProfile(), getTradingAccountSummary(), balanceRequest])
+  .then(([profileResult, equityResult, balanceResult]) => {
         if (!mounted) return;
-  if (walletResult.status === 'fulfilled') setWallet(toCommandCenterWallet(walletResult.value));
   if (balanceResult.status === 'fulfilled') {
     const syncedBalance = Number(balanceResult.value.balance_usdt ?? 0);
     setBalanceUsdt(syncedBalance);

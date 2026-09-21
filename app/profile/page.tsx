@@ -30,6 +30,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [wallet, setWallet] = useState<WalletType | null>(null)
   const [neonBalance, setNeonBalance] = useState(0)
+  const [neonBalanceLoaded, setNeonBalanceLoaded] = useState(false)
   const [account, setAccount] = useState<TradingAccount | null>(null)
   const [transactions, setTransactions] = useState<WalletTransaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,6 +55,7 @@ export default function ProfileScreen() {
       ])
       setProfile(p); setWallet(w); setAccount(a); setTransactions(t)
       setNeonBalance(Number(balanceResponse?.balance_usdt ?? 0))
+      setNeonBalanceLoaded(Boolean(balanceResponse))
     } finally { setLoading(false) }
   }
   useEffect(() => { void load() }, [user])
@@ -74,10 +76,10 @@ export default function ProfileScreen() {
   }
 
   const balances = useMemo(() => ({
-    funding: neonBalance || Number(account?.funding_balance ?? wallet?.available ?? 0),
+    funding: neonBalanceLoaded ? neonBalance : Number(account?.funding_balance ?? wallet?.available ?? 0),
     spot: Number(account?.spot_balance ?? 0),
     futures: Number(account?.futures_balance ?? 0),
-  }), [account, wallet])
+  }), [account, wallet, neonBalance, neonBalanceLoaded])
   const total = balances.funding + balances.spot + balances.futures
   const displayed = tab === 'spot' ? balances.spot : tab === 'futures' ? balances.futures : tab === 'funding' ? balances.funding : total
 
