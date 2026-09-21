@@ -109,7 +109,7 @@ export default function AssetDetailScreen() {
         </div>
       </header>
 
-      <div className="px-6 py-6 space-y-8">
+      <div className="flex min-w-0 flex-col gap-5 px-4 py-4 sm:gap-8 sm:px-6 sm:py-6">
         {/* Price header */}
         <section>
           {isLoading && !quote ? (
@@ -155,7 +155,7 @@ export default function AssetDetailScreen() {
 
         {/* Chart */}
         <section>
-          <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-hide">
+          <div className="mb-2 flex min-w-0 items-center gap-1 overflow-x-auto scrollbar-hide">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf}
@@ -174,7 +174,7 @@ export default function AssetDetailScreen() {
 
           <Card className="p-4 rounded-[24px] border-none shadow-sm">
             {chartLoading && !candles.length ? (
-              <Skeleton className="h-56 w-full rounded-2xl" />
+              <Skeleton className="h-[220px] w-full rounded-xl sm:h-64" />
             ) : candles.length ? (
               <>
                 <CandleChart candles={candles} up={up} />
@@ -305,7 +305,7 @@ export default function AssetDetailScreen() {
                   rel="noopener noreferrer"
                   className="block"
                 >
-                  <Card className="p-4 rounded-[24px] border-none shadow-sm">
+<Card className="min-w-0 overflow-hidden rounded-2xl border border-border/60 bg-card p-2.5 shadow-sm sm:rounded-[24px] sm:p-4">
                     <p className="text-[13px] font-bold text-slate-900 leading-snug mb-1 text-pretty">
                       {headline.title}
                     </p>
