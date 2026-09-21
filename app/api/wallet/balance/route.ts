@@ -16,5 +16,5 @@ export async function GET() {
   const storedBalance = Number(current?.availableBalance ?? 0)
   const recentTransactions = await db.select().from(transactions).where(and(eq(transactions.userId, session.user.id), inArray(transactions.status, ['completed', 'pending']))).orderBy(desc(transactions.createdAt)).limit(20)
 
-  return NextResponse.json({ stored_balance: storedBalance, calculated_balance: calculatedBalance, discrepancy_detected: Math.abs(storedBalance - calculatedBalance) > 0.00000001, wallet_id: current?.id ?? null, last_updated: current?.updatedAt ?? null, transactions: recentTransactions })
+  return NextResponse.json({ balance_usdt: storedBalance, currency: current?.currency ?? 'USDT', stored_balance: storedBalance, calculated_balance: calculatedBalance, discrepancy_detected: Math.abs(storedBalance - calculatedBalance) > 0.00000001, wallet_id: current?.id ?? null, last_updated: current?.updatedAt ?? null, transactions: recentTransactions })
 }

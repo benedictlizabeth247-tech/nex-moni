@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpFromLine, Bell, ChevronRight, Copy, Eye, EyeOff, Globe, History, Languages, Lock, LogOut, Search, Settings, ShieldCheck, SlidersHorizontal, User, WalletCards, X, Sun, Moon } from 'lucide-react'
+import { ArrowDownToLine, ArrowLeft, ArrowLeftRight, ArrowUpFromLine, Bell, ChevronRight, Copy, Eye, EyeOff, Globe, History, Languages, Lock, LogOut, RefreshCw, Search, Settings, ShieldCheck, SlidersHorizontal, User, WalletCards, X, Sun, Moon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
@@ -29,6 +29,7 @@ export default function ProfileScreen() {
   const { toast } = useToast()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [wallet, setWallet] = useState<WalletType | null>(null)
+  const [balanceUsdt, setBalanceUsdt] = useState(0)
   const [account, setAccount] = useState<TradingAccount | null>(null)
   const [transactions, setTransactions] = useState<WalletTransaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,8 +45,8 @@ export default function ProfileScreen() {
     if (!user) return
     setLoading(true)
     try {
-      const [p,w,a,t] = await Promise.all([getProfile(), getWallet(), getTradingAccount(), getTransactions(8)])
-      setProfile(p); setWallet(w); setAccount(a); setTransactions(t)
+      const [p,w,a,t,b] = await Promise.all([getProfile(), getWallet(), getTradingAccount(), getTransactions(8), fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Balance unavailable')))])
+      setProfile(p); setWallet(w); setAccount(a); setTransactions(t); setBalanceUsdt(Number(b.balance_usdt ?? 0))
     } finally { setLoading(false) }
   }
   useEffect(() => { void load() }, [user])
@@ -66,7 +67,7 @@ export default function ProfileScreen() {
   }
 
   const balances = useMemo(() => ({
-    funding: Number(account?.funding_balance ?? wallet?.available ?? 0),
+    funding: balanceUsdt || Number(account?.funding_balance ?? wallet?.available ?? 0),
     spot: Number(account?.spot_balance ?? 0),
     futures: Number(account?.futures_balance ?? 0),
   }), [account, wallet])
@@ -109,7 +110,7 @@ export default function ProfileScreen() {
             <button onClick={()=>document.getElementById('profile-preferences')?.scrollIntoView({behavior:'smooth'})} className="h-9 w-9 rounded-xl bg-[#F5F8F7] flex items-center justify-center"><Settings size={16}/></button>
           </div>
           <div className="mt-4 rounded-2xl bg-[#5C5552] p-4 text-white">
-            <div className="flex items-center justify-between"><p className="text-[9px] uppercase tracking-[.18em] text-white/60">Total estimated balance</p><button onClick={()=>setShowBalance(v=>!v)}>{showBalance?<Eye size={16}/>:<EyeOff size={16}/>}</button></div>
+            <div className="flex items-center justify-between"><p className="text-[9px] uppercase tracking-[.18em] text-white/60">Total estimated balance</p><div className="flex items-center gap-2"><button onClick={()=>void load()} aria-label="Refresh balance" className="rounded-lg p-1 hover:bg-white/10"><RefreshCw size={14}/></button><button onClick={()=>setShowBalance(v=>!v)} aria-label="Toggle balance visibility">{showBalance?<Eye size={16}/>:<EyeOff size={16}/>}</button></div></div>
             <p className="mt-2 text-[29px] font-black tracking-tight">{loading ? '••••••' : showBalance ? money(total) : '••••••••'}</p>
             <p className="mt-1 text-[9px] text-white/55">Funding + Spot + Futures account balances</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
