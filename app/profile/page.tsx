@@ -29,6 +29,7 @@ export default function ProfileScreen() {
   const { toast } = useToast()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [wallet, setWallet] = useState<WalletType | null>(null)
+  const [neonBalance, setNeonBalance] = useState(0)
   const [account, setAccount] = useState<TradingAccount | null>(null)
   const [transactions, setTransactions] = useState<WalletTransaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,8 +45,15 @@ export default function ProfileScreen() {
     if (!user) return
     setLoading(true)
     try {
-      const [p,w,a,t] = await Promise.all([getProfile(), getWallet(), getTradingAccount(), getTransactions(8)])
+      const [p,w,a,t,balanceResponse] = await Promise.all([
+        getProfile(),
+        getWallet(),
+        getTradingAccount(),
+        getTransactions(8),
+        fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
+      ])
       setProfile(p); setWallet(w); setAccount(a); setTransactions(t)
+      setNeonBalance(Number(balanceResponse?.balance_usdt ?? 0))
     } finally { setLoading(false) }
   }
   useEffect(() => { void load() }, [user])
@@ -66,7 +74,7 @@ export default function ProfileScreen() {
   }
 
   const balances = useMemo(() => ({
-    funding: Number(account?.funding_balance ?? wallet?.available ?? 0),
+    funding: neonBalance || Number(account?.funding_balance ?? wallet?.available ?? 0),
     spot: Number(account?.spot_balance ?? 0),
     futures: Number(account?.futures_balance ?? 0),
   }), [account, wallet])

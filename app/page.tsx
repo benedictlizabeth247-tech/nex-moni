@@ -56,7 +56,16 @@ function HomeContent() {
   if (balanceResult.status === 'fulfilled') {
     const syncedBalance = Number(balanceResult.value.balance_usdt ?? 0);
     setBalanceUsdt(syncedBalance);
-    setWallet((current) => current ? { ...current, available: syncedBalance, currency: 'USDT' } : current);
+    setWallet((current) => current ? { ...current, available: syncedBalance, currency: 'USDT' } : {
+      id: String(balanceResult.value.wallet_id ?? 'neon-wallet'),
+      userId: '',
+      available: syncedBalance,
+      savings: 0,
+      investments: 0,
+      vault: 0,
+      lastUpdated: balanceResult.value.last_updated ?? new Date().toISOString(),
+      currency: balanceResult.value.currency ?? 'USDT',
+    });
   }
   if (profileResult.status === 'fulfilled') setProfile(profileResult.value);
         if (equityResult.status === 'fulfilled') setEquity(Number(equityResult.value?.equity ?? 0));
