@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
 import { randomUUID } from 'node:crypto'
 import { db } from '@/lib/db'
 import { deposits } from '@/lib/db/schema'
@@ -19,20 +19,15 @@ const schema = z.object({
 })
 
 async function requireUser() {
-  const client = await createClient()
-  const { data: { user } } = await client.auth.getUser()
-  return user
+  const session = await auth.api.getSession({ headers: await headers() })
+  return session?.user ?? null
 }
 
 export async function GET() {
   const user = await requireUser()
   if (!user?.id) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 })
 
-  const admin = createAdminClient()
-  const { data, error } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  const value = data?.value as Record<string, unknown> | null
-  const configured = Array.isArray(value?.receivingAccounts) ? value.receivingAccounts : []
-  const receivingAccounts = configured.length ? configured : [
+  const receivingAccounts = [
     { bankName: 'UBA', accountNumber: '2295345512', accountName: 'Benjamin Arinze Atuchukwu' },
     { bankName: 'Access Bank', accountNumber: '1841089139', accountName: 'Benjamin Arinze' },
   ]
@@ -55,11 +50,7 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: 'Enter a valid amount, sending bank and reference.' }, { status: 400 })
 
-  const admin = createAdminClient()
-  const { data: config, error: configError } = await admin.from('app_config').select('value').eq('id', 'bank_details').maybeSingle()
-  const value = config?.value as Record<string, unknown> | null
-  const configured = Array.isArray(value?.receivingAccounts) ? value.receivingAccounts : []
-  const receivingAccounts = configured.length ? configured : [
+  const receivingAccounts = [
     { bankName: 'UBA', accountNumber: '2295345512', accountName: 'Benjamin Arinze Atuchukwu' },
     { bankName: 'Access Bank', accountNumber: '1841089139', accountName: 'Benjamin Arinze' },
   ]
@@ -70,21 +61,6 @@ export async function POST(request: Request) {
   const reference = `NXM-${randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`
   const depositId = randomUUID()
   try {
-    const { error: canonicalError } = await admin.from('deposits').insert({
-      id: depositId,
-      user_id: user.id,
-      bank_name: bankName,
-      account_number: parsed.data.senderAccountNumber,
-      account_name: parsed.data.senderAccountName.trim(),
-      amount: parsed.data.amount,
-      sender_bank: parsed.data.senderBank.trim(),
-      reference,
-      screenshot_url: parsed.data.screenshotUrl ?? null,
-      status: 'pending',
-      expiry_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-    })
-    if (canonicalError) throw canonicalError
-
     await db.insert(deposits).values({
       id: depositId,
       userId: user.id,
@@ -106,7 +82,6 @@ export async function POST(request: Request) {
       updatedAt: new Date(),
     })
   } catch {
-    await admin.from('deposits').delete().eq('id', depositId).eq('user_id', user.id)
     return NextResponse.json({ error: 'Deposit request could not be recorded.' }, { status: 422 })
   }
 

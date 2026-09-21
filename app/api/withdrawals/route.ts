@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createClient as createServerClient } from '@/lib/supabase/server'
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
 import { db } from '@/lib/db'
-import { withdrawals as neonWithdrawals, auditLog } from '@/lib/db/schema'
+import { wallets, withdrawals as neonWithdrawals, auditLog, ledgerEntries } from '@/lib/db/schema'
+import { and, eq, sql } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 
 const schema = z.object({
@@ -16,10 +18,10 @@ const schema = z.object({
 })
 
 export async function POST(request: Request) {
-  const supabase = await createServerClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const session = await auth.api.getSession({ headers: await headers() })
+  const user = session?.user
 
-  if (authError || !user?.id) {
+  if (!user?.id) {
     return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 })
   }
 
@@ -34,46 +36,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Crypto network is required.' }, { status: 400 })
   }
 
-  const { data, error } = await supabase.rpc('create_withdrawal_request', {
-    p_amount: parsed.data.amount,
-    p_currency: parsed.data.currency.toUpperCase(),
-    p_destination_type: parsed.data.destinationType,
-    p_destination: parsed.data.destination,
-    p_network: parsed.data.network || null,
-    p_autopilot: parsed.data.autopilot,
-    p_idempotency_key: parsed.data.idempotencyKey,
-  })
-
-  if (error) {
-    const message = error.message || 'Unable to create withdrawal request.'
-    const status = /insufficient available|wallet is not available/i.test(message) ? 422 : 400
-    return NextResponse.json({ error: message }, { status })
+  const requestId = randomUUID()
+  const currency = parsed.data.currency.toUpperCase()
+  try {
+    await db.transaction(async (tx) => {
+      const [wallet] = await tx.select().from(wallets).where(and(eq(wallets.userId, user.id), eq(wallets.currency, currency))).limit(1)
+      if (!wallet || Number(wallet.availableBalance) < parsed.data.amount) throw new Error('Insufficient available balance.')
+      await tx.update(wallets).set({ availableBalance: sql`${wallets.availableBalance} - ${parsed.data.amount}`, heldBalance: sql`${wallets.heldBalance} + ${parsed.data.amount}`, updatedAt: new Date() }).where(eq(wallets.id, wallet.id))
+      await tx.insert(neonWithdrawals).values({ id: requestId, userId: user.id, amount: parsed.data.amount.toFixed(2), currency, destinationType: parsed.data.destinationType, destination: parsed.data.destination, status: 'PENDING', updatedAt: new Date() })
+      await tx.insert(ledgerEntries).values({ id: randomUUID(), userId: user.id, walletId: wallet.id, kind: 'WITHDRAWAL_HOLD', direction: 'DEBIT', amount: parsed.data.amount.toFixed(2), currency, reference: `WD-${requestId}`, sourceId: requestId, metadata: { destinationType: parsed.data.destinationType, network: parsed.data.network ?? null } })
+      await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'WITHDRAWAL_CREATED', resourceType: 'withdrawal', resourceId: requestId, metadata: { amount: parsed.data.amount, currency } })
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to create withdrawal request.'
+    return NextResponse.json({ error: message }, { status: /insufficient/i.test(message) ? 422 : 400 })
   }
 
-  if (data?.status === 'created' && parsed.data.autopilot && data?.request_id) {
-    const { data: routed, error: routeError } = await supabase.rpc('route_autopilot_withdrawal', { p_withdrawal_id: data.request_id })
-    if (routeError) {
-      // The financial reservation remains safe and pending; autopilot never makes
-      // a failed routing attempt look like a failed withdrawal.
-      return NextResponse.json({ ...data, autopilot_routing: 'pending', autopilot_error: routeError.message }, { status: 201 })
-    }
-    return NextResponse.json({ ...data, ...routed, autopilot_routing: 'processing' }, { status: 201 })
-  }
-
-  if (data?.request_id && data?.status === 'created') {
-    const now = new Date()
-    await db.insert(neonWithdrawals).values({
-      id: String(data.request_id),
-      userId: user.id,
-      amount: parsed.data.amount.toFixed(2),
-      currency: parsed.data.currency.toUpperCase(),
-      destinationType: parsed.data.destinationType,
-      destination: parsed.data.destination,
-      status: 'PENDING',
-      updatedAt: now,
-    }).onConflictDoNothing()
-    await db.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'WITHDRAWAL_CREATED', resourceType: 'withdrawal', resourceId: String(data.request_id), metadata: { amount: parsed.data.amount, currency: parsed.data.currency.toUpperCase(), destinationType: parsed.data.destinationType } })
-  }
-
-  return NextResponse.json(data, { status: data?.status === 'already_created' ? 200 : 201 })
+  const data = { status: 'created', request_id: requestId }
+  return NextResponse.json({ ...data, autopilot_routing: parsed.data.autopilot ? 'pending' : undefined }, { status: 201 })
 }
