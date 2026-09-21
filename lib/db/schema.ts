@@ -13,6 +13,10 @@ export const opportunities = pgTable('opportunities', {
 
 export const opportunitySources = pgTable('opportunity_sources', { provider: text('provider').primaryKey(), status: text('status').notNull().default('unavailable'), lastSuccessfulSync: timestamp('last_successful_sync', { withTimezone: true }), lastAttemptedSync: timestamp('last_attempted_sync', { withTimezone: true }), error: text('error'), recordsDiscovered: integer('records_discovered').notNull().default(0), recordsValid: integer('records_valid').notNull().default(0), recordsRejected: integer('records_rejected').notNull().default(0), recordsExpired: integer('records_expired').notNull().default(0), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow() })
 
+export const deposits = pgTable('deposits', {
+  id: text('id').primaryKey(), userId: text('user_id').notNull(), amount: numeric('amount', { precision: 20, scale: 2 }).notNull(), currency: text('currency').notNull().default('NGN'), method: text('method').notNull().default('bank_transfer'), senderBank: text('sender_bank').notNull(), senderBankCode: text('sender_bank_code'), senderAccountName: text('sender_account_name').notNull(), senderAccountNumber: text('sender_account_number').notNull(), senderBranch: text('sender_branch'), receivingBank: text('receiving_bank').notNull(), receivingAccountNumber: text('receiving_account_number').notNull(), receivingAccountName: text('receiving_account_name').notNull(), reference: text('reference').notNull().unique(), status: text('status').notNull().default('PENDING'), screenshotUrl: text('screenshot_url'), expiryTime: timestamp('expiry_time', { withTimezone: true }), reviewedAt: timestamp('reviewed_at', { withTimezone: true }), reviewedBy: text('reviewed_by'), rejectionReason: text('rejection_reason'), createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export type Opportunity = typeof opportunities.$inferSelect
 export type OpportunityInsert = typeof opportunities.$inferInsert
 export type OpportunitySource = typeof opportunitySources.$inferSelect

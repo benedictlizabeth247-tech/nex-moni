@@ -76,7 +76,7 @@ export default function FundAccountPage() {
     if (!user || !session || fiatAmount <= 0 || !senderBank || senderAccountName.trim().length < 2 || senderAccountNumber.length !== 10) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter your account name, select your bank, enter a valid 10-digit account number, and provide an amount.'}); return }
     setSubmitting(true)
     try {
-      const result=await submitDepositRequest({amount:fiatAmount,senderBank,reference,receivingBank})
+      const result=await submitDepositRequest({amount:fiatAmount,senderBank,senderAccountName,senderAccountNumber,reference,receivingBank})
       if(!result.success) throw new Error('Deposit request could not be recorded')
       setStage('pending')
     } catch(e:any){toast({variant:'destructive',title:'Deposit failed',description:e?.message||'Please try again.'})} finally{setSubmitting(false)}

@@ -3,10 +3,16 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { randomUUID } from 'node:crypto'
+import { db } from '@/lib/db'
+import { deposits } from '@/lib/db/schema'
 
 const schema = z.object({
   amount: z.number().finite().positive().max(1_000_000_000),
   senderBank: z.string().trim().min(2).max(120),
+  senderAccountName: z.string().trim().min(2).max(120),
+  senderAccountNumber: z.string().regex(/^\d{10}$/),
+  senderBranch: z.string().trim().max(120).optional(),
+  senderBankCode: z.string().trim().max(32).optional(),
   reference: z.string().trim().max(120).optional(),
   screenshotUrl: z.string().url().max(2000).nullable().optional(),
   receivingBank: z.enum(['UBA', 'Access Bank']).optional(),
@@ -61,24 +67,32 @@ export async function POST(request: Request) {
   const bankName = String(selected.bankName)
   const accountNumber = String(selected.accountNumber)
   const accountName = String(selected.accountName)
-  const reference = parsed.data.reference?.trim() || `NXM-${randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`
-  const { data, error } = await admin.from('deposits').insert({
-    user_id: user.id,
-    bank_name: bankName,
-    account_number: accountNumber,
-    account_name: accountName,
-    amount: parsed.data.amount,
-    sender_bank: parsed.data.senderBank.trim(),
-    reference,
-    screenshot_url: parsed.data.screenshotUrl ?? null,
-    status: 'pending',
-    expiry_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-  }).select('id,reference').single()
-
-  if (error) {
-    if (error.code === '23505') return NextResponse.json({ error: 'That transfer reference has already been submitted.' }, { status: 409 })
+  const reference = `NXM-${randomUUID().replaceAll('-', '').slice(0, 8).toUpperCase()}`
+  const depositId = randomUUID()
+  try {
+    await db.insert(deposits).values({
+      id: depositId,
+      userId: user.id,
+      amount: parsed.data.amount.toFixed(2),
+      currency: 'NGN',
+      method: 'bank_transfer',
+      senderBank: parsed.data.senderBank.trim(),
+      senderBankCode: parsed.data.senderBankCode ?? null,
+      senderAccountName: parsed.data.senderAccountName.trim(),
+      senderAccountNumber: parsed.data.senderAccountNumber,
+      senderBranch: parsed.data.senderBranch ?? null,
+      receivingBank: bankName,
+      receivingAccountNumber: accountNumber,
+      receivingAccountName: accountName,
+      reference,
+      status: 'PENDING',
+      screenshotUrl: parsed.data.screenshotUrl ?? null,
+      expiryTime: new Date(Date.now() + 15 * 60 * 1000),
+      updatedAt: new Date(),
+    })
+  } catch {
     return NextResponse.json({ error: 'Deposit request could not be recorded.' }, { status: 422 })
   }
 
-  return NextResponse.json({ success: true, depositId: data.id, referenceId: data.reference })
+  return NextResponse.json({ success: true, depositId, referenceId: reference })
 }
