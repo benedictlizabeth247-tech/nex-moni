@@ -1,31 +1,36 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { and, eq, sql } from 'drizzle-orm'
+import { headers } from 'next/headers'
+import { randomUUID } from 'node:crypto'
+import { auth } from '@/lib/auth'
+import { db } from '@/lib/db'
+import { auditLog, futuresAccounts, spotAccounts, tradingPositions } from '@/lib/db/schema'
 import { getQuotes } from '@/services/market-data/router'
-
-export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => null)
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    const body = await request.json()
     const positionId = String(body?.positionId ?? '')
     const symbol = String(body?.symbol ?? '')
-    if (!positionId || !symbol) return NextResponse.json({ error: 'Position and market are required.' }, { status: 400 })
-
-    const client = await createClient()
-    const { data: auth } = await client.auth.getUser()
-    if (!auth.user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
-
-    const quoteId = symbol.includes('.') ? symbol : symbol.includes('/') ? `crypto.${symbol.replace('/', '').toUpperCase()}` : `stock.${symbol.toUpperCase()}`
+    const quoteId = symbol.includes('.') ? symbol : `crypto.${symbol.replace('/', '').toUpperCase()}`
     const market = await getQuotes([quoteId])
     const quote = market.quotes.find((item) => item.id === quoteId)
     const markPrice = Number(quote?.price ?? 0)
-    if (!quote || !Number.isFinite(markPrice) || markPrice <= 0) return NextResponse.json({ error: 'No live execution price is currently available.' }, { status: 503 })
-    if (quote.stale || !quote.timestamp || Date.now() - quote.timestamp > 30_000) return NextResponse.json({ error: 'Market feed is stale; closing is paused until a fresh price is available.' }, { status: 503 })
-
-    const { data, error } = await client.rpc('trading_close_position', { p_position_id: positionId, p_mark_price: markPrice })
-    if (error) return NextResponse.json({ error: error.message, code: error.code ?? 'CLOSE_POSITION_FAILED' }, { status: 400 })
-    return NextResponse.json({ ...data, execution_price: markPrice, provider: quote.provider, timestamp: quote.timestamp }, { headers: { 'cache-control': 'no-store' } })
+    if (!positionId || !quote || !Number.isFinite(markPrice) || markPrice <= 0 || quote.stale || !quote.timestamp || Date.now() - quote.timestamp > 30000) return NextResponse.json({ error: 'A fresh market price is required to close this position.' }, { status: 503 })
+    const [position] = await db.select().from(tradingPositions).where(and(eq(tradingPositions.id, positionId), eq(tradingPositions.userId, session.user.id), eq(tradingPositions.status, 'open'))).limit(1)
+    if (!position) return NextResponse.json({ error: 'Open position not found.' }, { status: 404 })
+    const pnl = (position.side === 'buy' ? markPrice - Number(position.entryPrice) : Number(position.entryPrice) - markPrice) * Number(position.quantity)
+    const now = new Date()
+    await db.transaction(async (tx) => {
+      await tx.update(tradingPositions).set({ markPrice: String(markPrice), unrealizedPnl: String(pnl), realizedPnl: String(pnl), status: 'closed', closedAt: now, updatedAt: now }).where(eq(tradingPositions.id, position.id))
+      if (position.mode === 'spot') await tx.update(spotAccounts).set({ lockedUsdt: sql`${spotAccounts.lockedUsdt} - ${position.margin}`, balanceUsdt: sql`${spotAccounts.balanceUsdt} + ${pnl}`, updatedAt: now }).where(eq(spotAccounts.userId, session.user.id))
+      else await tx.update(futuresAccounts).set({ lockedUsdt: sql`${futuresAccounts.lockedUsdt} - ${position.margin}`, balanceUsdt: sql`${futuresAccounts.balanceUsdt} + ${pnl}`, updatedAt: now }).where(eq(futuresAccounts.userId, session.user.id))
+      await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: session.user.id, action: 'TRADE_CLOSED', resourceType: 'trading_position', resourceId: position.id, metadata: { symbol, markPrice, realizedPnl: pnl } })
+    })
+    return NextResponse.json({ status: 'closed', position_id: position.id, realized_pnl: pnl, mark_price: markPrice, reference: `CLOSE-${position.id}` }, { headers: { 'cache-control': 'no-store' } })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Position close failed' }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Position close failed' }, { status: 400 })
   }
 }

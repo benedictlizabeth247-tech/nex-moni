@@ -3,7 +3,8 @@ import { and, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { futuresAccounts, spotAccounts, wallets } from '@/lib/db/schema'
+import { futuresAccounts, spotAccounts, wallets, tradingPositions } from '@/lib/db/schema'
+import { desc } from 'drizzle-orm'
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -12,18 +13,22 @@ export async function GET() {
   const [funding] = await db.select().from(wallets).where(and(eq(wallets.userId, userId), eq(wallets.currency, 'USDT'))).limit(1)
   const [spot] = await db.select().from(spotAccounts).where(eq(spotAccounts.userId, userId)).limit(1)
   const [futures] = await db.select().from(futuresAccounts).where(eq(futuresAccounts.userId, userId)).limit(1)
+  const positions = await db.select().from(tradingPositions).where(eq(tradingPositions.userId, userId)).orderBy(desc(tradingPositions.openedAt)).limit(100)
+  const openPositions = positions.filter((position) => position.status === 'open')
+  const unrealizedPnl = openPositions.reduce((total, position) => total + Number(position.unrealizedPnl ?? 0), 0)
   const fundingBalance = Number(funding?.availableBalance ?? 0)
   const spotBalance = Number(spot?.balanceUsdt ?? 0)
   const spotLocked = Number(spot?.lockedUsdt ?? 0)
   const futuresBalance = Number(futures?.balanceUsdt ?? 0)
   const futuresLocked = Number(futures?.lockedUsdt ?? 0)
   return NextResponse.json({
-    totalBalance: fundingBalance + spotBalance + futuresBalance,
+    totalBalance: fundingBalance + spotBalance + futuresBalance + unrealizedPnl,
     totalLocked: spotLocked + futuresLocked,
     totalAvailable: fundingBalance + spotBalance - spotLocked + futuresBalance - futuresLocked,
     funding: { balance: fundingBalance, available: fundingBalance, currency: 'USDT' },
     spot: { balance: spotBalance, locked: spotLocked, available: Math.max(0, spotBalance - spotLocked) },
     futures: { balance: futuresBalance, locked: futuresLocked, available: Math.max(0, futuresBalance - futuresLocked) },
-    positions: { spot: [], futures: [] },
+    unrealizedPnl,
+    positions: { spot: openPositions.filter((position) => position.mode === 'spot'), futures: openPositions.filter((position) => position.mode === 'futures') },
   })
 }

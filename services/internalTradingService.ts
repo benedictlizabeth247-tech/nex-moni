@@ -63,35 +63,18 @@ export interface TradingAccountSummary {
 }
 
 export async function getTradingAccountSummary(): Promise<TradingAccountSummary | null> {
-  const requestSummary = () => supabase.rpc('trading_account_summary')
-  let { data, error } = await requestSummary()
-
-  if (error?.message.toLowerCase().includes('jwt issued at future')) {
-    // A preview can briefly retain a token minted ahead of the database clock.
-    // Refresh the cookie-backed session once, then retry the RPC with the new token.
-    await supabase.auth.refreshSession()
-    ;({ data, error } = await requestSummary())
-  }
-
-  if (error) {
-    if (error.message.toLowerCase().includes('jwt issued at future')) {
-      return null
-    }
-    throw new Error(error.message)
-  }
-
-  return data as TradingAccountSummary
+  const response = await fetch('/api/assets/overview', { cache: 'no-store' })
+  const overview = await response.json().catch(() => null)
+  if (!response.ok || !overview) return null
+  const unrealizedPnl = Number(overview.unrealizedPnl ?? 0)
+  return { user_id: '', settled_balance: Number(overview.totalBalance ?? 0), equity: Number(overview.totalBalance ?? 0), used_margin: Number(overview.totalLocked ?? 0), available_margin: Number(overview.totalAvailable ?? 0), unrealized_pnl: unrealizedPnl, spot_balance: Number(overview.spot?.available ?? 0), futures_balance: Number(overview.futures?.available ?? 0), funding_balance: Number(overview.funding?.available ?? 0), updated_at: new Date().toISOString() }
 }
 
 export async function getTradingAccount() {
-  const { data, error } = await supabase.rpc('trading_get_account')
-  if (error) {
-    const message = error.message.toLowerCase()
-    if (message.includes('invalid api key') || message.includes('supabase publishable key')) return null
-    if (message.includes('jwt') || message.includes('not authenticated')) return null
-    throw new Error(error.message)
-  }
-  return (Array.isArray(data) ? data[0] : data) as TradingAccount | null
+  const response = await fetch('/api/assets/overview', { cache: 'no-store' })
+  const overview = await response.json().catch(() => null)
+  if (!response.ok || !overview) return null
+  return { user_id: '', funding_balance: Number(overview.funding?.available ?? 0), spot_balance: Number(overview.spot?.available ?? 0), futures_balance: Number(overview.futures?.available ?? 0), updated_at: new Date().toISOString() } as TradingAccount
 }
 
 export type TradingAccountBucket = 'funding' | 'spot' | 'futures'
@@ -119,12 +102,10 @@ export async function transferBetweenAccounts(from: TradingAccountBucket, to: Tr
 
 export async function transferToTrading(mode: TradingMode, amount: number) {
   if (!amount || amount <= 0) throw new Error('Enter a valid transfer amount.')
-  const { data, error } = await supabase.rpc('trading_transfer_from_funding', {
-    p_mode: mode,
-    p_amount: amount,
-  })
-  if (error) throw new Error(error.message)
-  return data
+  const response = await fetch('/api/assets/transfer', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ from: 'funding', to: mode, amount }) })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(payload?.error || 'Transfer failed')
+  return payload
 }
 
 export async function placeInternalOrder(input: {
@@ -149,27 +130,24 @@ export async function placeInternalOrder(input: {
 }
 
 export async function getTradingPositions(mode?: TradingMode) {
-  let q = supabase.from('trading_positions').select('*').eq('status', 'open').order('opened_at', { ascending: false })
-  if (mode) q = q.eq('mode', mode)
-  const { data, error } = await q
-  if (error) throw new Error(error.message)
-  return (data ?? []) as TradingPosition[]
+  const response = await fetch(`/api/trading/positions${mode ? `?mode=${mode}` : ''}`, { cache: 'no-store' })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(payload?.error || 'Unable to load positions')
+  return (payload.positions ?? []).filter((position: TradingPosition) => position.status === 'open') as TradingPosition[]
 }
 
 export async function getTradingPositionHistory(mode?: TradingMode) {
-  let q = supabase.from('trading_positions').select('*').eq('status', 'closed').order('closed_at', { ascending: false }).limit(50)
-  if (mode) q = q.eq('mode', mode)
-  const { data, error } = await q
-  if (error) throw new Error(error.message)
-  return (data ?? []) as TradingPosition[]
+  const response = await fetch(`/api/trading/positions${mode ? `?mode=${mode}` : ''}`, { cache: 'no-store' })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(payload?.error || 'Unable to load history')
+  return (payload.positions ?? []).filter((position: TradingPosition) => position.status === 'closed').slice(0, 50) as TradingPosition[]
 }
 
 export async function getTradingOrders(mode?: TradingMode) {
-  let q = supabase.from('trading_orders').select('*').order('created_at', { ascending: false }).limit(50)
-  if (mode) q = q.eq('mode', mode)
-  const { data, error } = await q
-  if (error) throw new Error(error.message)
-  return (data ?? []) as TradingOrder[]
+  const response = await fetch(`/api/trading/positions${mode ? `?mode=${mode}` : ''}`, { cache: 'no-store' })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(payload?.error || 'Unable to load orders')
+  return (payload.orders ?? []).slice(0, 50) as TradingOrder[]
 }
 
 export async function cancelTradingOrder(orderId: string) {
