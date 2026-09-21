@@ -85,7 +85,12 @@ export async function getTradingAccountSummary(): Promise<TradingAccountSummary 
 
 export async function getTradingAccount() {
   const { data, error } = await supabase.rpc('trading_get_account')
-  if (error) throw new Error(error.message)
+  if (error) {
+    const message = error.message.toLowerCase()
+    if (message.includes('invalid api key') || message.includes('supabase publishable key')) return null
+    if (message.includes('jwt') || message.includes('not authenticated')) return null
+    throw new Error(error.message)
+  }
   return (Array.isArray(data) ? data[0] : data) as TradingAccount | null
 }
 
