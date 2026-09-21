@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { getAdminContext } from '@/lib/admin'
 import { db } from '@/lib/db'
-import { deposits as neonDeposits } from '@/lib/db/schema'
+import { deposits as neonDeposits, user as neonUsers } from '@/lib/db/schema'
 import { desc } from 'drizzle-orm'
 
 const adminTables = [
@@ -23,12 +23,18 @@ export async function GET() {
   const admin = createSupabaseClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
   const staff = context.staff
 
-  const [{ data: authUsers, error: usersError }, ...tableResults] = await Promise.all([
-    admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+  const [neonUserRows, ...tableResults] = await Promise.all([
+    db.select({ id: neonUsers.id, name: neonUsers.name, email: neonUsers.email, createdAt: neonUsers.createdAt, emailVerified: neonUsers.emailVerified }).from(neonUsers).orderBy(desc(neonUsers.createdAt)).limit(1000),
     db.select().from(neonDeposits).orderBy(desc(neonDeposits.createdAt)).limit(250),
     ...adminTables.filter((table) => table !== 'deposits').map((table) => admin.from(table).select('*').order('created_at', { ascending: false }).limit(250)),
   ])
-  if (usersError) return NextResponse.json({ error: 'Unable to load registered users.' }, { status: 502 })
+  const users = neonUserRows.map((record) => ({
+    id: record.id,
+    name: record.name,
+    email: record.email,
+    created_at: record.createdAt?.toISOString() ?? null,
+    email_confirmed_at: record.emailVerified ? record.createdAt?.toISOString() ?? null : null,
+  }))
 
   const neonDepositRows = tableResults[0] || []
   const supabaseResults = tableResults.slice(1)
@@ -38,11 +44,6 @@ export async function GET() {
     const result = supabaseResults[index]
     return [table, Array.isArray(result) ? result : result?.data || []]
   }))
-  const users = (authUsers?.users || []).map(({ id, email, phone, created_at, last_sign_in_at, email_confirmed_at, user_metadata }) => ({
-    id, email, phone, created_at, last_sign_in_at, email_confirmed_at,
-    name: user_metadata?.full_name || user_metadata?.name || null,
-  }))
-
   return NextResponse.json({
     user: { id: user.id, email: user.email },
     staff,
