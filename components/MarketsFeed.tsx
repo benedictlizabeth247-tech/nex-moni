@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Search, Star, TrendingUp, TrendingDown, Activity } from "lucide-react";
+import { ChevronRight, Search, Star, TrendingUp, TrendingDown } from "lucide-react";
 
 import { useUser } from "@/supabase";
 import { useLiveQuotes, useMarketBoard, useMarketSearch } from "@/hooks/use-market-data";
@@ -66,9 +66,6 @@ export default function MarketsFeed() {
 
   const rows = isFavoritesTab ? favoriteFeed.list : board.quotes;
   const isLoading = isFavoritesTab ? favoriteFeed.isLoading : board.isLoading;
-  const isDegraded = isFavoritesTab
-    ? Boolean(favoriteFeed.error) || favoriteFeed.isOffline
-    : board.isDegraded;
 
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
@@ -138,16 +135,6 @@ export default function MarketsFeed() {
             </div>
           )}
         </div>
-
-        {!isFavoritesTab && (
-          <div className="mb-3 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2">
-            <Activity className="text-primary" aria-hidden="true" />
-            <p className="text-[10px] font-semibold text-muted-foreground">
-              {activeMarketTab === "Hot" ? "Live volume ranking · refreshes every 10 seconds" : `${activeMarketTab} ranked by live market data`}
-            </p>
-            {isDegraded && <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-warning">Delayed</span>}
-          </div>
-        )}
 
         <div className="w-full border-b border-gray-50 pb-0 mb-3">
           <div className="flex w-full gap-0 overflow-x-auto scrollbar-hide">
