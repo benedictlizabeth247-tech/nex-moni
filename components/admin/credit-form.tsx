@@ -12,11 +12,17 @@ export function CreditForm({ userId }: { userId: string }) {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
+    const numericAmount = Number(amount)
+    const normalizedReason = reason.trim()
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0 || !currency || normalizedReason.length < 3) {
+      setMessage("Enter a valid amount, currency and reason.")
+      return
+    }
     setSaving(true)
     const requestReference = reference ?? `ADMIN-${crypto.randomUUID()}`
     setMessage("")
     try {
-      const response = await fetch("/api/admin/credits", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userId, amount: Number(amount), currency, reason, reference: requestReference }) })
+      const response = await fetch("/api/admin/credits", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userId, amount: numericAmount, currency, reason: normalizedReason, reference: requestReference }) })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error || "Credit update failed")
       setReference(requestReference)

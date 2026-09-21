@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin"
 import { z } from "zod"
 
 const schema = z.object({
-  userId: z.string().uuid(),
+  userId: z.string().trim().min(1).max(128),
   amount: z.number().finite().positive("Amount must be greater than zero"),
   currency: z.enum(["NGN", "USD", "USDT"]).default("USDT"),
   reference: z.string().trim().max(120).optional(),
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     userId: body?.userId,
     amount: Number(body?.amount),
     currency: body?.currency || "USDT",
-    reason: body?.reason,
+    reason: typeof body?.reason === "string" ? body.reason.trim() : body?.reason,
     reference: body?.reference,
   })
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid amount, currency and reason." }, { status: 400 })
