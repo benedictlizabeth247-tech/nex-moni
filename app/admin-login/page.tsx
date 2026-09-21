@@ -44,7 +44,7 @@ function AdminLoginForm() {
     } catch (cause) {
       const code = (cause as { code?: string })?.code
       const message = cause instanceof Error ? cause.message : ''
-      setError(code === "invalid_credentials" ? "Invalid admin email or password." : message === 'ADMIN_ACCESS_REQUIRED' ? "This account is not authorized for the NexMonie admin dashboard." : "Admin sign-in failed. Please check your credentials and try again.")
+      setError(code === "invalid_credentials" || message.toLowerCase().includes('invalid login credentials') ? "Invalid admin email or password." : message === 'ADMIN_ACCESS_REQUIRED' ? "This account is not authorized for the NexMonie admin dashboard." : message.toLowerCase().includes('email not confirmed') ? "Confirm this account's email before signing in." : message.toLowerCase().includes('api key') ? "Admin authentication is temporarily unavailable. Please refresh and try again." : "Admin sign-in failed. Please check your credentials and try again.")
     } finally {
       setBusy(false)
     }
@@ -64,7 +64,7 @@ function AdminLoginForm() {
         <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-[#55D6A7] font-black text-[#102019] hover:bg-[#55D6A7]/90">{busy ? <><Loader2 size={16} className="mr-2 animate-spin"/>Signing in…</> : "Enter Admin Dashboard"}</Button>
         <Link href="/admin-login/forgot-password" className="block text-center text-xs font-bold text-[#55D6A7]">Forgot password?</Link>
       </form>
-      <p className="mt-5 text-center text-[10px] text-[#6F777F]">Admin access is verified again against the Supabase admin_staff record.</p>
+      <p className="mt-5 text-center text-[10px] text-[#6F777F]">Admin access is verified against the active staff record after sign-in.</p>
     </div>
   </main>
 }
