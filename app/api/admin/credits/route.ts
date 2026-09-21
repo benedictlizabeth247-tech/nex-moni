@@ -8,7 +8,7 @@ import { z } from "zod"
 
 const schema = z.object({
   userId: z.string().trim().min(1).max(128),
-  amount: z.number().finite().refine((value) => value !== 0 && Math.abs(value) <= 1000000000, "Amount must be non-zero and within the allowed limit").refine((value) => Number.isInteger(value * 100000000), "Amount supports up to 8 decimal places"),
+  amount: z.number().finite().refine((value) => value !== 0, "Amount cannot be zero"),
   currency: z.enum(["NGN", "USD", "USDT"]).default("USDT"),
   reference: z.string().trim().max(120).optional(),
   reason: z.string().trim().min(3).max(500),
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       await tx.insert(auditLog).values({ id: randomUUID(), actorUserId: user.id, action: 'ADMIN_WALLET_ADJUSTMENT', resourceType: 'wallet', resourceId: updated.id, metadata: { userId: parsed.data.userId, amount, currency: parsed.data.currency, reason: parsed.data.reason, reference } })
       return updated
     })
-    return NextResponse.json({ success: true, committed: true, wallet: { ...result, balance_after: result.availableBalance, available: result.availableBalance, currency: result.currency, transaction_id: reference } })
+    return NextResponse.json({ wallet: result, committed: true })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Wallet adjustment failed.' }, { status: 422 })
   }
