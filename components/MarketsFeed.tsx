@@ -167,7 +167,7 @@ export default function MarketsFeed() {
           </div>
         </div>
 
-        <div className="max-h-[720px] overflow-y-auto overflow-x-auto scrollbar-hide">
+        <div className="overflow-x-auto scrollbar-hide">
           <table className="w-full min-w-[520px] text-left">
             <thead>
               <tr className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider border-b border-gray-50">
