@@ -51,7 +51,7 @@ export function ProductDiscovery() {
   return (
     <div className="mb-10">
       <div className="mb-3 flex items-center justify-between px-5 sm:mb-5">
-        <h2 className="text-[17px] font-bold text-[#1A1A1A] tracking-tight">Financial Products</h2>
+        <h2 className="text-base font-black tracking-tight text-foreground sm:text-[17px]">Financial Products</h2>
         <button 
           onClick={() => router.push('/utilities-hub')}
           className="text-[13px] font-bold text-primary active:opacity-60 transition-opacity"
@@ -65,7 +65,7 @@ export function ProductDiscovery() {
             key={idx}
             onClick={() => router.push(prod.path)}
             className={cn(
-              "relative flex min-w-0 h-[176px] cursor-pointer flex-col rounded-[24px] border border-white/50 p-3.5 shadow-soft transition-all active:scale-[0.98] group sm:h-[210px] sm:rounded-[30px] sm:p-5",
+              "group relative flex min-w-0 h-[176px] cursor-pointer flex-col rounded-[24px] border border-border/60 p-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] sm:h-[210px] sm:rounded-[30px] sm:p-5",
               prod.color
             )}
           >

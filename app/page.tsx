@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import type { TouchEvent } from 'react';
-import { Bell, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bell } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -43,8 +42,6 @@ function HomeContent() {
   const [equity, setEquity] = useState<number | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [homePage, setHomePage] = useState<0 | 1>(0);
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -86,23 +83,8 @@ function HomeContent() {
   const identityLabel = profileLoading ? 'Loading profile…' : registeredName || 'Member';
 
 
-  const handleTouchStart = (event: TouchEvent) => {
-    touchStart.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
-  };
-
-  const handleTouchEnd = (event: TouchEvent) => {
-    const start = touchStart.current;
-    touchStart.current = null;
-    if (!start) return;
-    const dx = event.changedTouches[0].clientX - start.x;
-    const dy = event.changedTouches[0].clientY - start.y;
-    if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
-    if (dx < 0 && homePage === 0) setHomePage(1);
-    if (dx > 0 && homePage === 1) setHomePage(0);
-  };
-
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0b1714] pb-24" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div className="min-h-screen overflow-x-hidden bg-background pb-24">
       <header className="sticky top-0 z-30 border-b border-[#29463b] bg-[#0b1714]/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex flex-col items-center gap-1">
@@ -130,50 +112,13 @@ function HomeContent() {
       </header>
 
       <main className="px-4 pt-4">
-        <div className="overflow-hidden">
-          <div className="flex w-[200%] transition-transform duration-300 ease-out" style={{ transform: `translateX(-${homePage * 50}%)` }}>
-            <section className="w-1/2 shrink-0 pr-2">
-              <CommandCenter wallet={wallet} equity={equity} loading={walletLoading} />
-              <QuickActionGrid />
-              <ProductDiscovery />
-              <NexTipsBanner />
-              <MarketsFeed />
-            </section>
-            <section className="w-1/2 shrink-0 pl-2">
-              <div className="mb-5 rounded-[26px] border border-[#29463b] bg-[#11221d] p-5 shadow-[0_18px_50px_rgba(0,0,0,.22)]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#8eafa0]">Home services</p>
-                    <h2 className="mt-1 text-[20px] font-black tracking-tight text-[#f4f7f1]">Everyday money tools</h2>
-                  </div>
-                  <button onClick={() => setHomePage(0)} className="flex h-10 w-10 items-center justify-center rounded-full border border-[#29463b] bg-[#19312a]" aria-label="Back to home"><ChevronRight className="rotate-180" size={18}/></button>
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-2.5">
-                  {[
-                    ['Transfer', '/send-money', '↗'],
-                    ['Deposit', '/fund-account', '↓'],
-                    ['Withdraw', '/withdraw', '↑'],
-                    ['P2P', '/finance/p2p', '⇄'],
-                    ['Spot', '/markets', '◇'],
-                    ['Futures', '/futures', '◈'],
-                    ['Extensions', '/utilities-hub', '▦'],
-                    ['Profile', '/profile', '◎'],
-                    ['More', '/actions-hub', '⋯'],
-                  ].map(([label, path, icon]) => (
-                    <button key={path} onClick={() => router.push(path)} className="flex min-h-[76px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#29463b] bg-[#13251f] px-1.5 py-2.5 text-center transition-colors hover:bg-secondary active:scale-[.98]">
-                      <span aria-hidden="true" className="text-[18px] font-semibold leading-none text-[#a7f36c]">{icon}</span>
-                      <span className="truncate text-[11px] font-black text-[#e8f4df]">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-          </div>
-        </div>
-        <div className="mb-3 flex items-center justify-center gap-1.5" aria-label="Home pages">
-          {[0,1].map((page) => <button key={page} onClick={() => setHomePage(page as 0 | 1)} className={`h-1.5 rounded-full transition-all ${homePage === page ? 'w-6 bg-[#a7f36c]' : 'w-1.5 bg-[#29463b]'}`} aria-label={`Show home page ${page + 1}`} />)}
-        </div>
-        <p className="mb-4 text-center text-[8px] font-bold uppercase tracking-[.18em] text-[#8eafa0]">Swipe left for services</p>
+        <section className="min-w-0">
+          <CommandCenter wallet={wallet} equity={equity} loading={walletLoading} />
+          <QuickActionGrid />
+          <ProductDiscovery />
+          <NexTipsBanner />
+          <MarketsFeed />
+        </section>
       </main>
 
       <BottomNav />
