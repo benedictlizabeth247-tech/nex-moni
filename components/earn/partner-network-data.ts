@@ -12,7 +12,7 @@ export type PartnerPlatform = {
   displayOrder: number
 }
 
-const logo = (slug: string) => `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/${slug}/default.svg`
+const logo = (slug: string) => `https://cdn.simpleicons.org/${slug}`
 
 export const partnerPlatforms: PartnerPlatform[] = [
   { id: "braintrust", name: "Braintrust", slug: "braintrust", logoUrl: logo("braintrust"), category: "Freelance", description: "Professional freelance & talent network", extendedDescription: "Discover professional freelance, contract and talent opportunities through the Braintrust network.", relationship: "Platform Access", officialUrl: "https://www.usebraintrust.com", route: "/earn/platform/braintrust", displayOrder: 1 },
