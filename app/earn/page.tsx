@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUser } from "@/supabase"
 import type { DiscoveryOpportunity } from "@/services/discovery"
+import { PartnerNetwork } from "@/components/earn/PartnerNetwork"
 
 const categories = ["All", "Bounty", "Project", "Job", "Grant", "Development", "Design", "Content", "Community", "Growth", "Other"]
 
@@ -92,9 +93,10 @@ export default function EarnScreen() {
         <div className="mb-4 flex items-end justify-between"><div><h2 className="text-lg font-bold text-foreground">Open opportunities</h2><p className="mt-1 text-xs text-gray-400">{feedState === 'live' ? 'Live listings from verified sources' : feedState === 'unavailable' ? 'Sources are temporarily unavailable' : 'Synchronizing verified sources'}</p></div><SlidersHorizontal size={18} className="text-gray-400" /></div>
         {loading ? <div className="space-y-3">{[1,2,3,4].map((item) => <Skeleton key={item} className="h-32 w-full rounded-2xl" />)}</div> : error ? <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center"><p className="text-sm font-semibold text-foreground">Discovery is temporarily unavailable.</p><p className="mt-1 text-xs text-gray-500">Try again to refresh the live sources.</p><Button onClick={() => load()} variant="outline" className="mt-4 rounded-xl">Try again</Button></div> : filtered.length === 0 ? <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center"><Globe2 className="mx-auto text-gray-300" size={28} /><p className="mt-3 text-sm font-semibold text-foreground">No opportunities found</p><p className="mt-1 text-xs text-gray-500">Try another search or category.</p></div> : <div className="space-y-3">{filtered.map((item) => <OpportunityCard key={item.id} item={item} onClick={() => setSelected(item)} />)}</div>}
         {!loading && !error && hasMore && filtered.length > 0 && <Button onClick={() => load(page + 1)} disabled={loadingMore} variant="outline" className="mt-5 w-full rounded-xl">{loadingMore ? "Loading more..." : "Load more opportunities"}</Button>}
-      </section>
-
-      <BottomNav />
+  </section>
+  <section className="px-6"><PartnerNetwork /></section>
+  
+  <BottomNav />
       {selected && <OpportunityDetail item={selected} onClose={() => setSelected(null)} />}
     </main>
   )
