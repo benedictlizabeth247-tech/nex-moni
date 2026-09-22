@@ -36,7 +36,7 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
             </button>
           </div>
           
-          <div className="mb-5 flex items-baseline gap-1 overflow-hidden sm:mb-7">
+          <div className="mb-6 flex min-h-[50px] items-center gap-1 overflow-hidden sm:mb-8 sm:min-h-[60px]">
             {loading ? (
               <Skeleton className="h-8 w-32 bg-white/10" />
             ) : (
