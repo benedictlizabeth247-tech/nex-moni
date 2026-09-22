@@ -21,7 +21,7 @@ function PlatformCard({ platform }: { platform: PartnerPlatform }) {
   return <div className="group flex min-h-[78px] items-center gap-3 rounded-2xl border border-[#d9d0c8] bg-[#eee9e3] px-3.5 py-3 transition-colors hover:border-[#b9998e] sm:gap-4 sm:px-4">
     <a href={platform.route} aria-label={`Explore ${platform.name}`}><PlatformLogo platform={platform} /></a>
     <a href={platform.route} className="min-w-0 flex-1">
-      <div className="flex min-w-0 items-center gap-2"><h3 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-[#302b29]">{platform.name}</h3><span className="hidden truncate rounded-full border border-[#d2c5bc] px-2 py-0.5 text-[9px] font-medium tracking-[0.06em] text-[#786c66] sm:inline-flex">{platform.relationship}</span></div>
+      <div className="flex min-w-0 items-center gap-2"><h3 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-[#302b29]">{platform.name}</h3><span className="hidden truncate rounded-full border border-[#d2c5bc] px-2 py-0.5 text-[9px] font-medium tracking-[0.06em] text-[#786c66] sm:inline-flex">{platform.relationshipDisplayLabel}</span></div>
       <p className="mt-1 truncate text-xs leading-[1.45] text-[#726861]">{platform.description}</p>
       <span className="mt-1 block truncate text-[10px] text-[#988b83]">{platform.category}</span>
     </a>
