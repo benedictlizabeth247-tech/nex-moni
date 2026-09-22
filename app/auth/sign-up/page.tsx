@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -47,7 +47,6 @@ export default function Page() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
@@ -58,15 +57,11 @@ export default function Page() {
     }
 
     try {
-      const response = await fetch('/api/auth/sign-up', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, firstName, surname }),
+      const { error } = await authClient.signUp.email({
+        email: email.trim().toLowerCase(),
+        password,
+        name: `${firstName.trim()} ${surname.trim()}`.trim(),
       })
-      const result = await response.json().catch(() => null)
-      if (!response.ok) throw Object.assign(new Error(result?.error ?? 'Unable to complete sign-up.'), { code: result?.code })
-
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
       if (error) throw error
       router.push('/')
     } catch (error: unknown) {

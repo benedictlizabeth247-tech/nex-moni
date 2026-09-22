@@ -3,7 +3,12 @@ import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import { createHash } from 'node:crypto'
 
-const sources = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)!)
+function getSources() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Opportunity sync data source is not configured.')
+  return createClient(url, key)
+}
 const timeoutMs = 12_000
 
 type NormalizedOpportunity = {
@@ -58,21 +63,21 @@ async function discoverSuperteam(): Promise<NormalizedOpportunity[]> {
 
 export async function syncOpportunitySources() {
   const startedAt = new Date().toISOString()
-  const run = await sources.from('opportunity_sync_runs').insert({ source: 'superteam_earn', status: 'RUNNING', started_at: startedAt }).select('id').maybeSingle()
+  const run = await getSources().from('opportunity_sync_runs').insert({ source: 'superteam_earn', status: 'RUNNING', started_at: startedAt }).select('id').maybeSingle()
   const runId = run.data?.id ?? null
   const results: Record<string, { ok: boolean; count: number; error?: string }> = {}
   try {
     const rows = await discoverSuperteam()
-    const { error } = await sources.from('opportunities').upsert(rows, { onConflict: 'source,source_id', ignoreDuplicates: false })
+    const { error } = await getSources().from('opportunities').upsert(rows, { onConflict: 'source,source_id', ignoreDuplicates: false })
     if (error) throw error
-    await sources.from('opportunity_sources').upsert({ source: 'superteam_earn', name: 'Superteam Earn', enabled: true, api_status: 'healthy', last_success_at: startedAt, last_sync_at: startedAt, records_seen: rows.length, records_updated: rows.length, error_message: null }, { onConflict: 'source' })
+    await getSources().from('opportunity_sources').upsert({ source: 'superteam_earn', name: 'Superteam Earn', enabled: true, api_status: 'healthy', last_success_at: startedAt, last_sync_at: startedAt, records_seen: rows.length, records_updated: rows.length, error_message: null }, { onConflict: 'source' })
     results.superteam_earn = { ok: true, count: rows.length }
-    if (runId) await sources.from('opportunity_sync_runs').update({ status: 'SUCCEEDED', finished_at: new Date().toISOString(), records_seen: rows.length, records_updated: rows.length }).eq('id', runId)
+    if (runId) await getSources().from('opportunity_sync_runs').update({ status: 'SUCCEEDED', finished_at: new Date().toISOString(), records_seen: rows.length, records_updated: rows.length }).eq('id', runId)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown source error'
-    await sources.from('opportunity_sources').upsert({ source: 'superteam_earn', name: 'Superteam Earn', enabled: true, api_status: 'error', last_failure_at: startedAt, last_sync_at: startedAt, error_message: message }, { onConflict: 'source' })
+    await getSources().from('opportunity_sources').upsert({ source: 'superteam_earn', name: 'Superteam Earn', enabled: true, api_status: 'error', last_failure_at: startedAt, last_sync_at: startedAt, error_message: message }, { onConflict: 'source' })
     results.superteam_earn = { ok: false, count: 0, error: message }
-    if (runId) await sources.from('opportunity_sync_runs').update({ status: 'FAILED', finished_at: new Date().toISOString(), error_message: message }).eq('id', runId)
+    if (runId) await getSources().from('opportunity_sync_runs').update({ status: 'FAILED', finished_at: new Date().toISOString(), error_message: message }).eq('id', runId)
   }
   return { startedAt, results }
 }
