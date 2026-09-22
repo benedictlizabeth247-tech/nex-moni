@@ -37,7 +37,7 @@ export async function getDepositSession(): Promise<DepositSession> {
   }
 }
 
-export async function submitDepositRequest(input: DepositRequestInput): Promise<{ success: boolean; referenceId: string }> {
+export async function submitDepositRequest(input: DepositRequestInput): Promise<{ success: boolean; referenceId: string; depositId: string; merchant: { bankName: string; accountNumber: string; accountName: string; branchName: string; expiresAt: string } }> {
   const response = await fetch('/api/deposits/bank', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -45,5 +45,5 @@ export async function submitDepositRequest(input: DepositRequestInput): Promise<
   })
   const payload = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(payload?.error || 'Deposit request could not be recorded.')
-  return { success: true, referenceId: String(payload.referenceId) }
+  return { success: true, referenceId: String(payload.referenceId), depositId: String(payload.depositId), merchant: payload.merchant }
 }
