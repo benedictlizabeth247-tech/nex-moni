@@ -121,7 +121,7 @@ export default function ProfileScreen() {
           </div>
           <div className="mt-4 rounded-2xl bg-[#5C5552] p-4 text-white">
             <div className="flex items-center justify-between"><p className="text-[9px] uppercase tracking-[.18em] text-white/60">Total estimated balance</p><button onClick={()=>setShowBalance(v=>!v)}>{showBalance?<Eye size={16}/>:<EyeOff size={16}/>}</button></div>
-            <p className="mt-2 text-[29px] font-black tracking-tight">{loading ? '••••••' : showBalance ? money(total) : '••••••••'}</p>
+            {loading || !showBalance ? <p className="mt-2 text-[29px] font-black tracking-tight">••••••</p> : <BalanceConversion amount={total} className="mt-2 !text-white" />}
             <p className="mt-1 text-[9px] text-white/55">Funding + Spot + Futures account balances</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={()=>router.push('/fund-account')} className="flex items-center justify-center gap-1.5 rounded-xl bg-[#9B5B52] py-2.5 text-[10px] font-black"><ArrowDownToLine size={14}/> Deposit / Fund</button>
