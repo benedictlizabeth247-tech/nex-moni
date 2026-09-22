@@ -72,8 +72,9 @@ export default function FundAccountPage() {
 
   const copy = (v:string, account = false) => { navigator.clipboard?.writeText(v); if (account) { setCopiedAccount(true); window.setTimeout(() => setCopiedAccount(false), 1800) }; toast({title:'Copied'}) }
   const fiatAmount = useMemo(()=>Number(amount||0),[amount])
+  const canSubmitFiat = Boolean(user && session && fiatAmount > 0 && senderBank && senderAccountName.trim().length >= 2 && senderAccountNumber.length === 10)
   const submitFiat = async () => {
-    if (!user || !session || fiatAmount <= 0 || !senderBank || senderAccountName.trim().length < 2 || senderAccountNumber.length !== 10) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter your account name, select your bank, enter a valid 10-digit account number, and provide an amount.'}); return }
+    if (!canSubmitFiat) return
     setSubmitting(true)
     try {
       const result=await submitDepositRequest({amount:fiatAmount,senderBank,senderAccountName,senderAccountNumber,reference,receivingBank})
@@ -160,7 +161,7 @@ export default function FundAccountPage() {
           </div>
           <div className="mt-4"><AmountEntry value={amount} onChange={setAmount} currency="NGN" label="Amount"/></div>
           <div className="mt-4 rounded-2xl bg-[#FAF7F5] p-4"><p className="text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Deposit instructions</p><p className="mt-2 text-[10px] leading-5 text-[#6F5C57]">Transfer the exact amount to the selected nexMonie receiving account, then submit your transfer details for pending review. Bank transfers may take up to 15 minutes to review.</p></div>
-          <button disabled={submitting || !session} onClick={submitFiat} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#342A28] text-[10px] font-black text-white disabled:opacity-50">Submit Deposit <ArrowRight size={14}/></button>
+          <button type="button" disabled={submitting || !canSubmitFiat} onClick={submitFiat} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#342A28] text-[10px] font-black text-white disabled:cursor-not-allowed disabled:opacity-50">Deposit <ArrowRight size={14}/></button>
         </Card>}
 
       </>}
