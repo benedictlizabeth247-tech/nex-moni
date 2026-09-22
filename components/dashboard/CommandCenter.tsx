@@ -40,13 +40,10 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
             {loading ? (
               <Skeleton className="h-8 w-32 bg-white/10" />
             ) : (
-              <span className={`text-[22px] sm:text-[32px] font-bold leading-none transition-all duration-300 truncate ${!showBalance && "blur-lg"}`}>
-                {showBalance ? `${usdtBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} USDT` : "•••••••"}
-              </span>
+              showBalance ? <BalanceConversion amount={usdtBalance} className="text-white" /> : <span className="text-[22px] sm:text-[32px] font-bold leading-none blur-lg">•••••••</span>
             )}
           </div>
-          {!loading && showBalance && <BalanceConversion amount={usdtBalance} />}
-
+        
 
         </div>
 

@@ -145,7 +145,7 @@ export default function ProfileScreen() {
         </section>
 
         <Card className="rounded-[26px] border-[#D9D6D2] bg-white p-4 shadow-none">
-          <div className="flex items-center justify-between"><div><p className="text-[9px] uppercase tracking-[.16em] text-[#737A7D]">{tab === 'overview' ? 'Overview' : `${tab} balance`}</p><p className="mt-1 text-[24px] font-black">{showBalance?money(displayed):'••••••'}</p>{showBalance && <BalanceConversion amount={displayed} className="!text-[#737A7D]" />}</div><button onClick={()=>router.push('/assets')} className="rounded-xl bg-[#F1E4E0] px-3 py-2 text-[9px] font-black text-[#8D554D]">Full assets</button></div>
+          <div className="flex items-center justify-between"><div><p className="text-[9px] uppercase tracking-[.16em] text-[#737A7D]">{tab === 'overview' ? 'Overview' : `${tab} balance`}</p>{showBalance ? <BalanceConversion amount={displayed} className="!text-[#302b29]" /> : <p className="mt-1 text-[24px] font-black">••••••</p>}</div><button onClick={()=>router.push('/assets')} className="rounded-xl bg-[#F1E4E0] px-3 py-2 text-[9px] font-black text-[#8D554D]">Full assets</button></div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button onClick={()=>router.push('/assets')} className="rounded-xl border border-[#D9D6D2] py-2.5 text-[9px] font-black flex items-center justify-center gap-1"><ArrowDownToLine size={13}/> Transfer</button>
             <button onClick={()=>router.push('/transactions')} className="rounded-xl border border-[#D9D6D2] py-2.5 text-[9px] font-black flex items-center justify-center gap-1"><History size={13}/> History</button>

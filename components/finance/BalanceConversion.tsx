@@ -23,10 +23,10 @@ export function BalanceConversion({ amount, className = "" }: { amount: number; 
   }, [])
 
   if (!Number.isFinite(amount) || amount < 0 || !rate) {
-    return <p className={`text-[10px] leading-4 text-white/55 ${className}`}>USD equivalent updates with the live Yahoo Finance rate</p>
+    return <div className={className}><p className="text-[22px] font-black leading-none">— USD</p><p className="mt-1 text-[10px] leading-4 text-white/55">Waiting for the live Yahoo Finance USD/NGN rate</p></div>
   }
 
   const dollars = amount / rate
   const timestamp = updatedAt ? new Date(updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : null
-  return <p className={`text-[10px] leading-4 text-white/60 ${className}`}>≈ ${dollars.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD · Yahoo Finance USD/NGN ₦{rate.toLocaleString("en-NG", { maximumFractionDigits: 2 })}{timestamp ? ` · ${timestamp}` : ""}</p>
+  return <div className={className}><p className="text-[22px] font-black leading-none">${dollars.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</p><p className="mt-1 text-[10px] leading-4 text-white/60">₦{amount.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} at ₦{rate.toLocaleString("en-NG", { maximumFractionDigits: 2 })}/$1 · Yahoo Finance{timestamp ? ` · ${timestamp}` : ""}</p></div>
 }
