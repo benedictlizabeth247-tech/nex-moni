@@ -1,36 +1,33 @@
-const OKX_BASE_URL = "https://www.okx.com/api/v5"
+const YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/USDNGN=X"
 
-type Quote = { base: "USDT"; quote: "NGN" | "USD"; rate: number | null; source: "OKX"; receivedAt: string | null; expiresAt: string | null; stale: boolean; status: "live" | "unavailable" }
-
+type Quote = { base: "USD"; quote: "NGN"; rate: number | null; source: "Yahoo Finance"; receivedAt: string | null; expiresAt: string | null; stale: boolean; status: "live" | "unavailable" }
 type CacheEntry = { value: Quote; expiresAt: number }
-const cache = new Map<string, CacheEntry>()
-const TTL_MS = 30_000
+let cached: CacheEntry | null = null
+const TTL_MS = 60_000
 
-async function fetchOkxQuote(quote: "NGN" | "USD"): Promise<Quote> {
+async function fetchYahooRate(): Promise<Quote> {
   const now = new Date()
-  const instruments = await fetch(`${OKX_BASE_URL}/public/instruments?instType=SPOT`, { next: { revalidate: 30 } }).then((response) => response.json()) as { data?: Array<{ instId?: string }> }
-  const instrument = instruments.data?.find((item) => item.instId === `USDT-${quote}`)
-  if (!instrument) return { base: "USDT", quote, rate: null, source: "OKX", receivedAt: null, expiresAt: null, stale: false, status: "unavailable" }
-  const ticker = await fetch(`${OKX_BASE_URL}/market/ticker?instId=${encodeURIComponent(instrument.instId!)}`, { next: { revalidate: 30 } }).then((response) => response.json()) as { data?: Array<{ last?: string }> }
-  const rate = Number(ticker.data?.[0]?.last)
-  if (!Number.isFinite(rate) || rate <= 0) return { base: "USDT", quote, rate: null, source: "OKX", receivedAt: null, expiresAt: null, stale: false, status: "unavailable" }
-  const receivedAt = now.toISOString()
-  return { base: "USDT", quote, rate, source: "OKX", receivedAt, expiresAt: new Date(now.getTime() + TTL_MS).toISOString(), stale: false, status: "live" }
+  const response = await fetch(`${YAHOO_CHART_URL}?range=1d&interval=1m`, { headers: { "User-Agent": "NexMonie/1.0" }, cache: "no-store" })
+  if (!response.ok) throw new Error(`Yahoo Finance returned ${response.status}`)
+  const payload = await response.json() as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; regularMarketTime?: number } }> } }
+  const meta = payload.chart?.result?.[0]?.meta
+  const rate = Number(meta?.regularMarketPrice)
+  if (!Number.isFinite(rate) || rate <= 0) return { base: "USD", quote: "NGN", rate: null, source: "Yahoo Finance", receivedAt: null, expiresAt: null, stale: false, status: "unavailable" }
+  const receivedAt = meta?.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : now.toISOString()
+  return { base: "USD", quote: "NGN", rate, source: "Yahoo Finance", receivedAt, expiresAt: new Date(now.getTime() + TTL_MS).toISOString(), stale: false, status: "live" }
 }
 
-export async function getLiveRate(quote: "NGN" | "USD"): Promise<Quote> {
-  const cached = cache.get(quote)
+export async function getUsdNgnRate(): Promise<Quote> {
   if (cached && cached.expiresAt > Date.now()) return cached.value
-  const value: Quote = await fetchOkxQuote(quote).catch(() => ({ base: "USDT" as const, quote, rate: null, source: "OKX" as const, receivedAt: null, expiresAt: null, stale: false, status: "unavailable" as const }))
-  cache.set(quote, { value, expiresAt: Date.now() + TTL_MS })
+  const value = await fetchYahooRate().catch(() => ({ base: "USD" as const, quote: "NGN" as const, rate: null, source: "Yahoo Finance" as const, receivedAt: null, expiresAt: null, stale: false, status: "unavailable" as const }))
+  cached = { value, expiresAt: Date.now() + TTL_MS }
   return value
 }
 
 export async function getValuationMetadata() {
-  const [ngn, usd] = await Promise.all([getLiveRate("NGN"), getLiveRate("USD")])
-  return { ngn, usd }
+  return { usdNgn: await getUsdNgnRate() }
 }
 
-export function convertUsdt(amountUsdt: number, quote: Quote) {
-  return quote.rate === null ? null : amountUsdt * quote.rate
+export function convertUsdToNgn(amountUsd: number, quote: Quote) {
+  return quote.rate === null ? null : amountUsd * quote.rate
 }

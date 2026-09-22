@@ -6,6 +6,7 @@ import { Eye, EyeOff, Plus, Send, Landmark, CreditCard } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Wallet } from '@/types'
+import { BalanceConversion } from '@/components/finance/BalanceConversion'
 
 interface CommandCenterProps {
   wallet: Wallet | null;
@@ -44,6 +45,7 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
               </span>
             )}
           </div>
+          {!loading && showBalance && <BalanceConversion amount={usdtBalance} />}
 
 
         </div>
