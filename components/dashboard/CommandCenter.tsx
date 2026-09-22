@@ -18,7 +18,7 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
   const [showBalance, setShowBalance] = useState(true)
 
   const displayBalance = equity ?? wallet?.available ?? 0
-  const nairaBalance = displayBalance
+  const usdtBalance = displayBalance
 
   return (
     <div className="mb-5 w-full">
@@ -40,7 +40,7 @@ export function CommandCenter({ wallet, equity, loading }: CommandCenterProps) {
               <Skeleton className="h-8 w-32 bg-white/10" />
             ) : (
               <span className={`text-[22px] sm:text-[32px] font-bold leading-none transition-all duration-300 truncate ${!showBalance && "blur-lg"}`}>
-                {showBalance ? `₦${nairaBalance.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "•••••••"}
+                {showBalance ? `${usdtBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} USDT` : "•••••••"}
               </span>
             )}
           </div>

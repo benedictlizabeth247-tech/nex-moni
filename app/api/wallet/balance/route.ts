@@ -11,10 +11,8 @@ export async function GET() {
     const user = session?.user
     if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const [wallet] = await db.select().from(wallets).where(and(eq(wallets.userId, user.id), eq(wallets.currency, "USDT"))).limit(1)
-    const [fallbackWallet] = wallet ? [null] : await db.select().from(wallets).where(eq(wallets.userId, user.id)).orderBy(desc(wallets.updatedAt)).limit(1)
-    const activeWallet = wallet ?? fallbackWallet
-    const walletCurrency = activeWallet?.currency ?? "USDT"
+    const [activeWallet] = await db.select().from(wallets).where(and(eq(wallets.userId, user.id), eq(wallets.currency, "USDT"))).limit(1)
+    const walletCurrency = "USDT"
     const rows = activeWallet
       ? await db.select().from(transactions).where(and(eq(transactions.userId, user.id), eq(transactions.walletId, activeWallet.id), eq(transactions.currency, walletCurrency), inArray(transactions.status, ["completed", "COMPLETED"]))).orderBy(desc(transactions.createdAt)).limit(100)
       : []

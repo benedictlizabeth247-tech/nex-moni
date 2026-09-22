@@ -19,7 +19,7 @@ import { getTradingAccount, type TradingAccount } from '@/services/internalTradi
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types/database'
 
-const money = (n:number) => `₦${Number(n||0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const money = (n:number) => `${Number(n||0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} USDT`
 
 type AssetTab = 'overview' | 'spot' | 'futures' | 'funding'
 
@@ -54,7 +54,7 @@ export default function ProfileScreen() {
         fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null),
       ])
       setProfile(p); setWallet(w); setAccount(a); setTransactions(t)
-      setNeonBalance(Number(balanceResponse?.balance_ngn ?? balanceResponse?.balance_usdt ?? 0))
+      setNeonBalance(Number(balanceResponse?.balance_usdt ?? balanceResponse?.balance_usdt ?? 0))
       setNeonBalanceLoaded(Boolean(balanceResponse))
     } finally { setLoading(false) }
   }
@@ -170,7 +170,7 @@ export default function ProfileScreen() {
           <label className="ml-1 text-[9px] font-black uppercase tracking-[.16em] text-[#737A7D]">Preferences & security</label>
           <Card className="overflow-hidden rounded-[26px] border-[#D9D6D2] bg-white shadow-none divide-y divide-[#F2F1EF]">
             <ProfileOption icon={<Languages/>} title="Language" subtitle={profile?.preferred_language || 'English'} />
-            <ProfileOption icon={<Globe/>} title="Currency display" subtitle="NGN (Naira) primary" />
+            <ProfileOption icon={<Globe/>} title="Currency display" subtitle="USDT primary · NGN shown as estimate" />
             <ProfileOption icon={<Lock/>} title="Transaction PIN" subtitle="Change your secure PIN" />
             <ProfileOption icon={<SlidersHorizontal/>} title="Security settings" subtitle="Authentication and account controls" />
             <div className="flex items-center justify-between p-4"><div><p className="text-[11px] font-bold">Push notifications</p><p className="text-[9px] text-[#737A7D]">Trade, deposit and account events</p></div><Switch checked={notifications} onCheckedChange={setNotifications}/></div>

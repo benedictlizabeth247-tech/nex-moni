@@ -20,11 +20,7 @@ type TradingMode = "spot" | "futures"
 type Side = "buy" | "sell"
 type MonitorTab = "positions" | "orders" | "history"
 
-const money = (n: number, _currency?: string) => new Intl.NumberFormat("en-NG", {
-  style: "currency",
-  currency: "NGN",
-  maximumFractionDigits: 2,
-}).format(Number.isFinite(n) ? n : 0)
+const money = (n: number, _currency?: string) => `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 8 }).format(Number.isFinite(n) ? n : 0)} USDT`
 
 export function TradingTerminal({ mode }: { mode: TradingMode }) {
   const router = useRouter()
