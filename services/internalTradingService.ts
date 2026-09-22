@@ -113,7 +113,9 @@ export async function placeInternalOrder(input: {
   symbol: string
   side: OrderSide
   orderType: OrderType
-  quantity: number
+  quantity?: number
+  amountUsdt?: number
+  marginUsdt?: number
   price?: number
   leverage?: number
   takeProfit?: number | null

@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { auditLog, futuresAccounts, spotAccounts, tradingOrders, tradingPositions } from '@/lib/db/schema'
 import { getQuotes } from '@/services/market-data/router'
+import { calculateFuturesOrder, calculateSpotOrder, DEFAULT_TRADING_FEE_RATE } from '@/lib/trading-calculations'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,26 +19,31 @@ export async function POST(request: Request) {
     const symbol = String(body?.symbol ?? '')
     const side = body?.side as 'buy' | 'sell'
     const orderType = body?.orderType ?? 'market'
-    const quantity = Number(body?.quantity)
+    const requestedAmountUsdt = Number(body?.amountUsdt ?? body?.marginUsdt ?? 0)
     const leverage = Number(body?.leverage ?? 1)
-    if (!['spot', 'futures'].includes(mode) || !['buy', 'sell'].includes(side) || orderType !== 'market' || !symbol || !Number.isFinite(quantity) || quantity <= 0 || leverage < 1 || leverage > 50) return NextResponse.json({ error: 'Invalid market order.' }, { status: 400 })
+    if (!['spot', 'futures'].includes(mode) || !['buy', 'sell'].includes(side) || orderType !== 'market' || !symbol || !Number.isFinite(requestedAmountUsdt) || requestedAmountUsdt <= 0 || leverage < 1 || leverage > 50) return NextResponse.json({ error: 'Enter a valid USDT amount.' }, { status: 400 })
     const quoteId = symbol.includes('.') ? symbol : `crypto.${symbol.replace('/', '').toUpperCase()}`
     const market = await getQuotes([quoteId])
     const quote = market.quotes.find((item) => item.id === quoteId)
     const executionPrice = Number(quote?.price ?? 0)
     if (!quote || !Number.isFinite(executionPrice) || executionPrice <= 0 || quote.stale || !quote.timestamp || Date.now() - quote.timestamp > 30000) return NextResponse.json({ error: 'A fresh market price is required.' }, { status: 503 })
-    const margin = quantity * executionPrice / (mode === 'futures' ? leverage : 1)
+    const quantity = mode === 'futures'
+      ? calculateFuturesOrder(requestedAmountUsdt, leverage, executionPrice, DEFAULT_TRADING_FEE_RATE).quantity
+      : calculateSpotOrder(requestedAmountUsdt, executionPrice, DEFAULT_TRADING_FEE_RATE).quantity
+    const margin = requestedAmountUsdt
+    const estimatedFee = (mode === 'futures' ? requestedAmountUsdt * leverage : requestedAmountUsdt) * DEFAULT_TRADING_FEE_RATE
+    if (!Number.isFinite(quantity) || quantity <= 0) return NextResponse.json({ error: 'The executable market price could not produce a valid quantity.' }, { status: 400 })
     const accountId = randomUUID()
     const positionId = randomUUID()
     const orderId = randomUUID()
     await db.transaction(async (tx) => {
       if (mode === 'spot') {
         const [account] = await tx.select().from(spotAccounts).where(eq(spotAccounts.userId, session.user.id)).limit(1)
-        if (!account || Number(account.balanceUsdt) - Number(account.lockedUsdt) < margin) throw new Error('Insufficient available Spot balance.')
+        if (!account || Number(account.balanceUsdt) - Number(account.lockedUsdt) < margin + estimatedFee) throw new Error('Insufficient available Spot balance for amount and estimated fee.')
         await tx.update(spotAccounts).set({ lockedUsdt: sql`${spotAccounts.lockedUsdt} + ${margin}`, updatedAt: new Date() }).where(eq(spotAccounts.id, account.id))
       } else {
         const [account] = await tx.select().from(futuresAccounts).where(eq(futuresAccounts.userId, session.user.id)).limit(1)
-        if (!account || Number(account.balanceUsdt) - Number(account.lockedUsdt) < margin) throw new Error('Insufficient available Futures margin.')
+        if (!account || Number(account.balanceUsdt) - Number(account.lockedUsdt) < margin + estimatedFee) throw new Error('Insufficient available Futures margin for margin and estimated fee.')
         await tx.update(futuresAccounts).set({ lockedUsdt: sql`${futuresAccounts.lockedUsdt} + ${margin}`, updatedAt: new Date() }).where(eq(futuresAccounts.id, account.id))
       }
       await tx.insert(tradingOrders).values({ id: orderId, userId: session.user.id, mode, symbol, side, orderType, quantity: String(quantity), price: String(executionPrice), leverage: String(leverage), margin: String(margin), status: 'filled', updatedAt: new Date() })
