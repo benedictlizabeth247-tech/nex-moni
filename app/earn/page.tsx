@@ -28,11 +28,12 @@ export default function EarnScreen() {
   const [hasMore, setHasMore] = useState(true)
   const [feedState, setFeedState] = useState<'loading' | 'live' | 'empty' | 'unavailable'>('loading')
 
-  async function load(nextPage = 1) {
+  async function load(nextPage = 1, refresh = false) {
     nextPage === 1 ? setLoading(true) : setLoadingMore(true)
     setError(false)
     try {
       const params = new URLSearchParams({ page: String(nextPage), limit: "24" })
+      if (refresh) params.set('refresh', 'true')
       if (query.trim()) params.set("search", query.trim())
       if (category !== "All") params.set("category", category)
       if (source !== "All") params.set("source", source)
@@ -50,8 +51,15 @@ export default function EarnScreen() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => load(), query.trim() || category !== "All" ? 250 : 0)
+    const timer = window.setTimeout(() => load(1, true), query.trim() || category !== "All" || source !== "All" ? 250 : 0)
     return () => window.clearTimeout(timer)
+  }, [query, category, source])
+
+  useEffect(() => {
+    const refreshTimer = window.setInterval(() => {
+      if (!document.hidden) load(1, true)
+    }, 60_000)
+    return () => window.clearInterval(refreshTimer)
   }, [query, category, source])
 
   const filtered = useMemo(() => items.filter((item) => {

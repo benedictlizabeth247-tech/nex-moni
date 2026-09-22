@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getDiscoveryOpportunities } from '@/services/discovery'
+import { syncOpportunitySources } from '@/services/opportunityIngestion'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,6 +9,9 @@ export async function GET(request: Request) {
   const page = Math.max(1, Number(searchParams.get('page') || '1'))
   const limit = Math.min(50, Math.max(1, Number(searchParams.get('limit') || '24')))
   try {
+    if (searchParams.get('refresh') === 'true') {
+      await syncOpportunitySources()
+    }
     const result = await getDiscoveryOpportunities({
       page,
       limit,

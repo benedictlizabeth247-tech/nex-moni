@@ -65,8 +65,13 @@ async function superteam() {
     const title = text(row.title); const sourceId = text(row.id) || text(row.slug); if (!title || !sourceId || !statusIsLive(row)) return []
     const slug = text(row.slug); const sourceUrl = text(row.url) || (slug ? `https://earn.superteam.fun/listing/${slug}/` : 'https://superteam.fun/earn')
     const sponsor = row.sponsor as Record<string, unknown> | undefined
+    const project = row.project as Record<string, unknown> | undefined
+    const profile = row.profile as Record<string, unknown> | undefined
+    const projectLogo = text(sponsor?.logo) || text(sponsor?.logoUrl) || text(sponsor?.image) || text(sponsor?.avatar) || text(project?.logo) || text(project?.logoUrl) || text(project?.image) || text(project?.avatar) || text(profile?.image) || text(profile?.avatar) || text(row.projectLogo) || text(row.logo) || text(row.image)
+    const projectName = text(sponsor?.name) || text(project?.name) || text(row.project) || text(row.organization)
+    const projectProfileUrl = text(sponsor?.url) || text(sponsor?.profileUrl) || text(project?.url) || text(project?.profileUrl)
     const deadline = date(row.deadline || row.endsAt || row.endDate)
-    return [normalize({ source: 'superteam_earn', sourceId, sourceUrl, applicationUrl: text(row.applicationUrl) || sourceUrl, projectName: text(sponsor?.name) || text(row.project), projectLogo: text(sponsor?.logo), projectProfileUrl: text(sponsor?.url), projectWebsiteUrl: text(sponsor?.website), sourceProfileUrl: 'https://superteam.fun/earn', title, description: text(row.description), opportunityType: text(row.type) || 'Bounty', category: text(row.type) || 'Bounty', rewardAmount: text(row.rewardAmount ?? row.maxRewardAsk ?? row.minRewardAsk), rewardCurrency: text(row.token) || text(row.currency), rewardDescription: text(row.rewardText), deadline, ecosystem: text(row.ecosystem), location: text(row.location), remote: row.remote === true, skills: asStrings(row.skills), metadata: { providerStatus: String(row.status || 'OPEN') } })]
+    return [normalize({ source: 'superteam_earn', sourceId, sourceUrl, applicationUrl: text(row.applicationUrl) || sourceUrl, projectName, projectLogo, projectProfileUrl, projectWebsiteUrl: text(sponsor?.website) || text(project?.website), sourceProfileUrl: projectProfileUrl || 'https://superteam.fun/earn', title, description: text(row.description), opportunityType: text(row.type) || 'Bounty', category: text(row.type) || 'Bounty', rewardAmount: text(row.rewardAmount ?? row.maxRewardAsk ?? row.minRewardAsk), rewardCurrency: text(row.token) || text(row.currency), rewardDescription: text(row.rewardText), deadline, ecosystem: text(row.ecosystem), location: text(row.location), remote: row.remote === true, skills: asStrings(row.skills), metadata: { providerStatus: String(row.status || 'OPEN'), profileImage: projectLogo, sourceProfile: projectProfileUrl } })]
   })
 }
 
