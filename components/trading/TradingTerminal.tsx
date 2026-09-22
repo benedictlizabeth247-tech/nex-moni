@@ -20,18 +20,11 @@ type TradingMode = "spot" | "futures"
 type Side = "buy" | "sell"
 type MonitorTab = "positions" | "orders" | "history"
 
-const money = (n: number, currency = "USD") => {
-  const asset = String(currency || "USD").trim().toUpperCase()
-  const isUsdt = asset === "USDT"
-  const isoCurrency = ["USD", "EUR", "GBP", "NGN"].includes(asset) ? asset : "USD"
-  const formatted = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: isoCurrency,
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(n) ? n : 0)
-
-  return isUsdt ? formatted.replace(/^\$/, "USDT ") : formatted
-}
+const money = (n: number, _currency?: string) => new Intl.NumberFormat("en-NG", {
+  style: "currency",
+  currency: "NGN",
+  maximumFractionDigits: 2,
+}).format(Number.isFinite(n) ? n : 0)
 
 export function TradingTerminal({ mode }: { mode: TradingMode }) {
   const router = useRouter()
@@ -103,7 +96,7 @@ export function TradingTerminal({ mode }: { mode: TradingMode }) {
   const currentPnl=activePositions.reduce((sum,p)=>sum+pnlFor(p),0)
   const choose=(id:string)=>{setSelectedId(id);setQuery("");setShowMarkets(false);setNotice(null)}
 
-  const transferFunds=async()=>{ const n=Number(transfer); if(!n||n<=0){setNotice("Enter a valid amount to transfer.");return}; setBusy(true);try{await transferToTrading(mode,n);setTransfer("");setNotice(`${money(n,wallet?.currency||"USD")} moved from Funding to ${mode==='spot'?'Spot':'Futures'} balance.`);await refresh()}catch(e:any){setNotice(e?.message||"Transfer failed")}finally{setBusy(false)} }
+  const transferFunds=async()=>{ const n=Number(transfer); if(!n||n<=0){setNotice("Enter a valid amount to transfer.");return}; setBusy(true);try{await transferToTrading(mode,n);setTransfer("");setNotice(`${money(n)} moved from Funding to ${mode==='spot'?'Spot':'Futures'} balance.`);await refresh()}catch(e:any){setNotice(e?.message||"Transfer failed")}finally{setBusy(false)} }
   const place=async()=>{ const q=Number(quantity); const executionPrice=orderType==='market'?price:Number(triggerPrice); if(orderType !== 'market'){setNotice('Limit and stop orders are temporarily disabled until reservation accounting is enabled. Market orders remain fully ledger-controlled.');return}; if(selected?.type !== 'crypto'){setNotice('Order entry is display-only for this market. Crypto spot and futures are enabled.');return}; if(!q||q<=0||!executionPrice){setNotice(orderType==='market'?"Enter a valid quantity and wait for a market price.":"Enter a valid trigger/limit price.");return}; if(!Number.isFinite(notional)||notional<=0||requiredMargin+estimatedFee>balance){setNotice(`Insufficient ${mode==='spot'?'spot balance':'futures margin'} for this order.`);return}; setBusy(true);try{const result:any = await placeInternalOrder({mode,symbol:selectedId,side,orderType:orderType as any,quantity:q,price:executionPrice,leverage});setQuantity("");setTriggerPrice("");setNotice(result?.status==='pending' ? `${mode==='spot'?'Spot':'Futures'} ${orderType} order placed and will use the live market feed for its trigger.` : `${mode==='spot'?'Spot':'Futures'} market order filled at the live market price.`);await refresh()}catch(e:any){setNotice(e?.message||"Order rejected")}finally{setBusy(false)} }
   const close=async (p:TradingPosition)=>{
     if (busy) return
@@ -115,7 +108,7 @@ export function TradingTerminal({ mode }: { mode: TradingMode }) {
     setBusy(true)
     try {
       const result=await closeInternalPosition(p.id,p.symbol)
-      setNotice(`Position ${marketLabel(p.symbol)} closed. Realized P&L: ${money(Number(result.realized_pnl),wallet?.currency||"USD")}.`)
+      setNotice(`Position ${marketLabel(p.symbol)} closed. Realized P&L: ${money(Number(result.realized_pnl))}.`)
       await refresh()
     } catch (error:any) {
       setNotice(error?.message||"Could not close position")
