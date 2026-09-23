@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MiniAppEngine } from '@/components/mini-app/MiniAppEngine'
+import { EcosystemHub } from '@/components/extension/EcosystemHub'
 
 export default function UtilitiesHub() {
   const router = useRouter()
@@ -120,6 +121,8 @@ export default function UtilitiesHub() {
         <h1 className="mb-1 text-2xl font-black leading-tight tracking-tight text-foreground sm:text-3xl">Extensions</h1>
         <p className="text-sm font-medium text-muted-foreground">Everyday services, connected in one place.</p>
       </div>
+
+      <div className="px-4"><EcosystemHub /></div>
 
       <section className="px-4 mb-4">
         <Card className="p-4 border-none shadow-soft rounded-[16px] bg-white">
