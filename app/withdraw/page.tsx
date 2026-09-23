@@ -18,8 +18,11 @@ export default function WithdrawPage(){
  const rails=[{id:'bank' as const,label:'Bank account',hint:'Configured payout destination',icon:Building2},{id:'nex' as const,label:'nexMonie account',hint:'Internal transfer',icon:ArrowUpFromLine},{id:'card_refund' as const,label:'Card refund',hint:'Return to eligible card',icon:CreditCard},{id:'mobile_money' as const,label:'Mobile money',hint:'Supported regional rail',icon:Smartphone},{id:'crypto' as const,label:'Crypto wallet',hint:'Network-specific payout',icon:Coins}]
   const [destination,setDestination]=useState(""); const [busy,setBusy]=useState(false)
   const [submitted,setSubmitted]=useState(false); const [error,setError]=useState("")
-  const [neonBalance, setNeonBalance] = useState(0)
-  useEffect(()=>{ void fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).then((data) => setNeonBalance(Number(data?.balance_usdt ?? 0))) },[])
+ const [neonBalance, setNeonBalance] = useState(0)
+ const [usdNgnRate, setUsdNgnRate] = useState<number | null>(null)
+ const [rateUpdatedAt, setRateUpdatedAt] = useState<string | null>(null)
+ useEffect(()=>{ void Promise.all([fetch('/api/wallet/balance', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null), fetch('/api/valuation', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null)]).then(([balance, valuation]) => { setNeonBalance(Number(balance?.balance_usdt ?? 0)); const rate = Number(valuation?.usdNgn?.rate); setUsdNgnRate(Number.isFinite(rate) && rate > 0 ? rate : null); setRateUpdatedAt(valuation?.usdNgn?.receivedAt ?? null) }) },[])
+ const requestedAmount = Number(amount || 0)
  const submit=async()=>{
   setError(""); const n=Number(amount); const available=neonBalance
   if(!n||n<=0){setError("Enter a valid amount.");return}
@@ -46,8 +49,9 @@ export default function WithdrawPage(){
      <button type="button" onClick={()=>setAutopilot(!autopilot)} className={`mt-3 flex w-full items-center justify-between rounded-xl border p-3 text-left ${autopilot?"border-[#087F5B] bg-[#E8F7F0]":"border-[#D6E1DE] bg-white"}`}><span className="flex items-center gap-2"><Bot size={16} className="text-[#087F5B]"/><span><b className="block text-[10px]">Autopilot routing</b><small className="text-[8px] text-[#708A85]">Queue eligible payouts after required security checks</small></span></span><span className={`h-5 w-9 rounded-full p-0.5 ${autopilot?"bg-[#087F5B]":"bg-[#B8C6C2]"}`}><span className={`block h-4 w-4 rounded-full bg-white transition-transform ${autopilot?"translate-x-4":""}`}/></span></button>
      <label className="mt-4 block text-[9px] font-black uppercase tracking-widest text-[#708A85]">Destination</label>
      <Input value={destination} onChange={e=>setDestination(e.target.value)} placeholder={destinationType==='bank'?"Bank account number / configured destination":"Recipient nex ID / username"} className="mt-2 h-12 rounded-xl"/>
-     <label className="mt-4 block text-[9px] font-black uppercase tracking-widest text-[#708A85]">Amount</label>
-     <Input value={amount} onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,""))} inputMode="decimal" placeholder="0.00" className="mt-2 h-12 rounded-xl"/>
+     <label className="mt-4 block text-[9px] font-black uppercase tracking-widest text-[#708A85]">Amount (USDT)</label>
+     <Input value={amount} onChange={e=>setAmount(e.target.value.replace(/[^0-9.]/g,""))} inputMode="decimal" placeholder="100.00" className="mt-2 h-12 rounded-xl"/>
+     <div className="mt-2 rounded-2xl bg-[#E8F7F0] p-3"><div className="flex items-center justify-between gap-3"><span className="text-[9px] font-black uppercase tracking-widest text-[#708A85]">Estimated NGN payout</span><b className="text-[15px] font-black">{usdNgnRate && requestedAmount > 0 ? `≈ ₦${(requestedAmount * usdNgnRate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '— NGN'}</b></div><p className="mt-1 text-[9px] leading-4 text-[#708A85]">{usdNgnRate ? `Live Yahoo Finance rate: ₦${usdNgnRate.toLocaleString('en-NG', { maximumFractionDigits: 2 })} per $1${rateUpdatedAt ? ` · ${new Date(rateUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}. Final payout is confirmed during processing.` : 'Live exchange rate unavailable. We will calculate the payout when the request is processed.'}</p></div>
      <button onClick={()=>setAmount(String(neonBalance))} className="mt-2 text-[9px] font-black text-[#087F5B]">Use maximum available</button>
      {error&&<p className="mt-3 rounded-xl bg-red-50 p-3 text-[9px] font-bold text-red-600">{error}</p>}
     </Card>

@@ -30,7 +30,7 @@ export default function FundAccountPage() {
   const [method, setMethod] = useState<Method>('crypto'); const [session, setSession] = useState<DepositSession|null>(null)
   const [banks, setBanks] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false)
   const [stage, setStage] = useState<'choose'|'details'|'pending'>('choose')
-  const [amount, setAmount] = useState(''); const [senderBank, setSenderBank] = useState(''); const [senderAccountName, setSenderAccountName] = useState(''); const [senderAccountNumber, setSenderAccountNumber] = useState(''); const [bankQuery, setBankQuery] = useState(''); const [showBankList, setShowBankList] = useState(false); const [receivingBank, setReceivingBank] = useState('UBA'); const [copiedAccount, setCopiedAccount] = useState(false); const [countdown, setCountdown] = useState(15 * 60); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
+  const [amount, setAmount] = useState(''); const [usdNgnRate, setUsdNgnRate] = useState<number | null>(null); const [rateUpdatedAt, setRateUpdatedAt] = useState<string | null>(null); const [senderBank, setSenderBank] = useState(''); const [senderAccountName, setSenderAccountName] = useState(''); const [senderAccountNumber, setSenderAccountNumber] = useState(''); const [bankQuery, setBankQuery] = useState(''); const [showBankList, setShowBankList] = useState(false); const [receivingBank, setReceivingBank] = useState('UBA'); const [copiedAccount, setCopiedAccount] = useState(false); const [countdown, setCountdown] = useState(15 * 60); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
   const networkOptions = DEPOSIT_NETWORKS[asset] ?? []
   const selectedNetwork = networkOptions.find((item) => item.id === network) ?? networkOptions[0]
   const receivingAccounts = session?.receivingAccounts ?? [{ bankName: 'UBA', accountNumber: '2295345512', accountName: 'Benjamin Arinze Atuchukwu' }, { bankName: 'Access Bank', accountNumber: '1841089139', accountName: 'Benjamin Arinze' }]
@@ -40,14 +40,17 @@ export default function FundAccountPage() {
 
   useEffect(() => {
     if (stage !== 'pending') return
-    setCountdown(method === 'crypto' ? 25 * 60 : 15 * 60)
-    const timer = window.setInterval(() => setCountdown((value) => Math.max(0, value - 1)), 1000)
+    const expiresAt = session?.expiryTime?.getTime() ?? Date.now() + (method === 'crypto' ? 25 : 15) * 60 * 1000
+    const updateCountdown = () => setCountdown(Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)))
+    updateCountdown()
+    const timer = window.setInterval(updateCountdown, 1000)
     return () => window.clearInterval(timer)
-  }, [stage, method])
+  }, [stage, method, session?.expiryTime])
 
   useEffect(() => { Promise.all([
     getDepositSession().then(setSession).catch(()=>setSession(null)),
     fetch('/api/banks').then(r=>r.json()).then(setBanks).catch(()=>setBanks([])),
+    fetch('/api/valuation', { cache: 'no-store' }).then(r=>r.json()).then(payload => { const rate = Number(payload?.usdNgn?.rate); setUsdNgnRate(Number.isFinite(rate) && rate > 0 ? rate : null); setRateUpdatedAt(payload?.usdNgn?.receivedAt ?? null) }).catch(() => { setUsdNgnRate(null); setRateUpdatedAt(null) }),
     fetch('/api/custody/deposit-address', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -149,6 +152,7 @@ export default function FundAccountPage() {
         {method === 'fiat' && <Card className="rounded-[28px] border-[#E1D5D1] bg-[#FFFDFB] p-5 shadow-none"><div className="mb-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-[#8E7772]"><span className="rounded-full bg-[#D86F68] px-2 py-1 text-white">1</span> Bank transfer deposit</div>
           <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#8E7772]">Fiat deposit</p>
           <h2 className="mt-1 text-[19px] font-black">Deposit NGN by bank transfer</h2>
+          <p className="mt-1 text-[9px] leading-4 text-[#8E7772]">Transfer NGN from your bank app to the NexMonie merchant account assigned to this deposit.</p>
           <div className="mt-4 space-y-3">
             <div><p className="mb-2 text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Receiving bank</p><div className="grid grid-cols-1 gap-2">{receivingAccounts.map((account) => <button key={account.bankName} type="button" onClick={() => setReceivingBank(account.bankName)} className={`w-full rounded-2xl border p-3 text-left transition ${receivingBank === account.bankName ? 'border-[#D86F68] bg-[#F9E8E5]' : 'border-[#E1D5D1] bg-[#FFFDFB]'}`}><b className="block text-[12px]">{account.bankName}</b><span className="mt-1 block text-[9px] text-[#8E7772]">{account.accountName}</span></button>)}</div></div>
             <div className="rounded-[22px] bg-[#F8F2F0] p-4"><p className="text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Send transfer to</p><p className="mt-2 text-[12px] font-black">{selectedReceiving?.bankName}</p><p className="mt-1 text-[10px] text-[#8E7772]">{selectedReceiving?.accountName}</p><div className="mt-3 flex items-center justify-between gap-3"><b className="text-[20px] tracking-wide">{selectedReceiving?.accountNumber}</b><button onClick={() => copy(selectedReceiving.accountNumber, true)} className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-[#342A28] px-3 text-[9px] font-black text-white" aria-label="Copy receiving account number"><Copy size={14}/>{copiedAccount ? 'Copied' : 'Copy'}</button></div></div>
@@ -159,7 +163,8 @@ export default function FundAccountPage() {
             <div><label className="mb-1 block text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Account number</label><input inputMode="numeric" value={senderAccountNumber} onChange={e=>setSenderAccountNumber(e.target.value.replace(/\\D/g, '').slice(0, 10))} placeholder="10-digit account number" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/></div>
             <input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Transfer reference (optional)" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/>
           </div>
-          <div className="mt-4"><AmountEntry value={amount} onChange={setAmount} currency="NGN" label="Amount"/></div>
+          <div className="mt-4"><AmountEntry value={amount} onChange={setAmount} currency="NGN" label="Deposit amount (NGN)"/></div>
+          <div className="mt-2 rounded-2xl bg-[#F9E8E5] p-3"><div className="flex items-center justify-between gap-3"><span className="text-[9px] font-black uppercase tracking-widest text-[#8E7772]">Estimated credit</span><b className="text-[15px] font-black">{usdNgnRate && fiatAmount > 0 ? `≈ ${(fiatAmount / usdNgnRate).toFixed(2)} USDT` : '— USDT'}</b></div><p className="mt-1 text-[9px] leading-4 text-[#8E7772]">{usdNgnRate ? `Calculated from ₦${usdNgnRate.toLocaleString('en-NG', { maximumFractionDigits: 2 })} per $1 using Yahoo Finance${rateUpdatedAt ? ` · ${new Date(rateUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}. Final credit is recorded after verification.` : 'Live exchange rate unavailable. We will calculate the credit when the deposit is verified.'}</p></div>
           <div className="mt-4 rounded-2xl bg-[#FAF7F5] p-4"><p className="text-[8px] font-black uppercase tracking-widest text-[#8E7772]">Deposit instructions</p><p className="mt-2 text-[10px] leading-5 text-[#6F5C57]">Transfer the exact amount to the selected nexMonie receiving account, then submit your transfer details for pending review. Bank transfers may take up to 15 minutes to review.</p></div>
           <button type="button" disabled={submitting || !canSubmitFiat} onClick={submitFiat} className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#342A28] text-[10px] font-black text-white disabled:cursor-not-allowed disabled:opacity-50">Deposit <ArrowRight size={14}/></button>
         </Card>}
