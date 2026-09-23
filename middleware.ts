@@ -1,7 +1,13 @@
-import { auth } from '@/lib/auth'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-export default auth.middleware({ loginUrl: '/auth/login' })
+const isPublicRoute = createRouteMatcher(['/auth/login(.*)', '/auth/sign-up(.*)', '/api/auth(.*)'])
+
+export default clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect()
+  }
+})
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth|auth/login|auth/sign-up|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: ['/((?!_next|.*\\..*).*)', '/(api|trpc)(.*)'],
 }
