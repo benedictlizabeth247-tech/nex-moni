@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { getProfile } from '@/services/profileService'
 import { getWallet, getTransactions, type Wallet as WalletType, type WalletTransaction } from '@/services/walletService'
 import { getTradingAccount, type TradingAccount } from '@/services/internalTradingService'
-import { createClient } from '@/lib/supabase/client'
+import { authClient } from '@/lib/auth-client'
 import type { Profile } from '@/types/database'
 
 const money = (n:number) => `${Number(n||0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} USDT`
@@ -76,10 +76,14 @@ export default function ProfileScreen() {
   const copy = async (text:string) => { await navigator.clipboard?.writeText(text); toast({title:'Copied',description:'Account identifier copied to clipboard.'}) }
 
   const signOut = async () => {
-    const supabase = createClient()
-    const { error } = await supabase.auth.signOut()
-    if (error) { toast({variant:'destructive', title:'Sign out failed', description:error.message}); return }
-    router.replace('/')
+    setLogoutOpen(false)
+    const result = await authClient.signOut()
+    if (result.error) {
+      toast({ variant: 'destructive', title: 'Sign out failed', description: 'Please try again.' })
+      return
+    }
+    router.replace('/admin-login')
+    router.refresh()
   }
 
   return (
