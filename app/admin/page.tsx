@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Activity, ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, BarChart3, CircleDollarSign, ClipboardList, Database, FileClock, LayoutDashboard, Network, Receipt, ShieldAlert, Store, Users, WalletCards, Menu, X, MessageSquare, LogOut, type LucideIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
+import { signOutAction } from "@/app/actions/auth"
 
 const modules: [string, string, LucideIcon, string][] = [
   ["Overview", "/admin/overview", LayoutDashboard, "Live operations summary"], ["Orders", "/admin/orders", ClipboardList, "Trading order queue"], ["Allocations", "/admin/allocations", Network, "Autopilot allocations"], ["Users & affiliates", "/admin/users", Users, "Customers and referrals"], ["Wallets", "/admin/wallets", WalletCards, "Balances and holds"], ["Deposits", "/admin/deposits", ArrowDownToLine, "Funding review"], ["Withdrawals", "/admin/withdrawals", ArrowUpFromLine, "Payout operations"], ["Transfers", "/admin/transfers", ArrowLeftRight, "Internal movement"], ["Payments", "/admin/payments", Receipt, "Provider payments"], ["Audit log", "/admin/audit-log", FileClock, "Staff actions"], ["Market data", "/admin/market-data", BarChart3, "Prices and feeds"], ["Risk", "/admin/risk", ShieldAlert, "Limits and controls"], ["Data purchases", "/admin/data-purchases", Database, "Airtime and data"], ["Merchant approvals", "/admin/merchants", Store, "Merchant operations"], ["P2P monitor", "/admin/p2p", CircleDollarSign, "Marketplace activity"], ["Support", "/admin/support", MessageSquare, "Customer conversations"]]
@@ -13,8 +13,12 @@ export default function AdminDashboard() {
   const router = useRouter()
   const [email, setEmail] = useState(""); const [menu, setMenu] = useState(false); const [error, setError] = useState(""); const [counts, setCounts] = useState<Record<string, number>>({})
   const signOut = async () => {
-    const result = await authClient.signOut()
-    if (result.error) { setError("Sign out failed. Please try again."); return }
+    try {
+      await signOutAction()
+    } catch {
+      setError("Sign out failed. Please try again.")
+      return
+    }
     router.replace("/admin-login")
     router.refresh()
   }

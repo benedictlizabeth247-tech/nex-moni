@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { getProfile } from '@/services/profileService'
 import { getWallet, getTransactions, type Wallet as WalletType, type WalletTransaction } from '@/services/walletService'
 import { getTradingAccount, type TradingAccount } from '@/services/internalTradingService'
-import { authClient } from '@/lib/auth-client'
+import { signOutAction } from '@/app/actions/auth'
 import type { Profile } from '@/types/database'
 
 const money = (n:number) => `${Number(n||0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} USDT`
@@ -77,8 +77,9 @@ export default function ProfileScreen() {
 
   const signOut = async () => {
     setLogoutOpen(false)
-    const result = await authClient.signOut()
-    if (result.error) {
+    try {
+      await signOutAction()
+    } catch {
       toast({ variant: 'destructive', title: 'Sign out failed', description: 'Please try again.' })
       return
     }
