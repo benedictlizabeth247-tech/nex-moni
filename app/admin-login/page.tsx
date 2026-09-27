@@ -4,7 +4,7 @@ import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ShieldCheck, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,15 +26,13 @@ function AdminLoginForm() {
     setError(null)
     const normalized = email.trim().toLowerCase()
     try {
-      const supabase = createClient()
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email: normalized, password })
-      if (signInError) throw signInError
+      const result = await authClient.signIn.email({ email: normalized, password })
+      if (result.error) throw new Error(result.error.message || 'invalid_credentials')
 
-      // Do not trust the typed email. The server must confirm the authenticated
-      // Supabase user has an active admin_staff record before we enter /admin.
+      // The server confirms the authenticated Neon Auth identity has an active admin_staff record.
       const authorization = await fetch('/api/admin/session', { cache: 'no-store' })
       if (!authorization.ok) {
-        await supabase.auth.signOut()
+        await authClient.signOut()
         throw new Error('ADMIN_ACCESS_REQUIRED')
       }
 
@@ -64,7 +62,7 @@ function AdminLoginForm() {
         <Button type="submit" disabled={busy} className="h-12 w-full rounded-2xl bg-[#55D6A7] font-black text-[#102019] hover:bg-[#55D6A7]/90">{busy ? <><Loader2 size={16} className="mr-2 animate-spin"/>Signing in…</> : "Enter Admin Dashboard"}</Button>
         <Link href="/admin-login/forgot-password" className="block text-center text-xs font-bold text-[#55D6A7]">Forgot password?</Link>
       </form>
-      <p className="mt-5 text-center text-[10px] text-[#6F777F]">Admin access is verified again against the Supabase admin_staff record.</p>
+      <p className="mt-5 text-center text-[10px] text-[#6F777F]">Admin access is verified again against the Neon admin_staff record.</p>
     </div>
   </main>
 }

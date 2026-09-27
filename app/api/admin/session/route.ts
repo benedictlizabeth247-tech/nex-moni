@@ -3,9 +3,12 @@ import { getAdminContext } from '@/lib/admin'
 
 export const dynamic = 'force-dynamic'
 
-/** Server-side confirmation that the current Supabase session is an active admin. */
 export async function GET() {
-  const context = await getAdminContext()
-  if (!context) return NextResponse.json({ authorized: false }, { status: 403 })
-  return NextResponse.json({ authorized: true }, { headers: { 'cache-control': 'no-store' } })
+  try {
+    const context = await getAdminContext()
+    if (!context) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 })
+    return NextResponse.json({ user: context.user, staff: context.staff })
+  } catch {
+    return NextResponse.json({ error: 'Admin access required.' }, { status: 403 })
+  }
 }
