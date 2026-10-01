@@ -43,10 +43,18 @@ function date(value: unknown) { const valueText = text(value); if (!valueText ||
 function hash(row: Record<string, unknown>) { return createHash('sha256').update(JSON.stringify(row)).digest('hex') }
 
 async function discoverSuperteam(): Promise<NormalizedOpportunity[]> {
-  const endpoint = process.env.SUPERTEAM_EARN_LISTINGS_URL || 'https://earn.superteam.fun/api/listings/?take=400&skip=0'
-  const payload = await json(endpoint)
-  const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.listings) ? payload.listings : Array.isArray(payload?.data) ? payload.data : []
-  return rows.flatMap((row: Record<string, unknown>) => {
+  const baseEndpoint = process.env.SUPERTEAM_EARN_LISTINGS_URL || 'https://earn.superteam.fun/api/listings/'
+  const pageSize = 400
+  const allRows: Record<string, unknown>[] = []
+  for (let skip = 0; skip < 10000; skip += pageSize) {
+    const separator = baseEndpoint.includes('?') ? '&' : '?'
+    const payload = await json(`${baseEndpoint}${separator}take=${pageSize}&skip=${skip}`)
+    const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.listings) ? payload.listings : Array.isArray(payload?.data) ? payload.data : []
+    allRows.push(...rows as Record<string, unknown>[])
+    if (rows.length < pageSize) break
+  }
+  const uniqueRows = Array.from(new Map(allRows.map((row) => [text(row.id) || text(row.slug) || text(row.title), row])).values())
+  return uniqueRows.flatMap((row: Record<string, unknown>) => {
     const status = String(row.status || 'OPEN').toUpperCase()
     if (['CLOSED', 'EXPIRED', 'ARCHIVED', 'CANCELLED', 'FILLED'].includes(status)) return []
     const id = text(row.id) || text(row.slug) || text(row.title)
