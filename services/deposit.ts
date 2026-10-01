@@ -6,15 +6,17 @@ export interface DepositSession {
   accountNumber: string
   accountName: string
   expiryTime: Date
+  merchantAccountId: string
   status: 'active' | 'expired'
 }
 
 export interface DepositRequestInput {
-  amount: number
+  amount: string
   senderBank: string
   sourceAccountName: string
   reference?: string
   screenshotUrl?: string | null
+  merchantAccountId: string
 }
 
 export async function getDepositSession(): Promise<DepositSession> {
@@ -23,6 +25,7 @@ export async function getDepositSession(): Promise<DepositSession> {
   if (!response.ok) throw new Error(payload?.error || 'Fiat funding account is not configured.')
   return {
     id: String(payload.sessionId),
+    merchantAccountId: String(payload.merchantAccountId),
     bankName: String(payload.bankName),
     accountNumber: String(payload.accountNumber),
     accountName: String(payload.accountName),
