@@ -117,8 +117,8 @@ export default function UtilitiesHub() {
       </header>
 
       <div className="px-4 mb-6">
-        <h1 className="text-[28px] font-bold text-[#1A1A1A] leading-tight mb-1">Utilities Hub</h1>
-        <p className="text-[14px] text-gray-500 font-medium">All your everyday services in one place.</p>
+        <h1 className="text-[28px] font-bold text-[#1A1A1A] leading-tight mb-1">Utilities & Extensions</h1>
+        <p className="text-[14px] text-gray-500 font-medium">Everyday services, tools, and connected apps in one place.</p>
       </div>
 
       <section className="px-4 mb-4">
