@@ -5,7 +5,7 @@ import { X, RefreshCw, ChevronLeft, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 /**
- * @fileOverview nexMonie Mini App Engine
+ * @fileOverview the3rdExchange Mini App Engine
  * Provides a reusable container for embed-friendly 3rd party services.
  * For services that block embedding (e.g. Spotify), UtilitiesHub triggers a system browser launch.
  */

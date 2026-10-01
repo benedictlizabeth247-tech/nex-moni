@@ -236,7 +236,7 @@ export default function PayBillsWorkflow() {
            <CheckCircle2 size={48} />
         </div>
         <h1 className="text-[22px] font-bold text-[#16231F] dark:text-[#EAF3F0] mb-2">Request Received</h1>
-        <p className="text-[#71807A] dark:text-[#9BAAA4] text-[13px] font-medium mb-10">Your bill payment request is queued for nexMonie operations. Provider verification and settlement happen before the wallet is debited.</p>
+        <p className="text-[#71807A] dark:text-[#9BAAA4] text-[13px] font-medium mb-10">Your bill payment request is queued for the3rdExchange operations. Provider verification and settlement happen before the wallet is debited.</p>
         <div className="grid grid-cols-2 gap-4 w-full">
            <button onClick={() => router.push('/')} className="py-5 bg-[#1A1A1A] text-white font-bold rounded-2xl">Return Home</button>
            <button className="py-5 bg-[#F8FAF9] dark:bg-[#1B2925] text-[#16231F] dark:text-[#EAF3F0] font-bold rounded-2xl border border-gray-100">Share Receipt</button>

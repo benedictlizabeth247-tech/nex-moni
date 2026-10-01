@@ -1,5 +1,5 @@
 /**
- * @fileOverview Reusable error handling utility for nexMonie.
+ * @fileOverview Reusable error handling utility for the3rdExchange.
  */
 
 export type AppErrorType = 

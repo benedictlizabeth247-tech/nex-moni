@@ -60,7 +60,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico'
 
-  // NexMonie is an authenticated-only app (wallet, orders, dashboard, etc.),
+  // the3rdExchange is an authenticated-only app (wallet, orders, dashboard, etc.),
   // so any non-auth route requires a session. Founder-only routes get an
   // additional role check server-side in their own layout.
   if (!isPublicPath && !user) {

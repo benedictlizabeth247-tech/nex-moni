@@ -45,7 +45,7 @@ export default function SavingsProvidersPage() {
         <div className="mt-6 flex gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-[11px] leading-relaxed text-gray-600">
           <Landmark className="shrink-0 text-primary" size={18} aria-hidden="true" />
           <p>
-            Rates and terms are set by each provider and can change. nexMonie shows the provider&apos;s own
+            Rates and terms are set by each provider and can change. the3rdExchange shows the provider&apos;s own
             information so you can choose where to save.
           </p>
         </div>

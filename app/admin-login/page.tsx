@@ -44,7 +44,7 @@ function AdminLoginForm() {
     } catch (cause) {
       const code = (cause as { code?: string })?.code
       const message = cause instanceof Error ? cause.message : ''
-      setError(code === "invalid_credentials" ? "Invalid admin email or password." : message === 'ADMIN_ACCESS_REQUIRED' ? "This account is not authorized for the NexMonie admin dashboard." : "Admin sign-in failed. Please check your credentials and try again.")
+      setError(code === "invalid_credentials" ? "Invalid admin email or password." : message === 'ADMIN_ACCESS_REQUIRED' ? "This account is not authorized for the the3rdExchange admin dashboard." : "Admin sign-in failed. Please check your credentials and try again.")
     } finally {
       setBusy(false)
     }
@@ -55,7 +55,7 @@ function AdminLoginForm() {
       <div className="mb-8 flex flex-col items-center gap-4">
         <NexLogo className="[&_*]:!text-[#F4F1EF]" />
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#183A36] text-[#55D6A7]"><ShieldCheck size={25}/></div>
-        <div className="text-center"><h1 className="text-xl font-black">Admin sign-in</h1><p className="mt-1 text-xs text-[#8D959D]">Authorized NexMonie operations access</p></div>
+        <div className="text-center"><h1 className="text-xl font-black">Admin sign-in</h1><p className="mt-1 text-xs text-[#8D959D]">Authorized the3rdExchange operations access</p></div>
       </div>
       <form onSubmit={submit} className="space-y-4 rounded-3xl border border-[#30343A] bg-[#171A1E] p-5">
         <div className="space-y-2"><Label htmlFor="admin-email" className="text-xs font-bold uppercase tracking-wide text-[#8D959D]">Admin email</Label><Input id="admin-email" type="email" required autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} className="h-12 rounded-2xl border-[#30343A] bg-[#0D0F11] text-white" /></div>

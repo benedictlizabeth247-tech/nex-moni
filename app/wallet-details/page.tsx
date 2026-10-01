@@ -112,11 +112,11 @@ export default function WalletDetailsPage() {
              isCopied={copiedField === 'Wallet Number'}
            />
            <IdentityRow 
-             label="nexMonie ID"
+             label="the3rdExchange ID"
              value={identity?.nexId || '---'} 
              loading={loading} 
-             onCopy={() => handleCopy(identity?.nexId || '', 'nexMonie ID')}
-             isCopied={copiedField === 'nexMonie ID'}
+             onCopy={() => handleCopy(identity?.nexId || '', 'the3rdExchange ID')}
+             isCopied={copiedField === 'the3rdExchange ID'}
            />
            
            <div className="pt-4 grid grid-cols-2 gap-4">
@@ -136,7 +136,7 @@ export default function WalletDetailsPage() {
         <div className="mt-10 p-6 bg-primary/5 rounded-[32px] border border-primary/10 flex gap-4">
            <Info size={20} className="text-primary shrink-0 mt-0.5" />
            <p className="text-[12px] text-gray-500 leading-relaxed font-medium">
-             Your nexMonie ID and Wallet Number are unique to you. Share them with others to receive funds instantly within the APEDAT network.
+             Your the3rdExchange ID and Wallet Number are unique to you. Share them with others to receive funds instantly within the the3rdExchange network.
            </p>
         </div>
       </div>

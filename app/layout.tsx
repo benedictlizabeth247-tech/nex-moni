@@ -1,19 +1,16 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { brand } from '@/lib/brand'
 
 export const metadata: Metadata = {
-  title: 'nexMonie | Your financial command center',
-  description: 'A secure, clear and connected financial platform for your money, markets and everyday transfers.',
-  generator: 'nexMonie',
-  icons: {
-    icon: [
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
-    apple: '/apple-icon.png',
-  },
+  title: `${brand.name} | Your financial command center`,
+  description: brand.description,
+  generator: brand.name,
+  applicationName: brand.name,
+  openGraph: { title: brand.name, description: brand.description, images: [brand.logo] },
+  twitter: { card: 'summary_large_image', title: brand.name, description: brand.description, images: [brand.logo] },
+  icons: { icon: brand.icon, apple: brand.icon },
 }
 
 export const viewport: Viewport = {

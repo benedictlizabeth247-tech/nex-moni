@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto'
 const schema = z.object({
   amount: z.number().finite().positive().max(1_000_000_000),
   senderBank: z.string().trim().min(2).max(120),
+  sourceAccountName: z.string().trim().min(2).max(160),
   reference: z.string().trim().max(120).optional(),
   screenshotUrl: z.string().url().max(2000).nullable().optional(),
 })
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
     account_name: accountName,
     amount: parsed.data.amount,
     sender_bank: parsed.data.senderBank.trim(),
+    source_account_name: parsed.data.sourceAccountName.trim(),
     reference,
     screenshot_url: parsed.data.screenshotUrl ?? null,
     status: 'pending',

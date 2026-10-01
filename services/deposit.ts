@@ -12,6 +12,7 @@ export interface DepositSession {
 export interface DepositRequestInput {
   amount: number
   senderBank: string
+  sourceAccountName: string
   reference?: string
   screenshotUrl?: string | null
 }

@@ -30,7 +30,7 @@ export default function FundAccountPage() {
   const [method, setMethod] = useState<Method>('crypto'); const [session, setSession] = useState<DepositSession|null>(null)
   const [banks, setBanks] = useState<any[]>([]); const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false)
   const [stage, setStage] = useState<'choose'|'details'|'pending'>('choose')
-  const [amount, setAmount] = useState(''); const [senderBank, setSenderBank] = useState(''); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
+  const [amount, setAmount] = useState(''); const [senderBank, setSenderBank] = useState(''); const [sourceAccountName, setSourceAccountName] = useState(''); const [reference, setReference] = useState(''); const [asset, setAsset] = useState('USDT'); const [network, setNetwork] = useState('TRON'); const [address, setAddress] = useState(''); const [cryptoAcknowledged, setCryptoAcknowledged] = useState(false)
   const networkOptions = DEPOSIT_NETWORKS[asset] ?? []
   const selectedNetwork = networkOptions.find((item) => item.id === network) ?? networkOptions[0]
 
@@ -62,10 +62,10 @@ export default function FundAccountPage() {
   const copy = (v:string) => { navigator.clipboard?.writeText(v); toast({title:'Copied'}) }
   const fiatAmount = useMemo(()=>Number(amount||0),[amount])
   const submitFiat = async () => {
-    if (!user || !session || fiatAmount <= 0 || !senderBank) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter the amount and sending bank.'}); return }
+    if (!user || !session || fiatAmount <= 0 || !senderBank || !sourceAccountName.trim()) { toast({variant:'destructive',title:'Complete the deposit details',description:'Enter the amount, sending bank, and account name.'}); return }
     setSubmitting(true)
     try {
-      const result=await submitDepositRequest({amount:fiatAmount,senderBank,reference})
+      const result=await submitDepositRequest({amount:fiatAmount,senderBank,sourceAccountName,reference})
       if(!result.success) throw new Error('Deposit request could not be recorded')
       setStage('pending')
     } catch(e:any){toast({variant:'destructive',title:'Deposit failed',description:e?.message||'Please try again.'})} finally{setSubmitting(false)}
@@ -88,7 +88,7 @@ export default function FundAccountPage() {
         <div className="mt-4">
           <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#8E7772]">Funding Account</p>
           <h1 className="mt-1 text-[24px] font-black tracking-[-.025em]">Fund your account</h1>
-          <p className="mt-1 max-w-[390px] text-[10px] leading-5 text-[#8E7772]">Choose how you want money or crypto to arrive in your nexMonie Funding balance.</p>
+          <p className="mt-1 max-w-[390px] text-[10px] leading-5 text-[#8E7772]">Choose how you want money or crypto to arrive in your the3rdExchange Funding balance.</p>
         </div>
       </div>
     </header>
@@ -148,6 +148,7 @@ export default function FundAccountPage() {
           <div className="mt-4"><AmountEntry value={amount} onChange={setAmount} currency="NGN" label="How much are you depositing?"/></div>
           <div className="mt-3 space-y-3">
             <Select value={senderBank} onValueChange={setSenderBank}><SelectTrigger className="h-12 rounded-xl bg-[#FFFDFB]"><SelectValue placeholder="Select your sending bank"/></SelectTrigger><SelectContent>{banks.map(b=><SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}</SelectContent></Select>
+            <input required value={sourceAccountName} onChange={e=>setSourceAccountName(e.target.value)} placeholder="Account name used to send funds" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/>
             <input value={reference} onChange={e=>setReference(e.target.value)} placeholder="Transfer reference (optional)" className="h-12 w-full rounded-xl border border-[#E1D5D1] bg-[#FFFDFB] px-3 text-[11px] outline-none"/>
           </div>
           <button disabled={submitting || !session} onClick={submitFiat} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[#E1D5D1] bg-[#FFFDFB] text-[10px] font-black text-[#342A28] disabled:opacity-50">I already made a bank transfer <ArrowRight size={14}/></button>

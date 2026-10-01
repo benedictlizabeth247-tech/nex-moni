@@ -172,7 +172,7 @@ export default function P2POrderDetails() {
             <Card className="p-6 border-none shadow-soft rounded-[32px] bg-white space-y-5">
               <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-amber-800">Merchant payment details</p>
-                <p className="mt-2 text-[11px] leading-5 text-amber-700">Payment details must come from the merchant's configured payment method for this order. No nexMonie bank account or merchant account details are hard-coded into the application.</p>
+                <p className="mt-2 text-[11px] leading-5 text-amber-700">Payment details must come from the merchant's configured payment method for this order. No the3rdExchange bank account or merchant account details are hard-coded into the application.</p>
               </div>
             </Card>
           </section>
@@ -182,7 +182,7 @@ export default function P2POrderDetails() {
              <div>
                 <h4 className="text-[13px] font-bold text-amber-900 mb-1">Security Warning</h4>
                 <p className="text-[11px] text-amber-700 leading-relaxed font-medium">
-                  DO NOT mention crypto, USDT, or nexMonie in the bank transfer reference. This protects both your account and the seller&apos;s account from bank freezes.
+                  DO NOT mention crypto, USDT, or the3rdExchange in the bank transfer reference. This protects both your account and the seller&apos;s account from bank freezes.
                 </p>
              </div>
           </div>
@@ -197,7 +197,7 @@ export default function P2POrderDetails() {
                  <div className="bg-gray-50 rounded-2xl p-4 text-center">
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Escrow System</p>
                     <p className="text-[11px] text-[#1A1A1A] font-medium leading-relaxed mt-1">
-                       The seller&apos;s {order.asset} is currently locked in nexMonie Escrow. It is safe to proceed with the transfer.
+                       The seller&apos;s {order.asset} is currently locked in the3rdExchange Escrow. It is safe to proceed with the transfer.
                     </p>
                  </div>
                  {messages.map((m) => (

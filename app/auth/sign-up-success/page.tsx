@@ -16,7 +16,7 @@ export default function Page() {
           </div>
           <h1 className="text-lg font-bold text-foreground">Account verified</h1>
           <p className="text-sm leading-relaxed text-gray-500">
-            Your account has been created and verified automatically. You can sign in and start using NexMonie.
+            Your account has been created and verified automatically. You can sign in and start using the3rdExchange.
           </p>
         </div>
 
