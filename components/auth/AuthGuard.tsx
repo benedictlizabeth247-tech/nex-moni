@@ -2,14 +2,15 @@
 
 import React, { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useUser } from '@/supabase'
+import { authClient } from '@/lib/auth-client'
 import { Loader2 } from 'lucide-react'
 import { NexLogo } from '@/components/ui/NexLogo'
 
 const PUBLIC_PREFIXES = ['/auth', '/admin-login']
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useUser()
+  const { data: session, isPending: loading } = authClient.useSession()
+  const user = session?.user ?? null
   const router = useRouter()
   const pathname = usePathname()
   const isPublicPath = PUBLIC_PREFIXES.some((prefix) => pathname?.startsWith(prefix))

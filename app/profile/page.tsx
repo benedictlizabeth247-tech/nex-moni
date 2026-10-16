@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
-import { useUser } from '@/supabase'
+import { authClient } from '@/lib/auth-client'
 import { NexLogo } from '@/components/ui/NexLogo'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 import { getProfile } from '@/services/profileService'
 import { getWallet, getTransactions, type Wallet as WalletType, type WalletTransaction } from '@/services/walletService'
 import { getTradingAccount, type TradingAccount } from '@/services/internalTradingService'
-import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types/database'
 import { BalanceConversion } from '@/components/finance/BalanceConversion'
 
@@ -26,7 +25,8 @@ type AssetTab = 'overview' | 'spot' | 'futures' | 'funding'
 
 export default function ProfileScreen() {
   const router = useRouter()
-  const { user } = useUser()
+  const { data: session } = authClient.useSession()
+  const user = session?.user ?? null
   const { toast } = useToast()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [wallet, setWallet] = useState<WalletType | null>(null)
@@ -87,10 +87,10 @@ export default function ProfileScreen() {
   const copy = async (text:string) => { await navigator.clipboard?.writeText(text); toast({title:'Copied',description:'Account identifier copied to clipboard.'}) }
 
   const signOut = async () => {
-    const supabase = createClient()
-    const { error } = await supabase.auth.signOut()
-    if (error) { toast({variant:'destructive', title:'Sign out failed', description:error.message}); return }
+    const result = await authClient.signOut()
+    if (result.error) { toast({variant:'destructive', title:'Sign out failed', description:'Please try again.'}); return }
     router.replace('/auth/login')
+    router.refresh()
   }
 
   return (
